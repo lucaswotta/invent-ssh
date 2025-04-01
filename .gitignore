@@ -1,0 +1,33 @@
+# Arquivos de log
+hardware_scan.log
+
+# Arquivos de saída gerados pelo script
+lista ip retorno.xlsx
+
+# Arquivos de bloqueio temporários
+.~lock.lista ip retorno.xlsx#
+
+# Ambiente virtual do Python
+venv/
+ENV/
+env/
+.venv/
+
+# Pacotes Python compilados
+__pycache__/
+*.py[cod]
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos temporários
+*.tmp
+*~
+
+# Distribuições do Python
+/dist/
+/build/
+/*.egg-info/
