@@ -6,6 +6,7 @@ import re
 import logging
 from tqdm import tqdm
 import concurrent.futures
+from openpyxl.styles import PatternFill
 
 # Configuração de logging
 logging.basicConfig(
@@ -13,6 +14,12 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# Adicionar logger específico para validação de dados
+validation_logger = logging.getLogger('validation')
+validation_logger.setLevel(logging.INFO)
+# Garantir que os logs de validação também vão para o arquivo principal
+validation_logger.addHandler(logging.FileHandler("hardware_scan.log"))
 
 # Configurações globais
 CONNECTION_TIMEOUT = 8  # Timeout reduzido para acelerar falhas
@@ -54,6 +61,9 @@ class SSHClient:
         if self.client is None and not self.connect():
             return None
         try:
+            # Verificar se self.client ainda é None após tentativa de conexão
+            if self.client is None:
+                return None
             stdin, stdout, stderr = self.client.exec_command(command, timeout=timeout)
             output = stdout.read().decode("utf-8", errors="ignore").strip()
             error = stderr.read().decode("utf-8", errors="ignore").strip()
@@ -389,13 +399,15 @@ def obter_info_disco(cliente):
             if resultado and "MB/sec" in resultado:
                 try:
                     # Extrair a velocidade
-                    velocidade = float(re.search(r'(\d+\.\d+) MB/sec', resultado).group(1))
-                    # SSDs tipicamente têm velocidades maiores que 100 MB/sec
-                    if velocidade > 100:
-                        tipo_disco = "SSD"
-                    else:
-                        tipo_disco = "HD"
-                    break
+                    search_result = re.search(r'(\d+\.\d+) MB/sec', resultado)
+                    if search_result is not None:
+                        velocidade = float(search_result.group(1))
+                        # SSDs tipicamente têm velocidades maiores que 100 MB/sec
+                        if velocidade > 100:
+                            tipo_disco = "SSD"
+                        else:
+                            tipo_disco = "HD"
+                        break
                 except:
                     pass
 
@@ -451,7 +463,7 @@ def obter_info_disco(cliente):
                 else:
                     # Procurar padrões como "120GB" ou "500 GB" ou "1TB"
                     match = re.search(r"(\d+\.?\d*)([GMKTP]i?B?)", resultado)
-                    if match:
+                    if match is not None:
                         valor = float(match.group(1))
                         unidade = match.group(2)[0].upper()  # G, T, etc.
                         if unidade == "T":
@@ -536,7 +548,7 @@ def extrair_info_pdv(descricao):
         return "Desconhecido"
     # Procurar por padrões como "PDV X" ou "PDV-X" na descrição
     match = re.search(r'PDV[\s-]*(\d+)', descricao)
-    if match:
+    if match is not None:
         return f"PDV {match.group(1)}"
     # Se não encontrar o padrão PDV, verificar por SelfCheckout
     if "SelfCheckout" in descricao:
@@ -556,6 +568,84 @@ def process_ip(args):
     else:
         info_hardware["STATUS"] = "Sucesso"
     return ip, info_hardware
+
+# Lista de processadores obsoletos
+PROCESSADORES_OBSOLETOS = [
+    "Intel(R) Celeron(R) CPU G1820",
+    "Intel(R) Celeron(R) CPU J1800",
+    "Intel(R) Celeron(R) CPU G3900",
+    "Intel(R) Atom(TM) CPU D2550",
+    "Intel(R) Atom(TM) CPU D2500",
+    "Intel(R) Celeron(R) CPU G3930",
+    "Intel(R) Pentium(R) CPU G620",
+    "Pentium(R) Dual-Core CPU E5300",
+    "Pentium(R) Dual-Core CPU E5800",
+    "Intel(R) Celeron(R) CPU 847",
+    "Intel(R) Core(TM) i5-2400 CPU @ 3.10GHz"
+]
+
+# Função para verificar se o processador é obsoleto
+def is_processador_obsoleto(processador):
+    if pd.isna(processador) or str(processador).strip() == "":
+        return False
+    return any(proc in str(processador) for proc in PROCESSADORES_OBSOLETOS)
+
+# Função para verificar se a RAM está abaixo do ideal (menos de 4GB)
+def is_ram_baixa(ram):
+    if pd.isna(ram) or str(ram).strip() == "":
+        return False
+    try:
+        ram_str = str(ram)
+        if "GB" not in ram_str:
+            return False
+        # Extrai apenas os números antes de "GB"
+        capacidade_str = ''.join(c for c in ram_str.split("GB")[0] if c.isdigit())
+        if not capacidade_str:
+            return False
+        capacidade_gb = int(capacidade_str)
+        return capacidade_gb < 4
+    except (AttributeError, ValueError):
+        return False
+
+# Função para verificar se o disco é HD
+def is_hd_lento(disco):
+    if pd.isna(disco):
+        return False
+    return "HD" in str(disco)
+
+# Função para determinar a prioridade
+def determinar_prioridade(row):
+    if pd.isna(row["PROCESSADOR"]) or str(row["PROCESSADOR"]).strip() == "":
+        return "Offline"
+    
+    processador_obsoleto = is_processador_obsoleto(row["PROCESSADOR"])
+    ram_baixa = is_ram_baixa(row["RAM"])
+    hd_lento = is_hd_lento(row["DISCO"])
+
+    if processador_obsoleto:
+        return "Alta"
+    elif ram_baixa and hd_lento:
+        return "Alta"
+    elif ram_baixa or hd_lento:
+        return "Média"
+    else:
+        return ""  # Prioridade baixa fica em branco
+
+# Função para determinar o motivo do upgrade
+def determinar_motivo(row):
+    motivos = []
+
+    if pd.isna(row["PROCESSADOR"]) or str(row["PROCESSADOR"]).strip() == "":
+        return ""
+    
+    if is_processador_obsoleto(row["PROCESSADOR"]):
+        motivos.append("Processador em obsolência")
+    if is_ram_baixa(row["RAM"]):
+        motivos.append("RAM abaixo do ideal")
+    if is_hd_lento(row["DISCO"]):
+        motivos.append("HD lento")
+
+    return "; ".join(motivos) if motivos else ""
 
 def main():
     # Obter o diretório onde o script está localizado
@@ -627,19 +717,31 @@ def main():
                 completed += 1
                 # Salvar progresso parcial
                 if completed % save_interval == 0 or completed == len(ips_to_process):
-                    # Atualizar DataFrame com resultados obtidos até agora
+                    # Atualizar DataFrame com resultados obtidos até agora, aplicando regras de validação
                     for idx, row in df_pdvs.iterrows():
                         ip = row["IP"]
                         if ip in results:
                             for key, value in results[ip].items():
                                 column_key = key.upper()
-                                # Usar o mapeamento para localizar a coluna correta
+                                # Determinar a coluna correta para atualização
+                                target_column = None
                                 if column_key in mapeamento_colunas and mapeamento_colunas[column_key]:
                                     # Caso seja uma coluna que foi renomeada
-                                    df_pdvs.at[idx, mapeamento_colunas[column_key]] = value
+                                    target_column = mapeamento_colunas[column_key]
                                 elif column_key in df_pdvs.columns:
                                     # Caso seja uma coluna que manteve o nome
-                                    df_pdvs.at[idx, column_key] = value
+                                    target_column = column_key
+                                
+                                # Aplicar regras de validação se a coluna existe
+                                if target_column:
+                                    current_value = df_pdvs.at[idx, target_column]
+                                    # Regra 1: Se a célula estiver vazia, preencher com os novos dados
+                                    if pd.isna(current_value) or current_value == "" or current_value == "Não detectado":
+                                        df_pdvs.at[idx, target_column] = value
+                                    # Regra 2: Se os valores forem diferentes, substituir os dados existentes
+                                    elif str(current_value).strip() != str(value).strip():
+                                        df_pdvs.at[idx, target_column] = value
+                                    # Se os valores forem iguais, manter os dados existentes (não faz nada)
                     # Salvar arquivo temporário
                     try:
                         temp_file = f"{arquivo_saida}.temp"
@@ -654,7 +756,7 @@ def main():
         
         progress_bar.close()
         
-        # Atualizar DataFrame com todos os resultados
+        # Atualizar DataFrame com todos os resultados, aplicando regras de validação
         for idx, row in df_pdvs.iterrows():
             ip = row["IP"]
             if ip in results:
@@ -666,19 +768,79 @@ def main():
                         if old_col.lower() == key.lower():
                             mapped_column = new_col
                             break
-                    # Aplicar o valor à coluna apropriada
+                    
+                    # Determinar a coluna correta para atualização
+                    target_column = None
                     if mapped_column and mapped_column in df_pdvs.columns:
-                        df_pdvs.at[idx, mapped_column] = value
+                        target_column = mapped_column
                     elif column_key in df_pdvs.columns:
-                        df_pdvs.at[idx, column_key] = value
+                        target_column = column_key
+                    
+                    # Aplicar regras de validação se a coluna existe
+                    if target_column:
+                        current_value = df_pdvs.at[idx, target_column]
+                        # Regra 1: Se a célula estiver vazia, preencher com os novos dados
+                        if pd.isna(current_value) or current_value == "" or current_value == "Não detectado":
+                            df_pdvs.at[idx, target_column] = value
+                            logging.info(f"IP {ip}, coluna {target_column}: Célula vazia preenchida com '{value}'")
+                        # Regra 2: Se os valores forem diferentes, substituir os dados existentes
+                        elif str(current_value).strip() != str(value).strip():
+                            old_value = current_value
+                            df_pdvs.at[idx, target_column] = value
+                            logging.info(f"IP {ip}, coluna {target_column}: Valor atualizado de '{old_value}' para '{value}'")
+                        # Se os valores forem iguais, manter os dados existentes (não faz nada)
         
         # Remover a coluna MODELO_PLACA_MAE já que foi combinada com FABRICANTE_PLACA_MAE
         if "MODELO_PLACA_MAE" in df_pdvs.columns:
             df_pdvs = df_pdvs.drop(columns=["MODELO_PLACA_MAE"])
         
-        # Salvar resultados finais
+        # Adicionar colunas de prioridade e motivo do upgrade
+        if "PRIORIDADE" not in df_pdvs.columns:
+            df_pdvs["PRIORIDADE"] = ""
+        if "MOTIVO DO UPGRADE" not in df_pdvs.columns:
+            df_pdvs["MOTIVO DO UPGRADE"] = ""
+        
+        # Aplicar funções para determinar prioridade e motivo
+        print("Analisando prioridades de upgrade...")
+        df_pdvs["PRIORIDADE"] = df_pdvs.apply(determinar_prioridade, axis=1)
+        df_pdvs["MOTIVO DO UPGRADE"] = df_pdvs.apply(determinar_motivo, axis=1)
+        
+        # Salvar resultados finais com formatação de cores
         print(f"\nSalvando resultados em: {arquivo_saida}")
-        df_pdvs.to_excel(arquivo_saida, index=False)
+        
+        with pd.ExcelWriter(arquivo_saida, engine="openpyxl") as writer:
+            # Salvar o DataFrame no Excel
+            df_pdvs.to_excel(writer, index=False, sheet_name="Sheet1")
+            
+            # Acessar a planilha para aplicar formatação
+            workbook = writer.book
+            worksheet = writer.sheets["Sheet1"]
+            
+            # Definir cores para a coluna PRIORIDADE
+            fill_alta = PatternFill(start_color="ec6f50", end_color="ec6f50", fill_type="solid")  # Vermelho
+            fill_media = PatternFill(start_color="ffe994", end_color="ffe994", fill_type="solid")  # Amarelo
+            fill_baixa = PatternFill(start_color="77bc65", end_color="77bc65", fill_type="solid")  # Verde
+            fill_offline = PatternFill(start_color="cccccc", end_color="cccccc", fill_type="solid")  # Cinza
+            
+            # Encontrar a coluna PRIORIDADE
+            prioridade_col_idx = None
+            for idx, col in enumerate(df_pdvs.columns, start=1):  # +1 porque openpyxl começa do 1, não do 0
+                if col == "PRIORIDADE":
+                    prioridade_col_idx = idx
+                    break
+            
+            # Aplicar cores na coluna PRIORIDADE
+            if prioridade_col_idx:
+                for idx, row in enumerate(df_pdvs["PRIORIDADE"], start=2):  # Começa na linha 2 (cabeçalho está na linha 1)
+                    cell = worksheet.cell(row=idx, column=prioridade_col_idx)
+                    if row == "Alta":
+                        cell.fill = fill_alta
+                    elif row == "Média":
+                        cell.fill = fill_media
+                    elif row == "Offline":
+                        cell.fill = fill_offline
+                    elif row == "":
+                        cell.fill = fill_baixa  # Células vazias (baixa prioridade) recebem cor verde
         
         # Estatísticas de sucesso
         sucessos = len([r for r in results.values() if r.get("STATUS") == "Sucesso"])
