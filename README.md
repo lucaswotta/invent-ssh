@@ -72,11 +72,22 @@ Siga os passos abaixo para preparar o ambiente e executar o projeto.
     SAVE_INTERVAL=10          # Quantidade de resultados a acumular antes de salvar no banco/CSV
     ```
 
----
+## Estrutura do Projeto
+
+O repositório está organizado da seguinte forma:
+````
+pdv-hardware-inspector/
+├── .env                  # Arquivo de configuração local com credenciais (NÃO versionar)
+├── .gitignore            # Arquivos e pastas a serem ignorados pelo Git
+├── README.md             # Documentação do projeto
+├── coletaPDV.py          # Módulo responsável pela coleta de hardware via SSH
+├── hardwarePDV.py        # Script principal que orquestra a execução
+└── requirements.txt      # Lista de dependências Python para o projeto
+````
 
 ## Como Usar
 
-Com o ambiente virtual ativado e o arquivo `.env` corretamente configurado, execute o script principal:
+Com o arquivo `.env` corretamente configurado, execute o script principal:
 
 ```bash
 python hardwarePDV.py
