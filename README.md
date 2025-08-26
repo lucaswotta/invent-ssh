@@ -39,7 +39,7 @@ Siga os passos abaixo para preparar o ambiente e executar o projeto.
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <url-do-seu-repositorio-aqui>
+    git clone https://github.com/lucaswotta/pdv-hardware-inspector.git
     cd pdv-hardware-inspector
     ```
 
