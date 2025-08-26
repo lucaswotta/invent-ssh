@@ -77,7 +77,7 @@ Siga os passos abaixo para preparar o ambiente e executar o projeto.
 O repositório está organizado da seguinte forma:
 ````
 pdv-hardware-inspector/
-├── .env                  # Arquivo de configuração local com credenciais (NÃO versionar)
+├── .env                  # Arquivo de configuração local com credenciais
 ├── .gitignore            # Arquivos e pastas a serem ignorados pelo Git
 ├── coletaPDV.py          # Módulo responsável pela coleta de hardware via SSH
 ├── hardwarePDV.log       # Arquivo de log
