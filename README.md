@@ -25,7 +25,7 @@ A aplicação se conecta a um banco de dados Oracle para obter uma lista de PDVs
 
 ---
 
-## 🔧 Instalação e Configuração
+## Instalação e Configuração
 
 Siga os passos abaixo para preparar o ambiente e executar o projeto.
 
@@ -119,7 +119,7 @@ Os dados coletados são armazenados na tabela `CONSINCO.BAR_HARDWARE_PDV` no Ora
 
 ---
 
-## 🛠️ Solução de Problemas
+## Solução de Problemas
 
 -   **Erros de Conexão com Oracle**:
     -   Verifique se as credenciais, host, porta e service name no `.env` estão corretos.
