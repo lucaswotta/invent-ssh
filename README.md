@@ -79,9 +79,10 @@ O repositório está organizado da seguinte forma:
 pdv-hardware-inspector/
 ├── .env                  # Arquivo de configuração local com credenciais (NÃO versionar)
 ├── .gitignore            # Arquivos e pastas a serem ignorados pelo Git
-├── README.md             # Documentação do projeto
 ├── coletaPDV.py          # Módulo responsável pela coleta de hardware via SSH
+├── hardwarePDV.log       # Arquivo de log
 ├── hardwarePDV.py        # Script principal que orquestra a execução
+├── README.md             # Documentação do projeto
 └── requirements.txt      # Lista de dependências Python para o projeto
 ````
 
