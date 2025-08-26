@@ -2,6 +2,6 @@ oracledb
 python-dotenv
 pandas
 paramiko
-tqdm
 openpyxl
+tqdm
 colorama
