@@ -348,7 +348,7 @@ def obter_info_disco(cliente):
             if resultado and "MB/sec" in resultado:
                 try:
                     velocidade = float(re.search(r'(\d+\.\d+)\s*MB/sec', resultado).group(1)) # Adicionado \s*
-                    tipo_disco = "SSD" if velocidade > 100 else "HD" # Seu threshold original
+                    tipo_disco = "SSD" if velocidade > 100 else "HD"
                     break
                 except: pass # Ignora erros de regex ou float conversion
     
