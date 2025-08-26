@@ -5,8 +5,6 @@
 
 Projetado para escanear informações de hardware de sistemas Linux via SSH, coletando dados detalhados sobre componentes. O aplicativo conecta-se a múltiplas máquinas em paralelo, processa os dados e gera um relatório completo em uma planilha de retorno.
 
-O **PDV Hardware Inspector** é uma ferramenta projetada para automatizar o inventário de hardware de terminais de Ponto de Venda (PDV) baseados em Linux.
-
 A aplicação se conecta a um banco de dados Oracle para obter uma lista de PDVs ativos, acessa cada terminal remotamente via SSH para realizar uma inspeção detalhada do hardware e, por fim, armazena os dados coletados de volta no Oracle, mantendo um inventário centralizado e sempre atualizado.
 
 ## Funcionalidades
