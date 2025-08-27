@@ -1,35 +1,39 @@
-# PDV Hardware Inspector
+# PDV Hardware Inspector 🕵️‍♂️
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-A aplicação se conecta a um banco de dados Oracle para obter uma lista de PDVs ativos, acessa cada terminal remotamente via SSH para realizar uma inspeção detalhada do hardware e, por fim, armazena os dados coletados de volta no Oracle, mantendo um inventário centralizado e sempre atualizado.
-
-## Funcionalidades
-
--   **Integração com Banco de Dados Oracle**: Utiliza uma base Oracle como fonte para a lista de PDVs e como destino para os dados coletados.
--   **Coleta Remota e Paralela**: Acessa múltiplos PDVs simultaneamente via SSH, otimizando o tempo de execução.
--   **Detecção Detalhada de Hardware**: Coleta informações sobre:
-    -   Placa-mãe (fabricante e modelo)
-    -   Processador (modelo e contagem de núcleos/threads)
-    -   Memória RAM (capacidade e tipo: DDR3/DDR4/DDR5)
-    -   Armazenamento (tipo: SSD/HD e capacidade total)
-    -   Versão do Kernel Linux
--   **Configuração Centralizada**: Todas as credenciais e parâmetros operacionais são gerenciados em um arquivo `.env`.
--   **Modo de Exportação CSV**: Oferece uma alternativa para salvar os dados em um arquivo `.csv` caso a integração com o banco não seja possível ou desejada.
--   **Resiliência e Fallbacks**: Emprega múltiplos comandos de detecção para cada componente de hardware e um sistema de novas tentativas (`retries`) para conexões instáveis.
+Ferramenta de automação em Python para coletar e inventariar remotamente o hardware de terminais de Ponto de Venda (PDV) baseados em Linux. O script é flexível, operando tanto conectado a um banco de dados Oracle quanto de forma autônoma, lendo dados de uma planilha local.
 
 ---
 
-## Instalação e Configuração
+## ✨ Funcionalidades Principais
 
-Siga os passos abaixo para preparar o ambiente e executar o projeto.
+-   **Dois Modos de Operação**:
+    -   **Modo Oracle**: Conecta-se a um banco de dados Oracle para buscar a lista de PDVs e salvar os resultados.
+    -   **Modo Planilha**: Funciona offline, lendo a lista de PDVs de um arquivo `lista_pdvs.xlsx` ou `.csv` e salvando um relatório em `resultado_hardware.xlsx` e `.csv`.
+
+-   **Menu Interativo**: Ao iniciar, a aplicação pergunta qual modo de operação você deseja usar, sugerindo o padrão definido no arquivo `.env`.
+
+-   **Coleta Remota e Paralela**: Acessa múltiplos PDVs simultaneamente via SSH para otimizar drasticamente o tempo de coleta.
+
+-   **Execução Sequencial para Depuração**: Permite rodar a coleta um PDV por vez, facilitando a identificação de problemas em hosts específicos.
+
+-   **Estabilidade e Resiliência**:
+    -   **Timeout por PDV**: Cada tentativa de conexão tem um tempo limite, evitando que um único PDV offline trave toda a execução.
+    -   **Fallbacks de Comandos**: Utiliza múltiplos comandos alternativos para detectar cada peça de hardware, aumentando a compatibilidade com diferentes sistemas Linux.
+
+-   **Configuração Centralizada**: Todas as credenciais e parâmetros são gerenciados de forma simples através de um arquivo `.env`.
+
+---
+
+## 🔧 Instalação e Configuração
 
 ### Pré-requisitos
 
 1.  **Python 3.8+**: [Instalar Python](https://www.python.org/downloads/)
-2.  **Oracle Instant Client**: A biblioteca `oracledb` necessita do client do Oracle. Faça o download no [site oficial](https://www.oracle.com/database/technologies/instant-client/downloads.html) e adicione o diretório ao `PATH` do seu sistema.
-3.  **Acesso de Rede**: A máquina que executa o script precisa de acesso de rede ao banco de dados Oracle e aos PDVs (via porta SSH, padrão 22).
+2.  **Oracle Instant Client**: **(Apenas para o Modo Oracle)** A biblioteca `oracledb` necessita do client. Faça o download no [site oficial](https://www.oracle.com/database/technologies/instant-client/downloads.html).
+3.  **Acesso de Rede**: A máquina que executa o script precisa de acesso de rede aos PDVs (via porta SSH, padrão 22).
 
 ### Passos de Instalação
 
@@ -39,34 +43,41 @@ Siga os passos abaixo para preparar o ambiente e executar o projeto.
     cd pdv-hardware-inspector
     ```
 
-2.  **Instale as dependências a partir do `requirements.txt`:**
+2.  **Instale as dependências:**
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Configure as variáveis de ambiente:**
-    Crie um arquivo chamado `.env` na raiz do projeto e preencha-o com as informações do seu ambiente.
+3.  **Configure o arquivo `.env`:**
+    Crie um arquivo `.env` na raiz do projeto e preencha-o com as suas informações.
 
-    **Arquivo `.env`:**
+    **Arquivo `.env` (Exemplo completo):**
     ```ini
-    # --- Credenciais do Banco de Dados Oracle ---
+    # --- MODO DE OPERAÇÃO PADRÃO ---
+    # Opções: ORACLE ou PLANILHA
+    MODE=ORACLE
+
+    # --- MODO DE EXECUÇÃO ---
+    # Opções: PARALLEL (rápido, padrão) ou SEQUENTIAL (lento, para depuração)
+    EXECUTION_MODE=PARALLEL
+
+    # --- CREDENCIAIS ORACLE (Obrigatório apenas para MODE=ORACLE) ---
     ORACLE_USER=seu_usuario_oracle
     ORACLE_PASSWORD=sua_senha_oracle
     ORACLE_HOST=host.do.banco.oracle
-    ORACLE_PORT=porta_do_servico_oracle
+    ORACLE_PORT=1521
     ORACLE_SERVICE=nome_do_servico_oracle
 
-    # --- Credenciais SSH para os PDVs ---
+    # --- CREDENCIAIS SSH (Sempre obrigatório) ---
     SSH_USERNAME=usuario_ssh_nos_pdvs
     SSH_PASSWORD=senha_ssh_nos_pdvs
 
-    # --- Configurações de Performance e Conexão ---
-    CONNECTION_TIMEOUT=8      # Timeout (segundos) para estabelecer a conexão SSH
-    COMMAND_TIMEOUT=10        # Timeout (segundos) para a execução de um comando remoto
-    MAX_WORKERS=20            # Número máximo de PDVs a serem processados em paralelo
-    MAX_RETRIES=2             # Tentativas de reconexão em caso de falha
-    SAVE_INTERVAL=10          # Quantidade de resultados a acumular antes de salvar no banco/CSV
+    # --- CONFIGURAÇÕES DE PERFORMANCE ---
+    MAX_WORKERS=15            # Máximo de PDVs a serem processados em paralelo
+    SSH_TIMEOUT=30            # Segundos até desistir de um PDV que não responde
     ```
+
+---
 
 ## Estrutura do Projeto
 
@@ -78,19 +89,37 @@ pdv-hardware-inspector/
 ├── coletaPDV.py          # Módulo responsável pela coleta de hardware via SSH
 ├── hardwarePDV.log       # Arquivo de log
 ├── hardwarePDV.py        # Script principal que orquestra a execução
+├── lista_pdvs.xlsx/csv   # Planilha com a lista dos PDVs (Opcional)
 ├── README.md             # Documentação do projeto
 └── requirements.txt      # Lista de dependências Python para o projeto
 ````
 
 ---
 
-## Como Usar
+## 🚀 Como Usar
 
-Com o arquivo `.env` corretamente configurado, execute o script principal:
+Com o arquivo `.env` corretamente configurado e/ou planilha na pasta raíz do projeto, execute o script principal:
 
 ```bash
 python hardwarePDV.py
-````
+```
+
+1. Um menu interativo será exibido, permitindo que você escolha entre o modo Oracle ou Planilha.
+
+2. A coleta será iniciada com uma barra de progresso.
+
+3. Ao final, os resultados serão salvos no destino correspondente (Oracle ou arquivo Excel) e toda a operação é salva no arquivo hardwarePDV.log.
+
+---
+
+## Detalhes do Modo Planilha
+**Planilha de Entrada:** Para usar este modo, crie um arquivo chamado lista_pdvs.xlsx ou lista_pdvs.csv na raiz do projeto.
+
+**Colunas Obrigatórias:** O arquivo precisa conter, no mínimo, as colunas IP, NROEMPRESA, e NROCHECKOUT.
+
+**Planilha de Saída:** O relatório será salvo no arquivo resultado_hardware.xlsx.
+
+---
 
 ## Saída dos Dados
 
