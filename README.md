@@ -3,8 +3,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-Projetado para escanear informações de hardware de sistemas Linux via SSH, coletando dados detalhados sobre componentes. O aplicativo conecta-se a múltiplas máquinas em paralelo, processa os dados e gera um relatório completo em uma planilha de retorno.
-
 A aplicação se conecta a um banco de dados Oracle para obter uma lista de PDVs ativos, acessa cada terminal remotamente via SSH para realizar uma inspeção detalhada do hardware e, por fim, armazena os dados coletados de volta no Oracle, mantendo um inventário centralizado e sempre atualizado.
 
 ## Funcionalidades
