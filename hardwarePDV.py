@@ -1,153 +1,424 @@
+import logging
+import os
+import concurrent.futures
+from datetime import datetime
 import oracledb
 import pandas as pd
-import os
-import logging
-import concurrent.futures
-from dotenv import load_dotenv 
-from datetime import datetime
+from dotenv import load_dotenv
 from tqdm import tqdm
 import csv
+import signal
+import time
 
-# --- Configuração Colorama ---
 try:
     from colorama import Fore, Style, init
     init(autoreset=True)
-    GREEN = Fore.GREEN
-    YELLOW = Fore.YELLOW
-    RED = Fore.RED
-    CYAN = Fore.CYAN
-    MAGENTA = Fore.MAGENTA
-    RESET = Style.RESET_ALL
+    GREEN, YELLOW, RED, CYAN, MAGENTA, RESET = Fore.GREEN, Fore.YELLOW, Fore.RED, Fore.CYAN, Fore.MAGENTA, Style.RESET_ALL
 except ImportError:
-    print("Colorama não encontrado. Saída colorida desativada.")
+    print("Biblioteca 'colorama' não encontrada. A saída não será colorida.")
     GREEN = YELLOW = RED = CYAN = MAGENTA = RESET = ""
 
-# --- Constantes ---
-LOG_FILE = "hardwarePDV.log" 
+try:
+    from coletaPDV import get_hardware_info
+except ImportError:
+    print(f"{RED}ERRO FATAL: O arquivo 'coletaPDV.py' não foi encontrado.{RESET}")
+    exit(1)
+
+
+# --- CONSTANTES E CONFIGURAÇÕES GLOBAIS ---
+load_dotenv()
+
+LOG_FILE = "hardwarePDV.log"
+INPUT_FILE_BASE = "lista_pdvs"
+OUTPUT_XLSX_FILE = "resultado_hardware.xlsx"
+OUTPUT_CSV_FILE = "resultado_hardware.csv"
 TABLE_NAME = "CONSINCO.BAR_HARDWARE_PDV"
-CSV_FILE = "hardwarePDV_output.csv"
 HARDWARE_FIELDS = ["PLACA_MAE", "PROCESSADOR", "CORES_THREADS", "RAM", "DISCO", "ARMAZENAMENTO", "RELEASE"]
 PDV_INFO_FIELDS = ["IP", "SEGMENTO", "OPERACAO"]
 
-# --- Configuração de Logging Principal ---
+
+# --- CONFIGURAÇÃO DE LOGGING ---
 logging.basicConfig(
     filename=LOG_FILE,
-    level=logging.INFO, 
-    format="%(asctime)s - %(levelname)s - [%(name)s:%(funcName)s:%(lineno)d] - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - [%(name)s:%(funcName)s:%(lineno)d] - %(message)s",
+    encoding='utf-8'
 )
-logger = logging.getLogger("SCRIPT_PRINCIPAL") 
+logger = logging.getLogger(__name__)
 
-# --- Funções de Configuração ---
-def load_env_configs():
-    """Carrega e valida as configurações do .env para o script principal."""
-    load_dotenv() 
-    required_vars = {
-        "ORACLE_USER": "seu_usuario_oracle",
-        "ORACLE_PASSWORD": "sua_senha_oracle",
-        "ORACLE_HOST": "host_oracle",
-        "ORACLE_PORT": "porta_oracle",
-        "ORACLE_SERVICE": "service_name_oracle",
-        "SSH_USERNAME": "seu_usuario_ssh",
+
+# --- FUNÇÃO DE TIMEOUT PARA SSH ---
+def get_hardware_with_timeout(ip, username, password, timeout=30):
+    """Versão com timeout da função de coleta de hardware."""
+    def timeout_handler(signum, frame):
+        raise TimeoutError(f"Timeout de {timeout}s na coleta do IP {ip}")
+    
+    # Configurar timeout apenas em sistemas Unix
+    if os.name != 'nt':  # Não é Windows
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(timeout)
+    
+    try:
+        start_time = time.time()
+        result = get_hardware_info(ip, username, password)
+        elapsed = time.time() - start_time
+        
+        if os.name != 'nt':
+            signal.alarm(0)  # Cancelar alarm
+            
+        logger.info(f"Coleta do IP {ip} concluída em {elapsed:.2f}s")
+        return result
+        
+    except TimeoutError as e:
+        logger.warning(f"Timeout na coleta do IP {ip}: {e}")
+        return {"status": "TIMEOUT", "error": str(e)}
+    except Exception as e:
+        if os.name != 'nt':
+            signal.alarm(0)
+        logger.error(f"Erro na coleta do IP {ip}: {e}")
+        return {"status": "ERROR", "error": str(e)}
+
+
+# --- FUNÇÕES DE CONFIGURAÇÃO E MODO ---
+def choose_operation_mode():
+    """Menu interativo para o usuário escolher o modo de operação."""
+    default_mode = os.getenv("MODE", "ORACLE").upper()
+    
+    print(f"{CYAN}--------------------------------------------------{RESET}")
+    print(f"{CYAN} Escolha o Modo de Operação para esta execução:{RESET}")
+    print(f"{CYAN}--------------------------------------------------{RESET}")
+    
+    options = {'1': 'ORACLE', '2': 'PLANILHA', '3': 'SAIR'}
+    default_choice = [key for key, value in options.items() if value == default_mode][0] if default_mode in options.values() else '1'
+
+    print(f"  {YELLOW}1.{RESET} Modo Oracle (Conectar ao banco de dados)")
+    print(f"  {YELLOW}2.{RESET} Modo Planilha (Ler de '{INPUT_FILE_BASE}.xlsx/.csv')")
+    print(f"  {YELLOW}3.{RESET} Sair")
+    print("-" * 50)
+    print(f"O modo padrão (do .env) é: {GREEN}{default_mode}{RESET}")
+
+    while True:
+        choice = input(f"Digite sua escolha [{default_choice}] ou pressione Enter para o padrão: ").strip()
+        
+        if not choice:
+            choice = default_choice
+
+        if choice in options:
+            chosen_mode = options[choice]
+            if chosen_mode == 'SAIR':
+                print(f"{MAGENTA}Operação cancelada pelo usuário.{RESET}")
+                return None
+            
+            logger.info(f"Modo de operação selecionado pelo usuário: {chosen_mode}")
+            return chosen_mode
+        else:
+            print(f"{RED}Opção inválida. Por favor, digite 1, 2 ou 3.{RESET}")
+
+def load_configurations(mode):
+    """Carrega e valida as configurações do .env com base no modo de operação."""
+    configs = {}
+    
+    # Configurações SSH sempre necessárias
+    ssh_vars = {
+        "SSH_USERNAME": "seu_usuario_ssh", 
         "SSH_PASSWORD": "sua_senha_ssh"
     }
-    
-    missing_vars = [key for key in required_vars if not os.getenv(key)]
-    if missing_vars:
-        error_msg = f"Variáveis ausentes no .env: {', '.join(missing_vars)}"
+    required_vars = ssh_vars.copy()
+
+    # Configurações Oracle apenas para modo ORACLE
+    if mode == 'ORACLE':
+        oracle_vars = {
+            "ORACLE_USER": "seu_usuario_oracle", 
+            "ORACLE_PASSWORD": "sua_senha_oracle",
+            "ORACLE_HOST": "host_oracle", 
+            "ORACLE_PORT": "porta_oracle",
+            "ORACLE_SERVICE": "service_name_oracle"
+        }
+        required_vars.update(oracle_vars)
+
+    # Verificar variáveis ausentes
+    missing = [key for key in required_vars if not os.getenv(key)]
+    if missing:
+        error_msg = f"Variáveis ausentes no .env para o modo {mode}: {', '.join(missing)}"
         logger.critical(error_msg)
-        print(f"{RED}Erro: {error_msg}")
+        print(f"{RED}Erro: {error_msg}{RESET}")
         print(f"{YELLOW}Adicione ao .env na raiz do projeto:")
-        for var in missing_vars:
-            print(f"{CYAN}  {var}=<{required_vars[var]}>")
+        for var in missing:
+            print(f"{CYAN}  {var}={required_vars[var]}")
         exit(1)
 
-    configs = {key: os.getenv(key) for key in required_vars}
-    configs["DSN"] = f"{configs['ORACLE_HOST']}:{configs['ORACLE_PORT']}/{configs['ORACLE_SERVICE']}"
+    # Carregar configurações
+    configs = {key.lower(): os.getenv(key) for key in required_vars.keys()}
 
+    # Configurações específicas do Oracle
+    if mode == 'ORACLE':
+        configs["dsn"] = f"{configs['oracle_host']}:{configs['oracle_port']}/{configs['oracle_service']}"
+
+    # Configurações numéricas com valores mais conservadores
     try:
-        configs["MAX_WORKERS"] = int(os.getenv("MAX_WORKERS", "20"))
-        configs["SAVE_INTERVAL"] = int(os.getenv("SAVE_INTERVAL", "10"))
-    except ValueError as e:
-        logger.warning(f"Erro ao ler MAX_WORKERS/SAVE_INTERVAL do .env: {e}. Usando padrões.")
-        configs["MAX_WORKERS"] = 20
-        configs["SAVE_INTERVAL"] = 10
-        print(f"{YELLOW}Aviso: Erro ao ler MAX_WORKERS/SAVE_INTERVAL. Usando padrões.")
+        configs["max_workers"] = min(int(os.getenv("MAX_WORKERS", "8")), 15)
+        configs["save_interval"] = int(os.getenv("SAVE_INTERVAL", "20"))
+        configs["ssh_timeout"] = int(os.getenv("SSH_TIMEOUT", "30"))
+    except ValueError:
+        configs["max_workers"] = 8
+        configs["save_interval"] = 20
+        configs["ssh_timeout"] =30
+        logger.warning("Configurações numéricas inválidas no .env, usando padrões.")
 
-    logger.info(f"Configurações para script principal: MAX_WORKERS={configs['MAX_WORKERS']}, SAVE_INTERVAL={configs['SAVE_INTERVAL']}")
+    logger.info(f"Configurações carregadas para modo {mode}: MAX_WORKERS={configs['max_workers']}, SAVE_INTERVAL={configs['save_interval']}, SSH_TIMEOUT={configs['ssh_timeout']}")
     return configs
 
-# --- Funções de Banco ---
-def check_table_exists(cursor):
-    """Verifica se a tabela de hardware existe no banco."""
+
+# --- FUNÇÕES DE ENTRADA DE DADOS ---
+def get_pdvs_from_file():
+    """Lê a lista de PDVs de um arquivo local (.xlsx ou .csv) e retorna um DataFrame."""
+    filepath_xlsx = f"{INPUT_FILE_BASE}.xlsx"
+    filepath_csv = f"{INPUT_FILE_BASE}.csv"
+
+    try:
+        if os.path.exists(filepath_xlsx):
+            df = pd.read_excel(filepath_xlsx)
+            logger.info(f"Arquivo de entrada '{filepath_xlsx}' lido com sucesso.")
+        elif os.path.exists(filepath_csv):
+            df = pd.read_csv(filepath_csv)
+            logger.info(f"Arquivo de entrada '{filepath_csv}' lido com sucesso.")
+        else:
+            raise FileNotFoundError(f"Nenhum arquivo encontrado: '{filepath_xlsx}' ou '{filepath_csv}'")
+
+        # Normalizar nomes das colunas
+        df.columns = [str(col).upper().strip() for col in df.columns]
+        
+        # Verificar colunas obrigatórias
+        required_cols = ['IP', 'NROEMPRESA', 'NROCHECKOUT']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            raise KeyError(f"Colunas essenciais ausentes na planilha: {missing_cols}")
+
+        # Adicionar colunas opcionais se não existirem
+        for col in ['SEGMENTO', 'OPERACAO']:
+            if col not in df.columns:
+                df[col] = 'N/A'
+
+        # Converter tipos de dados
+        df['NROEMPRESA'] = pd.to_numeric(df['NROEMPRESA'])
+        df['NROCHECKOUT'] = pd.to_numeric(df['NROCHECKOUT'])
+        df['IP'] = df['IP'].astype(str).str.strip()
+
+        logger.info(f"Encontrados {len(df)} PDVs na planilha.")
+        return df
+
+    except FileNotFoundError as e:
+        error_msg = f"Arquivo de entrada não encontrado. Crie '{filepath_xlsx}' ou '{filepath_csv}' com as colunas: IP, NROEMPRESA, NROCHECKOUT"
+        logger.critical(error_msg)
+        print(f"{RED}Erro Crítico: {error_msg}{RESET}")
+        exit(1)
+    except KeyError as e:
+        logger.critical(str(e))
+        print(f"{RED}Erro Crítico: {str(e)}{RESET}")
+        exit(1)
+    except Exception as e:
+        logger.critical(f"Erro inesperado ao ler a planilha: {e}", exc_info=True)
+        print(f"{RED}Erro inesperado ao ler a planilha: {e}{RESET}")
+        exit(1)
+
+def get_pdvs_from_oracle(connection):
+    """Busca a lista de PDVs ativos do banco de dados Oracle e retorna um DataFrame."""
+    query = """
+        WITH PARAMPDV AS (
+            SELECT NROEMPRESA, NROCHECKOUT, COALESCE(TO_CHAR(VALOR), 'VendaCupomNota') AS VALOR
+            FROM CONSINCOMONITOR.TB_PARAMPDVVALOR WHERE PARAMPDV = 'ModoOperacao'
+        ), PDV_ATIVO AS (
+            SELECT IP, NROEMPRESA, NROCHECKOUT, NROSEGMENTO FROM CONSINCOMONITOR.TB_CHECKOUT
+            WHERE ATIVO = 'S' AND NROCHECKOUT <> 100
+        )
+        SELECT A.IP, A.NROEMPRESA, A.NROCHECKOUT, S.SEGMENTO, COALESCE(B.VALOR, 'PDV') AS OPERACAO
+        FROM PDV_ATIVO A
+        LEFT JOIN PARAMPDV B ON A.NROEMPRESA = B.NROEMPRESA AND A.NROCHECKOUT = B.NROCHECKOUT
+        JOIN CONSINCOMONITOR.TB_SEGMENTO S ON S.NROSEGMENTO = A.NROSEGMENTO
+        ORDER BY A.NROEMPRESA, A.NROCHECKOUT
+    """
+    
+    logger.info("Executando query para buscar PDVs ativos no Oracle...")
+    try:
+        df = pd.read_sql(query, connection)
+        df.columns = [col.upper() for col in df.columns]
+        df['NROEMPRESA'] = pd.to_numeric(df['NROEMPRESA'])
+        df['NROCHECKOUT'] = pd.to_numeric(df['NROCHECKOUT'])
+        logger.info(f"Encontrados {len(df)} PDVs no Oracle.")
+        return df
+    except Exception as e:
+        logger.error(f"Erro ao executar query de PDVs: {e}", exc_info=True)
+        raise
+
+
+# --- FUNÇÕES DE PRÉ-CARREGAMENTO (SOLUÇÃO PARA TRAVAMENTO) ---
+def preload_existing_data(cursor):
+    """Pré-carrega todos os dados existentes do Oracle para evitar consultas durante threading."""
+    try:
+        query = f"""
+            SELECT IP, NROEMPRESA, NROCHECKOUT, SEGMENTO, OPERACAO, PLACA_MAE, PROCESSADOR, 
+                   CORES_THREADS, RAM, DISCO, ARMAZENAMENTO, RELEASE, STATUS, DTAINCLUSAO, DTAATUALIZACAO
+            FROM {TABLE_NAME}
+        """
+        cursor.execute(query)
+        
+        existing_data_map = {}
+        for row in cursor.fetchall():
+            columns = [desc[0].upper() for desc in cursor.description]
+            data_dict = dict(zip(columns, row))
+            key = (int(data_dict['NROEMPRESA']), int(data_dict['NROCHECKOUT']))
+            existing_data_map[key] = data_dict
+            
+        logger.info(f"Pré-carregados {len(existing_data_map)} registros existentes do Oracle.")
+        return existing_data_map
+        
+    except Exception as e:
+        logger.error(f"Erro ao pré-carregar dados existentes: {e}", exc_info=True)
+        return {}
+
+
+# --- FUNÇÕES DE BANCO DE DADOS ---
+def check_and_create_oracle_table(cursor):
+    """Verifica se a tabela existe e oferece para criá-la se não existir."""
     try:
         cursor.execute(f"SELECT 1 FROM {TABLE_NAME} WHERE 1=0")
         logger.info(f"Tabela {TABLE_NAME} encontrada.")
-        return "TABLE_EXISTS"
+        return True
     except oracledb.DatabaseError as e:
-        error_obj, = e.args
-        if error_obj.code == 942: 
-            logger.info(f"Tabela {TABLE_NAME} não encontrada.")
-            return "TABLE_NOT_FOUND"
-        logger.error(f"Erro DB ao verificar tabela {TABLE_NAME}: {str(e)} (Código: {error_obj.code})", exc_info=True)
-        return "DB_ERROR"
-    except Exception as e: 
-        logger.error(f"Erro inesperado ao verificar tabela {TABLE_NAME}: {str(e)}", exc_info=True)
-        return "DB_ERROR"
+        if e.args[0].code == 942:  # ORA-00942: table or view does not exist
+            logger.warning(f"Tabela {TABLE_NAME} não encontrada.")
+            print(f"{YELLOW}Aviso: Tabela {TABLE_NAME} não encontrada no banco de dados.{RESET}")
+            choice = input(f"{CYAN}Deseja tentar criá-la agora? (s/n): {RESET}").lower()
+            if choice == 's':
+                return create_oracle_table(cursor)
+            else:
+                return False
+        else:
+            logger.error(f"Erro ao verificar tabela: {e}", exc_info=True)
+            raise e
 
 def create_oracle_table(cursor):
     """Cria a tabela de hardware no banco de dados Oracle."""
-    create_table_sql = f"""
-    CREATE TABLE {TABLE_NAME} (
-        IP VARCHAR2(45), NROEMPRESA NUMBER(5) NOT NULL, NROCHECKOUT NUMBER(5) NOT NULL,
-        SEGMENTO VARCHAR2(100), OPERACAO VARCHAR2(50), PLACA_MAE VARCHAR2(255),
-        PROCESSADOR VARCHAR2(255), CORES_THREADS VARCHAR2(50), RAM VARCHAR2(50),
-        DISCO VARCHAR2(50), ARMAZENAMENTO VARCHAR2(50), RELEASE VARCHAR2(100),
-        STATUS VARCHAR2(10), DTAINCLUSAO DATE, DTAATUALIZACAO DATE,
-        CONSTRAINT PK_BAR_HARDWARE_PDV PRIMARY KEY (NROEMPRESA, NROCHECKOUT)
-    )"""
+    create_sql = f"""
+        CREATE TABLE {TABLE_NAME} (
+            IP VARCHAR2(45), NROEMPRESA NUMBER(5) NOT NULL, NROCHECKOUT NUMBER(5) NOT NULL,
+            SEGMENTO VARCHAR2(100), OPERACAO VARCHAR2(50), PLACA_MAE VARCHAR2(255),
+            PROCESSADOR VARCHAR2(255), CORES_THREADS VARCHAR2(50), RAM VARCHAR2(50),
+            DISCO VARCHAR2(50), ARMAZENAMENTO VARCHAR2(50), RELEASE VARCHAR2(100),
+            STATUS VARCHAR2(20), DTAINCLUSAO DATE, DTAATUALIZACAO DATE,
+            CONSTRAINT PK_BAR_HARDWARE_PDV PRIMARY KEY (NROEMPRESA, NROCHECKOUT)
+        )"""
     try:
-        cursor.execute(create_table_sql)
+        cursor.execute(create_sql)
         logger.info(f"Tabela {TABLE_NAME} criada com sucesso.")
-        print(f"{GREEN}Tabela {TABLE_NAME} criada com sucesso.")
+        print(f"{GREEN}Tabela criada com sucesso!{RESET}")
         return True
-    except Exception as e: 
-        logger.error(f"Erro ao criar tabela {TABLE_NAME}: {str(e)}", exc_info=True)
-        print(f"{RED}Erro ao criar tabela {TABLE_NAME}: {str(e)}")
+    except Exception as e:
+        logger.error(f"Falha ao criar a tabela: {e}", exc_info=True)
+        print(f"{RED}Erro ao criar a tabela: {e}{RESET}")
         return False
 
-def get_existing_data(cursor, nroempresa, nrocheckout):
-    """Busca dados de hardware existentes para um PDV específico."""
-    try:
-        cursor.execute(
-            f"SELECT IP, NROEMPRESA, NROCHECKOUT, SEGMENTO, OPERACAO, PLACA_MAE, PROCESSADOR, CORES_THREADS, RAM, DISCO, ARMAZENAMENTO, RELEASE, STATUS, DTAINCLUSAO, DTAATUALIZACAO FROM {TABLE_NAME} WHERE NROEMPRESA = :1 AND NROCHECKOUT = :2",
-            (nroempresa, nrocheckout)
-        )
-        result = cursor.fetchone()
-        if result:
-            columns = [desc[0].upper() for desc in cursor.description]
-            return dict(zip(columns, result))
-        return None
-    except Exception as e:
-        logger.error(f"Erro ao buscar dados existentes para PDV {nroempresa}-{nrocheckout}: {str(e)}", exc_info=True)
-        return None
-
-def has_relevant_data_changes(new_data_dict, existing_data_db_dict):
+def has_relevant_data_changes(new_data, existing_data):
     """Verifica alterações nos campos de dados (IP, Info PDV, Hardware)."""
-    if not existing_data_db_dict: 
-        return True 
-    
+    if not existing_data:
+        return True
+   
     fields_to_compare = PDV_INFO_FIELDS + HARDWARE_FIELDS
     for field in fields_to_compare:
-        new_value = str(new_data_dict.get(field, "Não detectado")).strip()
-        existing_value = str(existing_data_db_dict.get(field, "Não detectado")).strip()
+        new_value = str(new_data.get(field, "Não detectado")).strip()
+        existing_value = str(existing_data.get(field, "Não detectado")).strip()
         if new_value != existing_value:
-            logger.info(f"Mudança de DADOS no PDV {new_data_dict.get('NROEMPRESA')}-{new_data_dict.get('NROCHECKOUT')}: Campo '{field}': Antigo='{existing_value}', Novo='{new_value}'")
+            logger.info(f"Mudança no PDV {new_data.get('NROEMPRESA')}-{new_data.get('NROCHECKOUT')}: Campo '{field}': '{existing_value}' -> '{new_value}'")
             return True
     return False
 
-def save_pdv_data(cursor, connection, batch_results):
+def mark_inactive_pdvs(cursor, connection, df_pdvs_ativos):
+    """Marca PDVs como 'Inativo' se não estiverem mais na lista de PDVs ativos."""
+    try:
+        cursor.execute(f"SELECT NROEMPRESA, NROCHECKOUT FROM {TABLE_NAME} WHERE STATUS <> 'Inativo'")
+        existing_pdvs = {(int(row[0]), int(row[1])) for row in cursor.fetchall()}
+       
+        active_pdvs = set()
+        if not df_pdvs_ativos.empty:
+            active_pdvs = {(int(row["NROEMPRESA"]), int(row["NROCHECKOUT"])) for _, row in df_pdvs_ativos.iterrows()}
+       
+        pdvs_to_inactivate = existing_pdvs - active_pdvs
+       
+        if pdvs_to_inactivate:
+            current_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            update_data = [
+                {'status': 'Inativo', 'dtaatualizacao': current_time_str, 'nroempresa': ne, 'nrocheckout': nc} 
+                for ne, nc in pdvs_to_inactivate
+            ]
+           
+            cursor.executemany(
+                f"UPDATE {TABLE_NAME} SET STATUS = :status, DTAATUALIZACAO = TO_DATE(:dtaatualizacao, 'YYYY-MM-DD HH24:MI:SS') WHERE NROEMPRESA = :nroempresa AND NROCHECKOUT = :nrocheckout",
+                update_data
+            )
+            connection.commit()
+            logger.info(f"{cursor.rowcount} PDVs marcados como 'Inativo'.")
+        else:
+            logger.info("Nenhum PDV para marcar como 'Inativo'.")
+           
+    except Exception as e:
+        logger.error(f"Erro ao marcar PDVs inativos: {e}", exc_info=True)
+
+
+# --- FUNÇÕES DE PROCESSAMENTO DE RESULTADOS ---
+def process_pdv_result(pdv_info, hw_result, existing_data):
+    """Processa o resultado da coleta de um PDV específico."""
+    current_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Dados base do PDV
+    data_for_processing = pdv_info.copy()
+    for field in HARDWARE_FIELDS:
+        data_for_processing[field] = "Não detectado"
+    
+    # Determinar status
+    status = "OFFLINE"
+    if hw_result and hw_result.get("status") in ["SUCESSO", "FALHA COMANDOS"]:
+        status = "ONLINE"
+        # Atualizar dados de hardware
+        for field in HARDWARE_FIELDS:
+            data_for_processing[field] = hw_result.get(field.lower(), "Não detectado")
+    elif hw_result and hw_result.get("status") in ["TIMEOUT", "ERROR"]:
+        logger.warning(f"PDV {pdv_info['NROEMPRESA']}-{pdv_info['NROCHECKOUT']} ({pdv_info['IP']}): {hw_result.get('status')} - {hw_result.get('error', 'Erro desconhecido')}")
+    
+    data_for_processing["STATUS"] = status
+    
+    # Verificar dados existentes e mudanças
+    data_changed = True
+    if existing_data:
+        # Se PDV está OFFLINE, preservar dados de hardware existentes
+        if status == "OFFLINE":
+            for field in HARDWARE_FIELDS:
+                data_for_processing[field] = existing_data.get(field, "Não detectado")
+        
+        # Verificar se houve mudanças significativas
+        data_changed = has_relevant_data_changes(data_for_processing, existing_data)
+        
+        if status == "ONLINE":
+            data_for_processing["DTAATUALIZACAO"] = current_time_str
+            if data_changed:
+                data_for_processing["DTAINCLUSAO"] = current_time_str
+            else:
+                data_for_processing["DTAINCLUSAO"] = existing_data["DTAINCLUSAO"].strftime('%Y-%m-%d %H:%M:%S')
+        else:  # OFFLINE
+            data_for_processing["DTAINCLUSAO"] = existing_data["DTAINCLUSAO"].strftime('%Y-%m-%d %H:%M:%S')
+            data_for_processing["DTAATUALIZACAO"] = current_time_str
+    else:
+        # Novo PDV
+        data_for_processing["DTAINCLUSAO"] = current_time_str
+        data_for_processing["DTAATUALIZACAO"] = current_time_str
+        data_changed = True
+    
+    return data_for_processing, data_changed
+
+
+# --- FUNÇÕES DE SAÍDA DE DADOS ---
+def save_results_to_oracle(cursor, connection, batch_results):
     """Salva ou atualiza um lote de dados de PDVs no Oracle usando MERGE."""
-    if not batch_results: 
+    if not batch_results:
         logger.info("Nenhum dado no batch para salvar no Oracle.")
         return 0, 0
         
@@ -168,345 +439,310 @@ def save_pdv_data(cursor, connection, batch_results):
             dest.PLACA_MAE = src.PLACA_MAE, dest.PROCESSADOR = src.PROCESSADOR,
             dest.CORES_THREADS = src.CORES_THREADS, dest.RAM = src.RAM, dest.DISCO = src.DISCO,
             dest.ARMAZENAMENTO = src.ARMAZENAMENTO, dest.RELEASE = src.RELEASE, dest.STATUS = src.STATUS,
-            dest.DTAINCLUSAO = src.DTAINCLUSAO_VAL, dest.DTAATUALIZACAO = src.DTAATUALIZACAO_VAL
-            WHERE DECODE(NVL(dest.IP, '#NULL#'), NVL(src.IP, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.SEGMENTO, '#NULL#'), NVL(src.SEGMENTO, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.OPERACAO, '#NULL#'), NVL(src.OPERACAO, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.PLACA_MAE, '#NULL#'), NVL(src.PLACA_MAE, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.PROCESSADOR, '#NULL#'), NVL(src.PROCESSADOR, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.CORES_THREADS, '#NULL#'), NVL(src.CORES_THREADS, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.RAM, '#NULL#'), NVL(src.RAM, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.DISCO, '#NULL#'), NVL(src.DISCO, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.ARMAZENAMENTO, '#NULL#'), NVL(src.ARMAZENAMENTO, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.RELEASE, '#NULL#'), NVL(src.RELEASE, '#NULL#'), 0, 1) = 1 OR
-                  DECODE(NVL(dest.STATUS, '#NULL#'), NVL(src.STATUS, '#NULL#'), 0, 1) = 1 OR
-                  dest.DTAINCLUSAO <> src.DTAINCLUSAO_VAL OR
-                  dest.DTAATUALIZACAO <> src.DTAATUALIZACAO_VAL
+            dest.DTAATUALIZACAO = src.DTAATUALIZACAO_VAL
         WHEN NOT MATCHED THEN INSERT (IP, NROEMPRESA, NROCHECKOUT, SEGMENTO, OPERACAO, PLACA_MAE, PROCESSADOR, CORES_THREADS, RAM, DISCO, ARMAZENAMENTO, RELEASE, STATUS, DTAINCLUSAO, DTAATUALIZACAO)
             VALUES (src.IP, src.NROEMPRESA, src.NROCHECKOUT, src.SEGMENTO, src.OPERACAO, src.PLACA_MAE, src.PROCESSADOR, src.CORES_THREADS, src.RAM, src.DISCO, src.ARMAZENAMENTO, src.RELEASE, src.STATUS, src.DTAINCLUSAO_VAL, src.DTAATUALIZACAO_VAL)
     """
     try:
         cursor.executemany(sql_merge, batch_results, batcherrors=True)
         connection.commit()
-        rows_affected_count = cursor.rowcount
+        rows_affected = cursor.rowcount
         batch_size = len(batch_results)
-        for error in cursor.getbatcherrors(): 
+        
+        # Log de erros em batch, se houver
+        for error in cursor.getbatcherrors():
             logger.error(f"Erro no batch Oracle na linha {error.offset}: {error.message}")
-        logger.info(f"Lote de {batch_size} registros enviado ao Oracle (afetados: {rows_affected_count}).")
-        return rows_affected_count, batch_size
+        
+        logger.info(f"Lote de {batch_size} registros processado no Oracle (afetados: {rows_affected}).")
+        return rows_affected, batch_size
     except Exception as e:
-        logger.error(f"Erro crítico ao salvar dados no Oracle: {str(e)}", exc_info=True)
-        tqdm.write(f"{RED}Erro DB/desconhecido ao salvar no Oracle: {str(e)}")
-        if isinstance(e, oracledb.DatabaseError): 
-            try: connection.rollback(); logger.info("Rollback da transação Oracle realizado.")
-            except Exception as rb_e: logger.error(f"Erro ao tentar rollback: {rb_e}")
-        return 0, len(batch_results) 
+        logger.error(f"Erro crítico ao salvar dados no Oracle: {e}", exc_info=True)
+        print(f"{RED}Erro ao salvar dados no Oracle: {e}{RESET}")
+        try:
+            connection.rollback()
+            logger.info("Rollback realizado.")
+        except Exception as rb_e:
+            logger.error(f"Erro ao fazer rollback: {rb_e}")
+        return 0, len(batch_results)
 
-def mark_inactive_pdvs(cursor, connection, df_pdvs_ativos):
-    """Marca PDVs como 'Inativo' se não estiverem mais na lista de PDVs ativos."""
+def save_results_to_excel(all_results, filename=OUTPUT_XLSX_FILE):
+    """Salva a lista final de resultados em um arquivo Excel."""
+    if not all_results:
+        logger.warning("Nenhum resultado para salvar no arquivo Excel.")
+        return 0
     try:
-        cursor.execute(f"SELECT NROEMPRESA, NROCHECKOUT FROM {TABLE_NAME} WHERE STATUS <> 'Inativo'")
-        existing_pdvs_in_table = {(int(row[0]), int(row[1])) for row in cursor.fetchall()}
+        df = pd.DataFrame(all_results)
         
-        active_pdvs_from_query = set()
-        if not df_pdvs_ativos.empty:
-            active_pdvs_from_query = {(int(row["NROEMPRESA"]), int(row["NROCHECKOUT"])) for _, row in df_pdvs_ativos.iterrows()}
-        
-        pdvs_to_mark_inactive = existing_pdvs_in_table - active_pdvs_from_query
-        
-        if pdvs_to_mark_inactive:
-            current_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            update_payload = [{'new_status': 'Inativo', 'dtaatualizacao': current_time_str, 'nroempresa': ne, 'nrocheckout': nc} for ne, nc in pdvs_to_mark_inactive]
-            
-            cursor.executemany(
-                f"UPDATE {TABLE_NAME} SET STATUS = :new_status, DTAATUALIZACAO = TO_DATE(:dtaatualizacao, 'YYYY-MM-DD HH24:MI:SS') WHERE NROEMPRESA = :nroempresa AND NROCHECKOUT = :nrocheckout",
-                update_payload
-            )
-            connection.commit()
-            logger.info(f"{len(pdvs_to_mark_inactive)} PDVs candidatos a 'Inativo'. Afetados no DB: {cursor.rowcount}.")
-            # tqdm.write(f"{YELLOW}{cursor.rowcount} de {len(pdvs_to_mark_inactive)} PDVs marcados como 'Inativo'.") # Removido do terminal
-        else:
-            logger.info("Nenhum PDV encontrado para marcar como 'Inativo' nesta execução.")
-            # tqdm.write(f"{GREEN}Nenhum PDV para marcar como 'Inativo'.") # Removido do terminal
-            
-    except Exception as e:
-        logger.error(f"Erro ao marcar PDVs inativos: {str(e)}", exc_info=True)
-        # tqdm.write(f"{RED}Erro ao marcar PDVs inativos: {str(e)}") # Opcional: remover ou manter para erros no terminal
+        # Organizar colunas na ordem desejada
+        ordered_cols = ['NROEMPRESA', 'NROCHECKOUT', 'IP', 'STATUS', 'SEGMENTO', 'OPERACAO'] + HARDWARE_FIELDS
+        remaining_cols = [col for col in df.columns if col not in ordered_cols]
+        final_cols = [col for col in ordered_cols if col in df.columns] + remaining_cols
+        df = df[final_cols]
 
-def save_to_csv(batch_results_raw):
-    """Salva um lote de dados de PDVs em um arquivo CSV."""
-    if not batch_results_raw: return 0
-    
-    batch_results_for_csv = []
-    for record_raw in batch_results_raw:
-        record_csv = {key.replace('v_', ''): value for key, value in record_raw.items()}
-        if 'DTAINCLUSAO_STR' in record_csv: record_csv['DTAINCLUSAO'] = record_csv.pop('DTAINCLUSAO_STR')
-        if 'DTAATUALIZACAO_STR' in record_csv: record_csv['DTAATUALIZACAO'] = record_csv.pop('DTAATUALIZACAO_STR')
-        batch_results_for_csv.append(record_csv)
-        
-    try:
-        fieldnames = ["IP", "NROEMPRESA", "NROCHECKOUT", "SEGMENTO", "OPERACAO", "PLACA_MAE", 
-                      "PROCESSADOR", "CORES_THREADS", "RAM", "DISCO", "ARMAZENAMENTO", 
-                      "RELEASE", "STATUS", "DTAINCLUSAO", "DTAATUALIZACAO"]
-        file_exists = os.path.exists(CSV_FILE)
-        with open(CSV_FILE, mode='a' if file_exists else 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
-            if not file_exists: writer.writeheader()
-            writer.writerows(batch_results_for_csv)
-        logger.info(f"Salvos {len(batch_results_for_csv)} registros no CSV {CSV_FILE}.")
-        return len(batch_results_for_csv)
+        df.to_excel(filename, index=False)
+        print(f"\n{GREEN}Resultados salvos com sucesso em: {YELLOW}{filename}{RESET}")
+        logger.info(f"{len(all_results)} resultados salvos em '{filename}'.")
+        return len(all_results)
     except Exception as e:
-        logger.error(f"Erro ao salvar dados no CSV {CSV_FILE}: {str(e)}", exc_info=True)
-        tqdm.write(f"{RED}Erro ao salvar dados no CSV: {str(e)}")
+        logger.error(f"Falha ao salvar o arquivo Excel: {e}", exc_info=True)
+        print(f"{RED}Erro ao salvar resultados no Excel: {e}{RESET}")
         return 0
 
-def handle_table_not_found(cursor):
-    """Interage com o usuário quando a tabela de hardware não é encontrada."""
-    print(f"{YELLOW}Tabela {TABLE_NAME} não encontrada no banco de dados.")
-    while True:
-        print(f"{CYAN}Escolha uma opção:\n  1. Criar tabela {TABLE_NAME}\n  2. Exportar dados apenas para CSV ({CSV_FILE})\n  3. Sair")
-        choice = input(f"{CYAN}Digite 1, 2 ou 3: {RESET}").strip()
-        if choice == '1':
-            if create_oracle_table(cursor): return "ORACLE"
-            else: print(f"{RED}Falha ao criar tabela. Verifique logs e permissões. Tente novamente ou escolha outra opção.")
-        elif choice == '2':
-            print(f"{GREEN}Dados coletados serão salvos apenas em {CSV_FILE}."); return "CSV"
-        elif choice == '3':
-            print(f"{MAGENTA}Script encerrado pelo usuário."); exit(0)
-        else: print(f"{YELLOW}Opção inválida. Por favor, digite 1, 2 ou 3.")
-
-# --- Lógica Principal ---
-def main():
-    """Função principal para orquestrar a coleta e salvamento de dados de hardware dos PDVs."""
-    try:
-        from coletaPDV import get_hardware_info 
-    except ImportError:
-        logger.critical("ERRO FATAL: coletaPDV.py não encontrado ou função get_hardware_info não definida.")
-        print(f"{RED}ERRO FATAL: coletaPDV.py não encontrado ou get_hardware_info não definida nele. Verifique o arquivo.")
-        exit(1)
-
-    db_connection = None; db_cursor = None; batch_buffer = []; processed_pdvs_count = 0
-    output_mode = "ORACLE"; sucessos_coleta_efetiva = 0; total_registros_enviados_db = 0
-    total_registros_afetados_db = 0; total_registros_salvos_csv = 0
-
-    print(f"{MAGENTA}=== Iniciando Coleta de Hardware de PDVs ===")
-    logger.info("=== INÍCIO DA EXECUÇÃO DO SCRIPT DE COLETA DE HARDWARE ===")
+def save_results_to_csv(batch_results, filename=OUTPUT_CSV_FILE):
+    """Salva um lote de dados de PDVs em um arquivo CSV."""
+    if not batch_results:
+        return 0
 
     try:
-        configs = load_env_configs()
+        fieldnames = ["IP", "NROEMPRESA", "NROCHECKOUT", "SEGMENTO", "OPERACAO", "PLACA_MAE",
+                      "PROCESSADOR", "CORES_THREADS", "RAM", "DISCO", "ARMAZENAMENTO",
+                      "RELEASE", "STATUS", "DTAINCLUSAO", "DTAATUALIZACAO"]
         
-        print(f"{CYAN}Conectando ao Oracle ({configs['DSN']})...")
-        db_connection = oracledb.connect(user=configs["ORACLE_USER"], password=configs["ORACLE_PASSWORD"], dsn=configs["DSN"])
-        db_cursor = db_connection.cursor()
-        print(f"{GREEN}Conexão Oracle estabelecida.")
+        file_exists = os.path.exists(filename)
+        with open(filename, mode='a' if file_exists else 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+            if not file_exists:
+                writer.writeheader()
+            writer.writerows(batch_results)
+        
+        logger.info(f"Salvos {len(batch_results)} registros no CSV {filename}.")
+        return len(batch_results)
+    except Exception as e:
+        logger.error(f"Erro ao salvar dados no CSV {filename}: {e}", exc_info=True)
+        print(f"{RED}Erro ao salvar dados no CSV: {e}{RESET}")
+        return 0
 
-        table_status = check_table_exists(db_cursor)
-        if table_status == "TABLE_EXISTS": print(f"{GREEN}Tabela {TABLE_NAME} encontrada e pronta para uso.")
-        elif table_status == "TABLE_NOT_FOUND": output_mode = handle_table_not_found(db_cursor)
-        else: print(f"{RED}Erro crítico ao verificar tabela {TABLE_NAME}. Verifique os logs. Saindo."); return
 
-        print(f"{CYAN}Buscando PDVs ativos da fonte de dados...")
-        query_pdvs_ativos = """
-            WITH PARAMPDV AS (
-                SELECT NROEMPRESA, NROCHECKOUT, COALESCE(TO_CHAR(VALOR), 'VendaCupomNota') AS VALOR
-                FROM CONSINCOMONITOR.TB_PARAMPDVVALOR WHERE PARAMPDV = 'ModoOperacao'
-            ), PDV_ATIVO AS (
-                SELECT IP, NROEMPRESA, NROCHECKOUT, NROSEGMENTO FROM CONSINCOMONITOR.TB_CHECKOUT
-                WHERE ATIVO = 'S' AND NROCHECKOUT <> 100
+# --- FUNÇÃO PRINCIPAL ---
+def main():
+    """Função principal que orquestra todo o processo de coleta e salvamento."""
+    logger.info("=== INICIANDO EXECUÇÃO DO SCRIPT DE COLETA DE HARDWARE ===")
+    print(f"{MAGENTA}=== PDV Hardware Inspector (Versão Corrigida) ===")
+    
+    # Escolher modo de operação
+    mode = choose_operation_mode()
+    if not mode:
+        return
+
+    print(f"{CYAN}Modo selecionado: {mode}{RESET}")
+    
+    # Carregar configurações
+    configs = load_configurations(mode)
+    
+    # Variáveis de controle
+    db_connection = None
+    db_cursor = None
+    existing_data_map = {}
+    ssh_results = []
+    all_results = []
+    processed_count = 0
+    success_count = 0
+    total_db_affected = 0
+    total_db_sent = 0
+    
+    try:
+        # ETAPA 1: Configurar conexão Oracle e pré-carregar dados (se necessário)
+        if mode == 'ORACLE':
+            print(f"{CYAN}Conectando ao Oracle...{RESET}")
+            db_connection = oracledb.connect(
+                user=configs["oracle_user"], 
+                password=configs["oracle_password"], 
+                dsn=configs["dsn"]
             )
-            SELECT A.IP, A.NROEMPRESA, A.NROCHECKOUT, S.SEGMENTO, COALESCE(B.VALOR, 'PDV') AS OPERACAO
-            FROM PDV_ATIVO A
-            LEFT JOIN PARAMPDV B ON A.NROEMPRESA = B.NROEMPRESA AND A.NROCHECKOUT = B.NROCHECKOUT
-            JOIN CONSINCOMONITOR.TB_SEGMENTO S ON S.NROSEGMENTO = A.NROSEGMENTO
-            ORDER BY A.NROEMPRESA, A.NROCHECKOUT
-        """
-        db_cursor.execute(query_pdvs_ativos)
-        pdv_data_from_db = db_cursor.fetchall()
-        df_pdvs = pd.DataFrame(pdv_data_from_db, columns=[d[0].upper() for d in db_cursor.description]) if pdv_data_from_db else pd.DataFrame()
+            db_cursor = db_connection.cursor()
+            print(f"{GREEN}Conexão Oracle estabelecida.{RESET}")
+            
+            if not check_and_create_oracle_table(db_cursor):
+                print(f"{RED}Tabela Oracle não está disponível. Encerrando.{RESET}")
+                return
+            
+            print(f"{CYAN}Pré-carregando dados existentes do Oracle...{RESET}")
+            existing_data_map = preload_existing_data(db_cursor)
+            
+            df_pdvs = get_pdvs_from_oracle(db_connection)
+        else:  # Modo PLANILHA
+            df_pdvs = get_pdvs_from_file()
 
         if df_pdvs.empty:
-            logger.warning("Nenhum PDV ativo encontrado na consulta à TB_CHECKOUT.")
-            print(f"{YELLOW}Nenhum PDV ativo encontrado para processar.")
-            if output_mode == "ORACLE":
-                logger.info("Verificando PDVs para marcar como 'Inativo' (nenhum PDV ativo encontrado).")
+            print(f"{YELLOW}Nenhum PDV encontrado para processar.{RESET}")
+            if mode == 'ORACLE' and db_cursor:
+                logger.info("Verificando PDVs para marcar como 'Inativo'...")
                 mark_inactive_pdvs(db_cursor, db_connection, df_pdvs)
-            print(f"{CYAN}Processo concluído."); return
-
-        df_pdvs["NROEMPRESA"] = pd.to_numeric(df_pdvs["NROEMPRESA"])
-        df_pdvs["NROCHECKOUT"] = pd.to_numeric(df_pdvs["NROCHECKOUT"])
-        logger.info(f"Encontrados {len(df_pdvs)} PDVs ativos para processar.")
-        print(f"{GREEN}Encontrados {len(df_pdvs)} PDVs ativos.")
-
-        pdvs_args_list = [
-            ({"IP": r["IP"], "NROEMPRESA": int(r["NROEMPRESA"]), 
-              "NROCHECKOUT": int(r["NROCHECKOUT"]), "SEGMENTO": r["SEGMENTO"], 
-              "OPERACAO": r["OPERACAO"]}, 
-             configs["SSH_USERNAME"], configs["SSH_PASSWORD"]) 
-            for _, r in df_pdvs.iterrows()
+            return
+        
+        # ETAPA 2: THREADING apenas para coleta SSH (SEM operações Oracle)
+        pdvs_to_process = [
+            {
+                "IP": row["IP"], 
+                "NROEMPRESA": int(row["NROEMPRESA"]),
+                "NROCHECKOUT": int(row["NROCHECKOUT"]), 
+                "SEGMENTO": row["SEGMENTO"],
+                "OPERACAO": row["OPERACAO"]
+            }
+            for _, row in df_pdvs.iterrows()
         ]
-        total_pdvs_to_scan = len(pdvs_args_list)
-        num_workers = min(configs["MAX_WORKERS"], total_pdvs_to_scan if total_pdvs_to_scan > 0 else 1)
-        print(f"{CYAN}Iniciando coleta de {total_pdvs_to_scan} PDVs com {num_workers} workers...")
         
-        with tqdm(total=total_pdvs_to_scan, desc=f"{CYAN}Escaneando PDVs", 
-                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]",
-                  ncols=100) as progress_bar:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-                future_to_pdv_map = {
-                    executor.submit(get_hardware_info, pa[0]["IP"], pa[1], pa[2]): pa[0] 
-                    for pa in pdvs_args_list
+        total_pdvs = len(pdvs_to_process)
+        print(f"{CYAN}Iniciando coleta SSH de {total_pdvs} PDVs com {configs['max_workers']} workers...{RESET}")
+        print(f"{YELLOW}Timeout SSH configurado para {configs['ssh_timeout']} segundos por PDV.{RESET}")
+
+        # Threading APENAS para SSH - sem operações Oracle
+        with tqdm(total=total_pdvs, desc=f"{CYAN}Coletando via SSH", ncols=100,
+                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]") as pbar:
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=configs["max_workers"]) as executor:
+                future_to_pdv = {
+                    executor.submit(get_hardware_with_timeout, 
+                                  pdv["IP"], 
+                                  configs["ssh_username"], 
+                                  configs["ssh_password"], 
+                                  configs["ssh_timeout"]): pdv
+                    for pdv in pdvs_to_process
                 }
-
-                for future in concurrent.futures.as_completed(future_to_pdv_map):
-                    pdv_initial_info = future_to_pdv_map[future]
-                    ip = pdv_initial_info["IP"]; nroempresa = pdv_initial_info["NROEMPRESA"]; nrocheckout = pdv_initial_info["NROCHECKOUT"]
-                    current_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-                    data_for_db = {
-                        "IP": ip, "NROEMPRESA": nroempresa, "NROCHECKOUT": nrocheckout,
-                        "SEGMENTO": pdv_initial_info["SEGMENTO"], "OPERACAO": pdv_initial_info["OPERACAO"]
-                    }
-                    for fld in HARDWARE_FIELDS: data_for_db[fld] = "Não detectado"
-
-                    coleta_online = False 
-                    hw_collection_result = None
-                    status_retornado_coleta_debug = "Coleta não iniciada"
-
+                
+                for future in concurrent.futures.as_completed(future_to_pdv):
+                    pdv_info = future_to_pdv[future]
+                    ip = pdv_info["IP"]
+                    
                     try:
-                        hw_collection_result = future.result() 
-                        logger.info(f"PDV {nroempresa}-{nrocheckout} (IP: {ip}): Resultado bruto da coleta: {hw_collection_result}")
+                        hw_result = future.result()
+                        ssh_results.append((pdv_info, hw_result))
                         
-                        status_retornado_coleta_debug = hw_collection_result.get("status") # Chave "status" do coletaPDV.py
-                        logger.info(f"PDV {nroempresa}-{nrocheckout} (IP: {ip}): 'status' de coletaPDV.py: '{status_retornado_coleta_debug}'")
-
-                        if status_retornado_coleta_debug == "SUCESSO" or status_retornado_coleta_debug == "FALHA COMANDOS":
-                            coleta_online = True
-                            if status_retornado_coleta_debug == "FALHA COMANDOS":
-                                logger.warning(f"PDV {nroempresa}-{nrocheckout} (IP: {ip}): Coleta retornou '{status_retornado_coleta_debug}'. PDV será ONLINE, hardware pode estar incompleto. Raw: {hw_collection_result}")
+                    except Exception as e:
+                        logger.error(f"Exceção crítica na thread SSH para {ip}: {e}", exc_info=True)
+                        ssh_results.append((pdv_info, {"status": "THREAD_ERROR", "error": str(e)}))
                     
-                    except Exception as e_collect_thread:
-                        logger.error(f"PDV {nroempresa}-{nrocheckout} (IP: {ip}): EXCEÇÃO na thread de coleta: {type(e_collect_thread).__name__} - {str(e_collect_thread)}", exc_info=True)
-                        tqdm.write(f"{RED}Exceção na coleta do PDV {nroempresa}-{nrocheckout} (IP: {ip}): {type(e_collect_thread).__name__}")
-                        status_retornado_coleta_debug = f"Exceção na thread: {type(e_collect_thread).__name__}"
-                    
-                    if coleta_online and hw_collection_result:
-                        data_for_db["STATUS"] = "ONLINE"
-                        for fld_key_db in HARDWARE_FIELDS: 
-                            data_for_db[fld_key_db] = hw_collection_result.get(fld_key_db.lower(), "Não detectado")
-                    else:
-                        data_for_db["STATUS"] = "OFFLINE"
-                        logger.warning(f"PDV {nroempresa}-{nrocheckout} (IP: {ip}) MARCADO COMO OFFLINE. Causa/Status da coleta: '{status_retornado_coleta_debug}'. Resultado bruto (se houver): {hw_collection_result}")
-                    
-                    existing_data_from_db = get_existing_data(db_cursor, nroempresa, nrocheckout) if output_mode == "ORACLE" else None
-                    needs_db_write = False
-                    dados_realmente_mudaram = False
+                    pbar.update(1)
+                    pbar.set_postfix_str(f"Último: {ip}")
 
-                    if existing_data_from_db:
-                        if data_for_db["STATUS"] == "OFFLINE":
-                            for fld in HARDWARE_FIELDS: 
-                                data_for_db[fld] = existing_data_from_db.get(fld, "Não detectado")
-                        
-                        dados_realmente_mudaram = has_relevant_data_changes(data_for_db, existing_data_from_db)
-
-                        if data_for_db["STATUS"] == "ONLINE":
-                            data_for_db["DTAATUALIZACAO"] = current_time_str
-                            if dados_realmente_mudaram:
-                                data_for_db["DTAINCLUSAO"] = current_time_str 
-                            else: 
-                                data_for_db["DTAINCLUSAO"] = existing_data_from_db["DTAINCLUSAO"].strftime('%Y-%m-%d %H:%M:%S')
-                        else: # STATUS == "OFFLINE"
-                            data_for_db["DTAINCLUSAO"] = existing_data_from_db["DTAINCLUSAO"].strftime('%Y-%m-%d %H:%M:%S')
-                            data_for_db["DTAATUALIZACAO"] = current_time_str
-                        
-                        needs_db_write = True 
+        print(f"\n{GREEN}Coleta SSH concluída. Processando resultados...{RESET}")
+        
+        # ETAPA 3: Processar resultados SEQUENCIALMENTE (com operações Oracle se necessário)
+        batch_buffer = []
+        
+        with tqdm(total=len(ssh_results), desc=f"{CYAN}Processando resultados", ncols=100) as pbar:
+            for pdv_info, hw_result in ssh_results:
+                nroempresa = pdv_info["NROEMPRESA"]
+                nrocheckout = pdv_info["NROCHECKOUT"]
+                
+                # Usar dados pré-carregados (sem consulta Oracle individual)
+                existing_data = existing_data_map.get((nroempresa, nrocheckout))
+                
+                # Processar resultado
+                processed_data, data_changed = process_pdv_result(pdv_info, hw_result, existing_data)
+                all_results.append(processed_data)
+                
+                # Contadores
+                processed_count += 1
+                if (processed_data["STATUS"] == "ONLINE" and 
+                    (not existing_data or data_changed or 
+                     (existing_data and existing_data.get("STATUS") != "ONLINE"))):
+                    success_count += 1
+                
+                # Para modo Oracle: preparar batch
+                if mode == 'ORACLE':
+                    batch_entry = {
+                        'v_IP': processed_data.get("IP"),
+                        'v_NROEMPRESA': processed_data.get("NROEMPRESA"),
+                        'v_NROCHECKOUT': processed_data.get("NROCHECKOUT"),
+                        'v_SEGMENTO': processed_data.get("SEGMENTO"),
+                        'v_OPERACAO': processed_data.get("OPERACAO"),
+                        'v_PLACA_MAE': processed_data.get("PLACA_MAE", "Não detectado"),
+                        'v_PROCESSADOR': processed_data.get("PROCESSADOR", "Não detectado"),
+                        'v_CORES_THREADS': processed_data.get("CORES_THREADS", "Não detectado"),
+                        'v_RAM': processed_data.get("RAM", "Não detectado"),
+                        'v_DISCO': processed_data.get("DISCO", "Não detectado"),
+                        'v_ARMAZENAMENTO': processed_data.get("ARMAZENAMENTO", "Não detectado"),
+                        'v_RELEASE': processed_data.get("RELEASE", "Não detectado"),
+                        'v_STATUS': processed_data.get("STATUS"),
+                        'v_DTAINCLUSAO_STR': processed_data.get("DTAINCLUSAO"),
+                        'v_DTAATUALIZACAO_STR': processed_data.get("DTAATUALIZACAO")
+                    }
+                    batch_buffer.append(batch_entry)
                     
-                    else: # Novo PDV
-                        data_for_db["DTAINCLUSAO"] = current_time_str
-                        data_for_db["DTAATUALIZACAO"] = current_time_str
-                        needs_db_write = True
-                        dados_realmente_mudaram = True 
-                    
-                    if needs_db_write:
-                        batch_entry = {
-                            'v_IP': data_for_db.get("IP"), 'v_NROEMPRESA': data_for_db.get("NROEMPRESA"),
-                            'v_NROCHECKOUT': data_for_db.get("NROCHECKOUT"), 'v_SEGMENTO': data_for_db.get("SEGMENTO"),
-                            'v_OPERACAO': data_for_db.get("OPERACAO"),
-                            'v_PLACA_MAE': data_for_db.get("PLACA_MAE", "Não detectado"),
-                            'v_PROCESSADOR': data_for_db.get("PROCESSADOR", "Não detectado"),
-                            'v_CORES_THREADS': data_for_db.get("CORES_THREADS", "Não detectado"),
-                            'v_RAM': data_for_db.get("RAM", "Não detectado"),
-                            'v_DISCO': data_for_db.get("DISCO", "Não detectado"),
-                            'v_ARMAZENAMENTO': data_for_db.get("ARMAZENAMENTO", "Não detectado"),
-                            'v_RELEASE': data_for_db.get("RELEASE", "Não detectado"),
-                            'v_STATUS': data_for_db.get("STATUS"),
-                            'v_DTAINCLUSAO_STR': data_for_db.get("DTAINCLUSAO"), 
-                            'v_DTAATUALIZACAO_STR': data_for_db.get("DTAATUALIZACAO") 
-                        }
-                        batch_buffer.append(batch_entry)
-                        
-                        if data_for_db["STATUS"] == "ONLINE":
-                            if not existing_data_from_db or dados_realmente_mudaram or \
-                               (existing_data_from_db and existing_data_from_db.get("STATUS") != "ONLINE"):
-                                sucessos_coleta_efetiva += 1
+                    # Salvar batch quando atingir o limite
+                    if len(batch_buffer) >= configs["save_interval"]:
+                        affected, sent = save_results_to_oracle(db_cursor, db_connection, batch_buffer)
+                        total_db_affected += affected
+                        total_db_sent += sent
+                        batch_buffer = []
+                
+                pbar.update(1)
 
-                        if len(batch_buffer) >= configs["SAVE_INTERVAL"]:
-                            if output_mode == "ORACLE":
-                                afetados, enviados = save_pdv_data(db_cursor, db_connection, batch_buffer)
-                                total_registros_afetados_db += afetados; total_registros_enviados_db += enviados
-                            else: total_registros_salvos_csv += save_to_csv(batch_buffer)
-                            batch_buffer = []
-                    
-                    processed_pdvs_count +=1
-                    progress_bar.update(1)
-                    progress_bar.set_postfix_str(f"Último: {ip} ({data_for_db.get('STATUS', 'N/A')})")
+        # Salvar batch restante
+        if mode == 'ORACLE' and batch_buffer:
+            affected, sent = save_results_to_oracle(db_cursor, db_connection, batch_buffer)
+            total_db_affected += affected
+            total_db_sent += sent
 
-        if batch_buffer:
-            if output_mode == "ORACLE":
-                afetados, enviados = save_pdv_data(db_cursor, db_connection, batch_buffer)
-                total_registros_afetados_db += afetados; total_registros_enviados_db += enviados
-            else: total_registros_salvos_csv += save_to_csv(batch_buffer)
-
-        if output_mode == "ORACLE": 
-            logger.info("Verificando PDVs para marcar como 'Inativo'...")
+        # ETAPA 4: Finalizar
+        if mode == 'ORACLE':
+            print(f"{CYAN}Marcando PDVs inativos...{RESET}")
             mark_inactive_pdvs(db_cursor, db_connection, df_pdvs)
+            
+            # Salvar cópia em Excel para backup
+            print(f"{CYAN}Salvando backup em Excel...{RESET}")
+            save_results_to_excel(all_results, f"backup_{OUTPUT_XLSX_FILE}")
+        else:
+            # Modo PLANILHA: salvar em Excel e CSV
+            print(f"{CYAN}Salvando resultados...{RESET}")
+            save_results_to_excel(all_results)
+            save_results_to_csv(all_results)
 
-        print(f"\n{GREEN}=== Processo de Coleta Concluído ===")
-        print(f"{CYAN}Total de PDVs na consulta de ativos: {total_pdvs_to_scan}")
-        print(f"{CYAN}PDVs processados nesta execução: {processed_pdvs_count}")
-        print(f"{GREEN}PDVs 'ONLINE' com escrita significativa: {sucessos_coleta_efetiva}")
-        pdvs_outros_resultados = processed_pdvs_count - sucessos_coleta_efetiva
-        if pdvs_outros_resultados >= 0: 
-            print(f"{YELLOW}PDVs 'OFFLINE' ou 'ONLINE' sem mudanças de dados que contassem como 'sucesso': {pdvs_outros_resultados}")
+        # ETAPA 5: Relatório final
+        print(f"\n{GREEN}=== Processo de Coleta Concluído ==={RESET}")
+        print(f"{CYAN}Total de PDVs encontrados: {total_pdvs}{RESET}")
+        print(f"{CYAN}PDVs processados: {processed_count}{RESET}")
+        print(f"{GREEN}PDVs 'ONLINE' com dados válidos/alterados: {success_count}{RESET}")
         
-        if output_mode == "ORACLE":
-            print(f"{CYAN}Registros enviados para processamento no Oracle: {total_registros_enviados_db}")
-            print(f"{CYAN}Registros efetivamente inseridos/atualizados no Oracle: {total_registros_afetados_db}")
-        elif output_mode == "CSV": 
-            print(f"{CYAN}Registros salvos no arquivo CSV: {total_registros_salvos_csv}")
+        offline_count = processed_count - success_count
+        if offline_count > 0:
+            print(f"{YELLOW}PDVs 'OFFLINE' ou sem mudanças significativas: {offline_count}{RESET}")
+        
+        if mode == 'ORACLE':
+            print(f"{CYAN}Registros enviados ao Oracle: {total_db_sent}{RESET}")
+            print(f"{CYAN}Registros processados no Oracle: {total_db_affected}{RESET}")
+        else:
+            print(f"{CYAN}Resultados salvos em arquivos de saída.{RESET}")
 
-    except oracledb.DatabaseError as oe: 
+    except oracledb.DatabaseError as oe:
         error_obj, = oe.args
-        logger.critical(f"Erro crítico de banco de dados Oracle: {str(oe)} (Código: {error_obj.code})", exc_info=True)
-        print(f"{RED}Erro crítico de banco de dados Oracle: {str(oe)}")
-        print(f"{YELLOW}Verifique credenciais, DSN, listener e permissões.")
-    except ImportError as imp_err: 
-        logger.critical(f"Erro de importação não tratado anteriormente: {str(imp_err)}", exc_info=True)
-        print(f"{RED}Erro de Importação Crítico: {str(imp_err)}")
-    except Exception as e_main: 
-        logger.critical(f"Erro INESPERADO e crítico na execução principal: {str(e_main)}", exc_info=True)
-        print(f"{RED}Erro Crítico Inesperado na Aplicação: {str(e_main)}")
+        logger.critical(f"Erro crítico de banco Oracle: {oe} (Código: {error_obj.code})", exc_info=True)
+        print(f"{RED}Erro crítico de banco Oracle: {oe}{RESET}")
+        print(f"{YELLOW}Verifique credenciais, DSN, listener e permissões.{RESET}")
+    
+    except Exception as e:
+        logger.critical(f"Erro crítico inesperado: {e}", exc_info=True)
+        print(f"{RED}Erro crítico inesperado: {e}{RESET}")
+    
     finally:
+        # Limpeza de recursos
         if db_cursor:
-            try: db_cursor.close(); print(f"{CYAN}Cursor Oracle fechado.")
-            except Exception as e: logger.warning(f"Erro ao fechar cursor Oracle: {str(e)}", exc_info=True)
-        if db_connection:
-            try: db_connection.close(); print(f"{CYAN}Conexão Oracle fechada.")
-            except Exception as e: logger.warning(f"Erro ao fechar conexão Oracle: {str(e)}", exc_info=True)
+            try:
+                db_cursor.close()
+                logger.info("Cursor Oracle fechado.")
+            except Exception as e:
+                logger.warning(f"Erro ao fechar cursor: {e}")
         
-        print(f"{CYAN}Detalhes completos da execução no arquivo de log: {YELLOW}{LOG_FILE}{CYAN}.")
-        if output_mode == "CSV": 
-             print(f"{CYAN}Os dados (se houver) foram exportados para: {YELLOW}{CSV_FILE}{CYAN}.")
-        logger.info("=== FIM DA EXECUÇÃO DO SCRIPT DE COLETA DE HARDWARE ===")
+        if db_connection:
+            try:
+                db_connection.close()
+                logger.info("Conexão Oracle fechada.")
+            except Exception as e:
+                logger.warning(f"Erro ao fechar conexão: {e}")
+        
+        print(f"\n{MAGENTA}=== Processo Finalizado ==={RESET}")
+        print(f"{CYAN}Logs detalhados disponíveis em: {YELLOW}{LOG_FILE}{RESET}")
+        
+        if mode == 'PLANILHA':
+            print(f"{CYAN}Arquivos de saída:{RESET}")
+            print(f"  {YELLOW}- {OUTPUT_XLSX_FILE}{RESET}")
+            print(f"  {YELLOW}- {OUTPUT_CSV_FILE}{RESET}")
+        else:
+            print(f"{CYAN}Backup disponível em: {YELLOW}backup_{OUTPUT_XLSX_FILE}{RESET}")
+        
+        logger.info("=== EXECUÇÃO FINALIZADA ===")
+
 
 if __name__ == "__main__":
     main()
