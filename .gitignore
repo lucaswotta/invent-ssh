@@ -1,6 +1,6 @@
-.env
+__pycache__/
 *.env
 *.log
 *.csv
-__pycache__/
+*.xlsx
 *.pyc
