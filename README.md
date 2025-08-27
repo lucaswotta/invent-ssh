@@ -113,11 +113,11 @@ python hardwarePDV.py
 ---
 
 ## Detalhes do Modo Planilha
-**Planilha de Entrada:** Para usar este modo, crie um arquivo chamado lista_pdvs.xlsx ou lista_pdvs.csv na raiz do projeto.
+**Planilha de Entrada:** Para usar este modo, crie um arquivo chamado `lista_pdvs.xlsx` ou `lista_pdvs.csv` na raiz do projeto.
 
 **Colunas Obrigatórias:** O arquivo precisa conter, no mínimo, as colunas IP, NROEMPRESA, e NROCHECKOUT.
 
-**Planilha de Saída:** O relatório será salvo no arquivo resultado_hardware.xlsx.
+**Planilha de Saída:** O relatório será salvo no arquivo `resultado_hardware.xlsx` e `.csv`.
 
 ---
 
