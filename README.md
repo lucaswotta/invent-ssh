@@ -1,4 +1,4 @@
-# PDV Hardware Inspector 🕵️‍♂️
+# PDV Hardware Inspector
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -7,7 +7,7 @@ Ferramenta de automação em Python para coletar e inventariar remotamente o har
 
 ---
 
-## ✨ Funcionalidades Principais
+## Funcionalidades Principais
 
 -   **Dois Modos de Operação**:
     -   **Modo Oracle**: Conecta-se a um banco de dados Oracle para buscar a lista de PDVs e salvar os resultados.
@@ -27,7 +27,7 @@ Ferramenta de automação em Python para coletar e inventariar remotamente o har
 
 ---
 
-## 🔧 Instalação e Configuração
+## Instalação e Configuração
 
 ### Pré-requisitos
 
@@ -96,7 +96,7 @@ pdv-hardware-inspector/
 
 ---
 
-## 🚀 Como Usar
+## Como Usar
 
 Com o arquivo `.env` corretamente configurado e/ou planilha na pasta raíz do projeto, execute o script principal:
 
