@@ -1,7 +1,5 @@
-colorama
-oracledb
-openpyxl
+customtkinter
 pandas
+openpyxl
 paramiko
-python-dotenv
-tqdm
+oracledb
