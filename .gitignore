@@ -1,6 +1,70 @@
-__pycache__/
-*.env
-*.log
-*.csv
-*.xlsx
+#Byte-compiled / optimized / DLL files
+pycache/
 *.pyc
+*.pyo
+*.pyd
+
+#C extensions
+*.so
+
+#Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+#PyInstaller
+Usually these files are created by pyinstaller, if you run your script from the console with the PyInstaller command
+This is not needed if you run the build script
+*.spec
+
+#Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+#Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+#Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+#IDE specific files
+.idea/
+.vscode/
+
+#Application-generated files and user configuration
+reports/
+logs/
+*.xlsx
+*.csv
+crash_log.txt
+config.json
