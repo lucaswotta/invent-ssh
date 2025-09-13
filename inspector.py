@@ -1,16 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 inspector.py: Coletor de Dados de Hardware para o invent-ssh (The Definitive Edition).
-
-Esta é a versão final e consolidada, incorporando todas as lições aprendidas
-com os cenários de produção. A lógica foi reestruturada para máxima robustez
-e para eliminar regressões.
-
-Melhorias Definitivas:
-- Lógica de RAM reconstruída para somar precisamente módulos de tamanhos
-  diferentes e reportar o total real, sem arredondamentos falhos.
-- Inferência de tipo de RAM baseada em velocidade (DDR2/DDR3) para hardware legado.
-- Lógica de Armazenamento que previne o retorno 'N/A' e detecta NVMe.
+Este módulo conecta-se a servidores Linux via SSH para coletar informações detalhadas de hardware,
+utilizando primeiramente o inxi (se disponível) e, em seguida, métodos manuais como fallback.
 """
 import paramiko
 import re
