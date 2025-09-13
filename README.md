@@ -1,170 +1,176 @@
-# PDV Hardware Inspector
+# invent-ssh
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+**Inventário de Hardware Linux via SSH**
 
-Ferramenta de automação em Python para coletar e inventariar hardware de terminais de Ponto de Venda (PDV) baseados em Linux. 
-O script é flexível, operando tanto conectado a um banco de dados Oracle quanto de forma autônoma, lendo dados de uma planilha local.
+Uma ferramenta open source para automatizar a coleta de informações de hardware em sistemas Linux através de conexões SSH. Desenvolvida para resolver problemas reais de visibilidade de infraestrutura em ambientes distribuídos.
 
----
+![Demo do invent-ssh](https://imgur.com/a/jYjGFCC)
 
-## Funcionalidades Principais
-
--   **Dois Modos de Operação**:
-    -   **Modo Oracle**: Conecta-se a um banco de dados Oracle para buscar a lista de PDVs e salvar os resultados.
-    -   **Modo Planilha**: Funciona offline, lendo a lista de PDVs de um arquivo `lista_pdvs.xlsx` ou `.csv` e salvando um relatório em `resultado_hardware.xlsx` e `.csv`.
-
--   **Menu Interativo**: Ao iniciar, a aplicação pergunta qual modo de operação você deseja usar, sugerindo o padrão definido no arquivo `.env`.
-
--   **Coleta Remota e Paralela**: Acessa múltiplos PDVs simultaneamente via SSH para otimizar drasticamente o tempo de coleta.
-
--   **Execução Sequencial para Depuração**: Permite rodar a coleta um PDV por vez, facilitando a identificação de problemas em hosts específicos.
-
--   **Estabilidade e Resiliência**:
-    -   **Timeout por PDV**: Cada tentativa de conexão tem um tempo limite, evitando que um único PDV offline trave toda a execução.
-    -   **Fallbacks de Comandos**: Utiliza múltiplos comandos alternativos para detectar cada peça de hardware, aumentando a compatibilidade com diferentes sistemas Linux.
-
--   **Configuração Centralizada**: Todas as credenciais e parâmetros são gerenciados de forma simples através de um arquivo `.env`.
+[![GitHub Release](https://img.shields.io/github/v/release/lucaswotta/invent-ssh?include_prereleases&label=versão&color=5cb85c)](https://github.com/lucaswotta/invent-ssh/releases)
+[![License: MIT](https://img.shields.io/badge/Licença-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
 
 ---
 
-## Instalação e Configuração
+## O Problema
 
-### Pré-requisitos
+"Precisamos fazer o upgrade das máquinas... mas qual é o hardware atual? Qual upgrade é mais necessário? Trocar o HDD por SSD? Aumentar a RAM? Ou substituir a máquina inteira?"
 
-1.  **Python 3.8+**: [Instalar Python](https://www.python.org/downloads/)
-2.  **Oracle Instant Client**: **(Apenas para o Modo Oracle)** A biblioteca `oracledb` necessita do client. Faça o download no [site oficial](https://www.oracle.com/database/technologies/instant-client/downloads.html).
-3.  **Acesso de Rede**: A máquina que executa o script precisa de acesso de rede aos PDVs (via porta SSH, padrão 22).
-
-### Passos de Instalação
-
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/lucaswotta/pdv-hardware-inspector.git
-    cd pdv-hardware-inspector
-    ```
-
-2.  **Instale as dependências:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Configure o arquivo `.env`:**
-    Crie um arquivo `.env` na raiz do projeto e preencha-o com as suas informações.
-
-    **Arquivo `.env` (Exemplo completo):**
-    ```ini
-    # --- MODO DE OPERAÇÃO PADRÃO ---
-    # Opções: ORACLE ou PLANILHA
-    MODE=ORACLE
-
-    # --- MODO DE EXECUÇÃO ---
-    # Opções: PARALLEL (rápido, padrão) ou SEQUENTIAL (lento, para depuração)
-    EXECUTION_MODE=PARALLEL
-
-    # --- CREDENCIAIS ORACLE (Obrigatório apenas para MODE=ORACLE) ---
-    ORACLE_USER=seu_usuario_oracle
-    ORACLE_PASSWORD=sua_senha_oracle
-    ORACLE_HOST=host.do.banco.oracle
-    ORACLE_PORT=1521
-    ORACLE_SERVICE=nome_do_servico_oracle
-
-    # --- CREDENCIAIS SSH (Sempre obrigatório) ---
-    SSH_USERNAME=usuario_ssh_nos_pdvs
-    SSH_PASSWORD=senha_ssh_nos_pdvs
-
-    # --- CONFIGURAÇÕES DE PERFORMANCE ---
-    MAX_WORKERS=15            # Máximo de PDVs a serem processados em paralelo
-    SSH_TIMEOUT=30            # Segundos até desistir de um PDV que não responde
-    ```
+A falta de visibilidade sobre o hardware instalado em terminais Linux distribuídos era um problema comum. Esta ferramenta nasceu dessa necessidade real: um script interno que evoluiu para uma solução completa quando outros profissionais enfrentavam o mesmo ponto cego na infraestrutura.
 
 ---
 
-## Estrutura do Projeto
+## Como Funciona
 
-O repositório está organizado da seguinte forma:
-````
-pdv-hardware-inspector/
-├── .env                  # Arquivo de configuração local com credenciais
-├── .gitignore            # Arquivos e pastas a serem ignorados pelo Git
-├── coletaPDV.py          # Módulo responsável pela coleta de hardware via SSH
-├── hardwarePDV.log       # Arquivo de log
-├── hardwarePDV.py        # Script principal que orquestra a execução
-├── lista_pdvs.xlsx/csv   # Planilha com a lista dos PDVs (Opcional)
-├── README.md             # Documentação do projeto
-└── requirements.txt      # Lista de dependências Python para o projeto
-````
+### Coleta Inteligente
+- **Estratégia Híbrida**: Usa `inxi` como fonte primária, com fallback para `dmidecode`, `lscpu` e comandos nativos do Linux
+- **100% Somente Leitura**: Zero modificações no sistema alvo
+- **Detecção Automática**: Identifica as melhores ferramentas disponíveis em cada sistema
+
+### Performance
+- **Processamento Paralelo**: Coleta dados de dezenas de máquinas simultaneamente
+- **Timeouts Configuráveis**: Otimização para diferentes condições de rede
+- **Escalabilidade**: Validado em ambientes com 500+ endpoints
+
+### Segurança
+- **Credenciais Temporárias**: Nunca persistidas em disco
+- **Suporte SSH Keys**: Autenticação padrão da indústria
+- **Logs Detalhados**: Auditoria completa de operações
 
 ---
 
-## Como Usar
+## Início Rápido
 
-Com o arquivo `.env` corretamente configurado e/ou planilha na pasta raíz do projeto, execute o script principal:
+### Windows
+1. Baixe o executável em [Releases](https://github.com/lucaswotta/invent-ssh/releases)
+2. Execute o arquivo `.exe` - sem instalação necessária
+3. Siga o guia da interface gráfica
 
+### Linux/macOS
 ```bash
-python hardwarePDV.py
+git clone https://github.com/lucaswotta/invent-ssh.git
+cd invent-ssh
+
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+python app.py
 ```
 
-1. Um menu interativo será exibido, permitindo que você escolha entre o modo Oracle ou Planilha.
-
-2. A coleta será iniciada com uma barra de progresso.
-
-3. Ao final, os resultados serão salvos no destino correspondente (Oracle ou arquivo Excel) e toda a operação é salva no arquivo hardwarePDV.log.
+**Requisito**: Python 3.8+
 
 ---
 
-## Detalhes do Modo Planilha
-**Planilha de Entrada:** Para usar este modo, crie um arquivo chamado `lista_pdvs.xlsx` ou `lista_pdvs.csv` na raiz do projeto.
+## Dados Coletados
 
-**Colunas Obrigatórias:** O arquivo precisa conter, no mínimo, as colunas IP, NROEMPRESA, e NROCHECKOUT.
+| Componente | Informações |
+|------------|------------|
+| **Sistema** | Distribuição, kernel |
+| **Placa-mãe** | Fabricante, modelo |
+| **Processador** | Modelo, cores físicos/lógicos, frequência |
+| **Memória** | Capacidade total, tipo (DDR5/4/3) |
+| **Armazenamento** | Tipo (NVMe/SSD/HDD), capacidade |
 
-**Planilha de Saída:** O relatório será salvo no arquivo `resultado_hardware.xlsx` e `.csv`.
-
----
-
-## Saída dos Dados
-
-Os dados coletados são armazenados na tabela `CONSINCO.BAR_HARDWARE_PDV` no Oracle. A estrutura da tabela é a seguinte:
-
-| Coluna | Tipo | Descrição |
-| :--- | :--- | :--- |
-| **IP** | VARCHAR2(45) | Endereço IP do PDV na última verificação. |
-| **NROEMPRESA** | NUMBER(5) | (Chave Primária) Número da empresa/loja. |
-| **NROCHECKOUT** | NUMBER(5) | (Chave Primária) Número do checkout/PDV. |
-| **SEGMENTO** | VARCHAR2(100) | Segmento de rede ou descrição do grupo de PDVs. |
-| **OPERACAO** | VARCHAR2(50) | Modo de operação do PDV (ex: Venda, Pré-venda). |
-| **PLACA_MAE** | VARCHAR2(255) | Fabricante e modelo da placa-mãe. |
-| **PROCESSADOR** | VARCHAR2(255) | Modelo da CPU. |
-| **CORES_THREADS** | VARCHAR2(50) | Formato "Núcleos Físicos / Total de Threads". |
-| **RAM** | VARCHAR2(50) | Capacidade e tipo (ex: "8GB DDR4"). |
-| **DISCO** | VARCHAR2(50) | Tipo de armazenamento principal (SSD ou HD). |
-| **ARMAZENAMENTO** | VARCHAR2(50) | Capacidade total do disco principal. |
-| **RELEASE** | VARCHAR2(100) | Versão do Kernel Linux. |
-| **STATUS** | VARCHAR2(10) | Status da última coleta: `ONLINE`, `OFFLINE`, `Inativo`. |
-| **DTAINCLUSAO** | DATE | Data em que os dados de hardware foram coletados pela primeira vez. |
-| **DTAATUALIZACAO** | DATE | Data da última atualização de qualquer informação do PDV. |
+### Exemplo de Saída
+```
+IP: 10.1.3.20
+NROEMPRESA: 100
+NROCHECKOUT: 20
+STATUS: ONLINE
+PLACA_MAE: PCWARE - IPX4120G
+PROCESSADOR: Intel(R) Celeron(R) N4120 CPU @ 1.10GHz
+CORES_THREADS: 4/4
+RAM: 8GB DDR4
+TIPO_DISCO: NVMe
+TAMANHO_DISCO: 128GB
+DISTRO: Ubuntu 18.04.3 LTS
+KERNEL: 5.3
+DTAATUALIZACAO: 2025-09-13 01:45:08
+```
 
 ---
 
-## Solução de Problemas
+## Configurações
 
--   **Erros de Conexão com Oracle**:
-    -   Verifique se as credenciais, host, porta e service name no `.env` estão corretos.
-    -   Confirme se o **Oracle Instant Client** está instalado e configurado no `PATH` do sistema.
-    -   Verifique se não há firewalls bloqueando a conexão com o banco.
+### Otimização
+- **Conexões Paralelas**: 1-50 simultâneas (padrão: 15)
+- **Timeout SSH**: 5-120 segundos (padrão: 30)
 
--   **Falhas de Conexão SSH**:
-    -   Confirme que o usuário e senha SSH no `.env` estão corretos.
-    -   Assegure que a rede permite a comunicação da máquina executora com os PDVs na porta 22.
+### Fontes de Dados
+- **Planilhas**: Excel (.xlsx) ou CSV
+- **Oracle Database**: Query personalizada para descoberta de ativos
 
--   **Campos de Hardware como "Não detectado"**:
-    -   Algumas distribuições Linux muito antigas ou customizadas podem não ter os utilitários necessários instalados.
+### Saída
+- **Planilhas**: XLSX ou CSV para relatórios
+- **Banco Oracle**: Inserção direta em tabelas corporativas
 
-Para erros detalhados, sempre consulte o arquivo de log `hardwarePDV.log`.
+---
 
-## Autor
+## Estrutura
 
-| ![Lucas Ribeiro](https://github.com/lucaswotta.png?size=120) |
-| :---: |
-| **Lucas Ribeiro** |
-| [![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lucaswotta) |
+```
+invent-ssh/
+├── app.py           # Interface gráfica (CustomTkinter)
+├── core.py          # Lógica de negócio  
+├── inspector.py     # Coleta e parsing do hardware
+├── build.py         # Script de empacotamento (.exe)
+├── requirements.txt # Dependências
+├── app.ico
+├── LICENSE
+└── README.md
+```
+
+### Fluxo de Processamento
+1. **Carregamento**: Lê lista de IPs (planilha ou Oracle)
+2. **Conexão**: Estabelece pool de conexões SSH
+3. **Coleta**: Executa comandos de hardware em paralelo
+4. **Parsing**: Normaliza dados para formato padrão
+5. **Saída**: Gera relatório ou insere no banco
+
+---
+
+## Segurança
+
+### Práticas Recomendadas
+- Use autenticação por chaves SSH sempre que possível
+- Execute apenas em redes controladas e confiáveis
+- Aplique o princípio do menor privilégio para contas de acesso
+
+### Garantias
+- Não instala ou modifica software nas máquinas alvo
+- Não armazena credenciais permanentemente
+- Não executa comandos de escrita ou configuração
+
+---
+
+## Stack
+
+| Componente | Tecnologia |
+|------------|------------|
+| **Interface** | CustomTkinter |
+| **SSH** | Paramiko |
+| **Dados** | Pandas |
+| **Database** | oracledb |
+| **Build** | PyInstaller |
+
+---
+
+## Contribuição
+
+1. Abra uma Issue descrevendo sua ideia
+2. Fork o projeto e crie uma branch
+3. Implemente suas mudanças
+4. Teste em ambiente real
+5. Submeta um Pull Request
+
+---
+
+## Licença
+
+MIT License - use, modifique e distribua livremente.
+
+---
+
+**Lucas Motta**  
+[GitHub](https://github.com/lucaswotta) • [LinkedIn](https://www.linkedin.com/in/lucaswotta)
