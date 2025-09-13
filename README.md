@@ -1,10 +1,14 @@
+<div align="center"><img src="app.ico" alt="invent-ssh icon" width="128"></div> 
+
 # invent-ssh
 
 **Inventário de Hardware Linux via SSH**
 
+---
+
 Uma ferramenta open source para automatizar a coleta de informações de hardware em sistemas Linux através de conexões SSH. Desenvolvida para resolver problemas reais de visibilidade de infraestrutura em ambientes distribuídos.
 
-![Demo do invent-ssh](https://imgur.com/a/jYjGFCC)
+![Demo do invent-ssh](https://i.imgur.com/Bba4sRb.gif)
 
 [![GitHub Release](https://img.shields.io/github/v/release/lucaswotta/invent-ssh?include_prereleases&label=versão&color=5cb85c)](https://github.com/lucaswotta/invent-ssh/releases)
 [![License: MIT](https://img.shields.io/badge/Licença-MIT-blue.svg)](https://opensource.org/licenses/MIT)
