@@ -1,70 +1,53 @@
-#Byte-compiled / optimized / DLL files
-pycache/
-*.pyc
-*.pyo
-*.pyd
-
-#C extensions
-*.so
-
-#Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-#PyInstaller
-Usually these files are created by pyinstaller, if you run your script from the console with the PyInstaller command
-This is not needed if you run the build script
-*.spec
-
-#Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-#Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-#Environments
+# 1. Ambientes Virtuais
+# Ignore as pastas de ambiente virtual para manter o repositório limpo.
 .env
 .venv
 env/
 venv/
-ENV/
-env.bak/
-venv.bak/
 
-#IDE specific files
-.idea/
+# 2. Arquivos de Sistema Operacional
+# Ignore arquivos de metadados gerados pelo macOS e Windows.
+.DS_Store
+Thumbs.db
+
+# 3. Configurações de IDEs
+# Ignore configurações específicas do editor de código.
 .vscode/
+.idea/
 
-#Application-generated files and user configuration
+# 4. Artefatos do Python
+# Byte-compiled, logs, caches e arquivos de distribuição.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+pip-log.txt
+
+# Empacotamento (gerado por setuptools, etc.)
+build/
+dist/
+downloads/
+eggs/
+*.egg-info/
+*.egg
+
+# Relatórios de Testes e Cobertura
+htmlcov/
+.tox/
+.coverage
+.cache
+.pytest_cache/
+
+# 5. Artefatos do PyInstaller
+# Ignore arquivos de especificação gerados pelo PyInstaller.
+*.spec
+
+# 6. Arquivos Gerados pela Aplicação
+# Ignore relatórios, logs e configurações de usuário.
 reports/
 logs/
+config.json
+crash_log.txt
 *.xlsx
 *.csv
-crash_log.txt
-config.json
