@@ -26,9 +26,9 @@ A falta de visibilidade sobre o hardware instalado em terminais Linux distribuí
 
 ## Como Funciona
 
-### Coleta Inteligente
-- **Estratégia Híbrida**: Usa `inxi` como fonte primária, com fallback para `dmidecode`, `lscpu` e comandos nativos do Linux
-- **100% Somente Leitura**: Zero modificações no sistema alvo
+### Coleta
+- **Estratégia Híbrida**: Usa `inxi` como fonte primária, com fallback para `dmidecode`, `lscpu` e demais comandos nativos do Linux
+- **Somente Leitura**: Zero modificações no sistema alvo
 - **Detecção Automática**: Identifica as melhores ferramentas disponíveis em cada sistema
 
 ### Performance
@@ -37,13 +37,13 @@ A falta de visibilidade sobre o hardware instalado em terminais Linux distribuí
 - **Escalabilidade**: Validado em ambientes com 500+ endpoints
 
 ### Segurança
-- **Credenciais Temporárias**: Nunca persistidas em disco
-- **Suporte SSH Keys**: Autenticação padrão da indústria
-- **Logs Detalhados**: Auditoria completa de operações
+- **Credenciais Temporárias**: Nunca salvas em disco
+- **Suporte SSH Keys**: Autenticação padrão recomendada
+- **Logs Detalhados**: Auditoria completa das operações
 
 ---
 
-## Início Rápido
+## Como Usar
 
 ### Windows
 1. Baixe o executável em [Releases](https://github.com/lucaswotta/invent-ssh/releases)
@@ -90,7 +90,7 @@ TIPO_DISCO: NVMe
 TAMANHO_DISCO: 128GB
 DISTRO: Ubuntu 18.04.3 LTS
 KERNEL: 5.3
-DTAATUALIZACAO: 2025-09-13 01:45:08
+DTAATUALIZACAO: 2025-09-13 00:00:00
 ```
 
 ---
@@ -118,7 +118,7 @@ invent-ssh/
 ├── app.py           # Interface gráfica (CustomTkinter)
 ├── core.py          # Lógica de negócio  
 ├── inspector.py     # Coleta e parsing do hardware
-├── build.py         # Script de empacotamento (.exe)
+├── build.py         # Empacotamento (.exe)
 ├── requirements.txt # Dependências
 ├── app.ico
 ├── LICENSE
