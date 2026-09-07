@@ -109,6 +109,10 @@ DTAATUALIZACAO: 2025-09-13 00:00:00
 - **Planilhas**: XLSX ou CSV para relatórios
 - **Banco Oracle**: Inserção direta em tabelas corporativas
 
+### Idioma
+- **Português (Brasil)** (padrão) ou **English**, selecionável na aba "Configurações"
+- A troca de idioma requer reiniciar a aplicação para ser aplicada por completo
+
 ---
 
 ## Estrutura
@@ -118,6 +122,7 @@ invent-ssh/
 ├── app.py           # Interface gráfica (CustomTkinter)
 ├── core.py          # Lógica de negócio  
 ├── inspector.py     # Coleta e parsing do hardware
+├── i18n.py          # Textos e suporte a múltiplos idiomas (pt-br/en)
 ├── build.py         # Empacotamento (.exe)
 ├── requirements.txt # Dependências
 ├── app.ico
