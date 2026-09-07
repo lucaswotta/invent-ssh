@@ -44,7 +44,7 @@ except ImportError:
     is_valid_oracle_identifier = None
 
 # --- Constantes da Aplicação ---
-APP_VERSION = "0.1" # Versão Beta
+APP_VERSION = "0.2" # Versão Beta
 APP_NAME = "invent-ssh"
 CONFIG_FILE = "config.json"
 ICON_FILE = "app.ico"
