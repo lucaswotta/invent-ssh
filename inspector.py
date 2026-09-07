@@ -10,6 +10,8 @@ import os
 import json
 from typing import Dict, Any, Optional
 
+from i18n import t
+
 # --- Funções de Baixo Nível ---
 
 def _clean_string(text: str) -> str:
@@ -72,7 +74,7 @@ def _collect_manually(client: paramiko.SSHClient) -> Dict[str, Any]:
     results = {}; results.update(_get_distro_info_manual(client)); results.update(_get_cpu_info_manual(client)); results.update(_get_motherboard_info_manual(client)); results.update(_get_memory_info_manual(client)); results.update(_get_storage_info_manual(client)); return results
 
 def _get_distro_info_manual(client: paramiko.SSHClient) -> Dict[str, str]:
-    info = {'distro': "Não foi possível obter", 'kernel': "N/A"}
+    info = {'distro': t("hw_info_unavailable"), 'kernel': "N/A"}
     kernel_output = _run_command(client, "uname -r")
     if kernel_output:
         match = re.match(r"(\d+\.\d+)", kernel_output)
@@ -124,7 +126,7 @@ def _get_motherboard_info_manual(client: paramiko.SSHClient) -> Dict[str, str]:
     if vendor or model:
         vendor, model = _clean_string(vendor), _clean_string(model)
         if (vendor and "empty" not in vendor.lower()) or (model and "empty" not in model.lower()): return {'placa_mae': f"{vendor} - {model}".strip(' -')}
-    return {'placa_mae': "Não foi possível obter"}
+    return {'placa_mae': t("hw_info_unavailable")}
 
 def _get_memory_info_manual(client: paramiko.SSHClient) -> Dict[str, str]:
     info = {'ram': "N/A"}; mem_type = ""
@@ -210,6 +212,11 @@ def _get_storage_info_manual(client: paramiko.SSHClient) -> Dict[str, str]:
 
 def get_hardware_info(ip: str, username: str, password: Optional[str], key_path: Optional[str], timeout: int = 30) -> Dict[str, Any]:
     client = paramiko.SSHClient()
+    # staff: AutoAddPolicy aceita chaves de host desconhecidas sem checagem contra known_hosts,
+    # o que expõe a um MITM na rede local. É uma escolha deliberada: o app varre parques com
+    # centenas de terminais recém-imageados sem infraestrutura de known_hosts compartilhada, e
+    # exigir verificação estrita quebraria o caso de uso principal. Mitigado por ser somente
+    # leitura e recomendar uso em redes corporativas confiáveis (ver modal de boas-vindas).
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         pkey = None
@@ -225,9 +232,9 @@ def get_hardware_info(ip: str, username: str, password: Optional[str], key_path:
         manual_results = _collect_manually(client)
         manual_results['status'] = "SUCESSO"; return manual_results
 
-    except paramiko.AuthenticationException: return {'status': "FALHA_AUTH", 'erro': "Falha na autenticação"}
-    except (socket.timeout, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError): return {'status': "FALHA_CONEXAO", 'erro': f"Timeout ao conectar no IP {ip}"}
-    except paramiko.SSHException as e: return {'status': "ERRO_SSH", 'erro': f"Erro SSH: {e}"}
-    except FileNotFoundError: return {'status': "FALHA_AUTH", 'erro': f"Chave SSH não encontrada: {key_path}"}
-    except Exception as e: return {'status': "ERRO_DESCONHECIDO", 'erro': f"Erro inesperado: {e}"}
+    except paramiko.AuthenticationException: return {'status': "FALHA_AUTH", 'erro': t("hw_auth_failed")}
+    except (socket.timeout, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError): return {'status': "FALHA_CONEXAO", 'erro': t("hw_connection_timeout", ip=ip)}
+    except paramiko.SSHException as e: return {'status': "ERRO_SSH", 'erro': t("hw_ssh_error", error=e)}
+    except FileNotFoundError: return {'status': "FALHA_AUTH", 'erro': t("hw_key_not_found", key_path=key_path)}
+    except Exception as e: return {'status': "ERRO_DESCONHECIDO", 'erro': t("hw_unknown_error", error=e)}
     finally: client.close()

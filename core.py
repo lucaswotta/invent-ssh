@@ -10,6 +10,8 @@ import pandas as pd
 import concurrent.futures
 from datetime import datetime
 import os
+import re
+import threading
 from queue import Queue
 from typing import List, Dict, Any, Optional
 import csv
@@ -17,11 +19,38 @@ import logging
 from dataclasses import dataclass, asdict
 
 from inspector import get_hardware_info
+from i18n import t
 
 try:
     import oracledb
 except ImportError:
     oracledb = None
+
+# Identificador Oracle válido: OWNER.TABELA (ou apenas TABELA), letras/números/_/$/#,
+# começando por letra ou underscore, até 30 caracteres por segmento (limite pré-12.2, seguro).
+_ORACLE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_$#]{0,29}(\.[A-Za-z_][A-Za-z0-9_$#]{0,29})?$")
+
+
+def is_valid_oracle_identifier(name: str) -> bool:
+    """
+    Valida se `name` é um identificador Oracle seguro (ex: OWNER.TABELA).
+    Como nomes de tabela não podem ser passados como bind variables, essa validação
+    por whitelist é a defesa contra injeção de SQL ao montar CREATE TABLE/MERGE.
+    """
+    return bool(name) and bool(_ORACLE_IDENTIFIER_RE.match(name.strip()))
+
+
+def is_select_only_query(query: str) -> bool:
+    """
+    Garante que a query de busca configurada pelo usuário seja um SELECT.
+    Remove comentários de linha/bloco antes de checar a primeira palavra-chave,
+    evitando que um DML/DDL disfarçado atrás de um comentário passe despercebido.
+    """
+    if not query:
+        return False
+    stripped = re.sub(r"/\*.*?\*/", "", query, flags=re.DOTALL)
+    stripped = re.sub(r"--[^\n]*", "", stripped)
+    return re.match(r"^\s*SELECT\b", stripped, re.IGNORECASE) is not None
 
 @dataclass
 class Terminal:
@@ -50,6 +79,11 @@ class InventoryEngine:
         self.log_queue = log_queue
         self.terminals: List[Terminal] = []
         self.logger = logging.getLogger(__name__)
+        self.cancel_event = threading.Event()
+
+    def cancel(self):
+        """Sinaliza para o motor interromper o processamento de terminais ainda pendentes."""
+        self.cancel_event.set()
 
     def log(self, level: str, message: str, value: Any = None):
         """Envia uma mensagem de log para a fila da UI e para o arquivo de log."""
@@ -60,29 +94,30 @@ class InventoryEngine:
     def run_inventory(self):
         """Ponto de entrada principal para iniciar o processo de inventário."""
         try:
-            self.log("INFO", f"Iniciando inventário em 'Modo {self.config['mode']}'")
+            mode_key = "mode_spreadsheet" if self.config['mode'] == 'Planilha' else "mode_oracle"
+            self.log("INFO", t("log_starting", mode=t(mode_key)))
             self._load_terminals()
             if not self.terminals:
-                self.log("ERROR", "Nenhum terminal encontrado. Processo abortado."); return
-            self.log("INFO", f"{len(self.terminals)} terminais carregados. Iniciando coleta...")
+                self.log("ERROR", t("log_no_terminals")); return
+            self.log("INFO", t("log_terminals_loaded", count=len(self.terminals)))
             results = self._execute_collection()
             if not results:
-                self.log("WARNING", "Nenhum dado de hardware foi coletado.")
+                self.log("WARNING", t("log_no_data_collected"))
             else:
-                self.log("INFO", f"Coleta finalizada. {len(results)} resultados. Salvando...")
+                self.log("INFO", t("log_collection_finished", count=len(results)))
                 self._save_results(results)
         except Exception as e:
-            self.log("ERROR", f"Erro crítico no motor da aplicação: {e}")
+            self.log("ERROR", t("log_critical_engine_error", error=e))
             self.logger.critical("Erro crítico no InventoryEngine", exc_info=True)
         finally:
-            self.log("FINISH", "Processo concluído!")
+            self.log("FINISH", t("log_process_finished"))
 
     def _load_terminals(self):
         """Direciona o carregamento dos terminais com base no modo de operação."""
         mode = self.config.get('mode')
         if mode == 'Planilha': self.terminals = self._load_from_spreadsheet()
         elif mode == 'Oracle': self.terminals = self._load_from_oracle()
-        else: raise ValueError(f"Modo de operação desconhecido: {mode}")
+        else: raise ValueError(t("log_unknown_mode", mode=mode))
 
     def _load_from_spreadsheet(self) -> List[Terminal]:
         """Carrega a lista de terminais de um arquivo .xlsx ou .csv."""
@@ -90,29 +125,32 @@ class InventoryEngine:
         try:
             df = pd.read_excel(filepath) if filepath.endswith(('.xlsx', '.xls')) else pd.read_csv(filepath, sep=None, engine='python')
             df.columns = [str(col).upper() for col in df.columns]
-            if 'IP' not in df.columns: raise ValueError("O arquivo deve conter a coluna 'IP'")
+            if 'IP' not in df.columns: raise ValueError(t("log_missing_ip_column"))
             df.dropna(subset=['IP'], inplace=True)
             df = df[df['IP'].astype(str).str.strip() != '']
             return [Terminal(ip=r['IP'], nro_empresa=pd.to_numeric(r.get('NROEMPRESA'), errors='coerce'), nro_checkout=pd.to_numeric(r.get('NROCHECKOUT'), errors='coerce')) for _, r in df.iterrows()]
-        except FileNotFoundError: self.log("ERROR", f"Arquivo não encontrado: {filepath}"); return []
-        except ValueError as ve: self.log("ERROR", f"Erro de formatação na planilha: {ve}"); return []
-        except Exception as e: self.log("ERROR", f"Falha ao ler planilha '{os.path.basename(filepath)}': {e}"); return []
+        except FileNotFoundError: self.log("ERROR", t("log_file_not_found", filepath=filepath)); return []
+        except ValueError as ve: self.log("ERROR", t("log_spreadsheet_format_error", error=ve)); return []
+        except Exception as e: self.log("ERROR", t("log_spreadsheet_read_error", filename=os.path.basename(filepath), error=e)); return []
 
     def _load_from_oracle(self) -> List[Terminal]:
         """Carrega a lista de terminais executando uma query em um banco de dados Oracle."""
-        if oracledb is None: self.log("ERROR", "'oracledb' não está instalado. Modo Oracle desativado."); return []
+        if oracledb is None: self.log("ERROR", t("log_oracledb_not_installed")); return []
+        oracle_query = self.config['oracle_query']
+        if not is_select_only_query(oracle_query):
+            self.log("ERROR", t("log_invalid_query_rejected")); return []
         db_config = self.config['oracle_config']
         dsn = f"{db_config['host']}:{db_config['port']}/{db_config['service']}"
         try:
-            self.log("INFO", f"Conectando ao Oracle em {db_config['host']}...")
+            self.log("INFO", t("log_oracle_connecting", host=db_config['host']))
             with oracledb.connect(user=db_config['user'], password=db_config['password'], dsn=dsn) as conn:
                 with conn.cursor() as cursor:
-                    self.log("INFO", "Executando query para buscar terminais...")
-                    cursor.execute(self.config['oracle_query'])
+                    self.log("INFO", t("log_oracle_running_query"))
+                    cursor.execute(oracle_query)
                     cols = [d[0].upper() for d in cursor.description]
                     rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
                     return [Terminal(ip=r['IP'], nro_empresa=r['NROEMPRESA'], nro_checkout=r['NROCHECKOUT']) for r in rows]
-        except Exception as e: self.log("ERROR", f"Falha na conexão ou consulta ao Oracle: {e}"); return []
+        except Exception as e: self.log("ERROR", t("log_oracle_query_failed", error=e)); return []
 
     def _execute_collection(self) -> List[Terminal]:
         """Executa a coleta de dados de hardware em paralelo para todos os terminais."""
@@ -120,20 +158,24 @@ class InventoryEngine:
         total = len(self.terminals)
         conn_failures, processed, circuit_tripped = 0, 0, False
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config['max_workers']) as executor:
-            future_map = {executor.submit(self._process_single_terminal, t): t for t in self.terminals}
+            future_map = {executor.submit(self._process_single_terminal, term): term for term in self.terminals}
             for i, future in enumerate(concurrent.futures.as_completed(future_map)):
+                if self.cancel_event.is_set():
+                    self.log("WARNING", t("log_cancelled_by_user"))
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    break
                 processed += 1
                 try:
                     result = future.result()
                     if result:
                         results.append(result)
                         if result.status == "FALHA_CONEXAO": conn_failures += 1
-                except Exception as exc: self.log("ERROR", f"Exceção ao processar {future_map[future].ip}: {exc}")
+                except Exception as exc: self.log("ERROR", t("log_processing_exception", ip=future_map[future].ip, error=exc))
                 if not circuit_tripped and processed >= 10 and conn_failures == processed:
-                    self.log("ERROR", "Circuit Breaker: 10/10 conexões iniciais falharam. Abortando.")
-                    self.log("ERROR", "Verifique credenciais SSH, rede ou firewall.")
+                    self.log("ERROR", t("log_circuit_breaker_tripped"))
+                    self.log("ERROR", t("log_circuit_breaker_hint"))
                     circuit_tripped = True
-                    [f.cancel() for f in future_map]; break
+                    executor.shutdown(wait=False, cancel_futures=True); break
                 self.log("PROGRESS", f"Processado: {future_map[future].ip}", (i + 1) / total * 100)
         return results
 
@@ -141,14 +183,14 @@ class InventoryEngine:
         """Processa um único terminal, conectando via SSH e coletando os dados de hardware."""
         if not terminal.ip:
             terminal.status = "ERRO_SEM_IP"; terminal.dta_atualizacao = datetime.now()
-            self.log("WARNING", f"Terminal ignorado por não possuir IP: {terminal}"); return terminal
+            self.log("WARNING", t("log_terminal_no_ip", terminal=terminal)); return terminal
         hw_info = get_hardware_info(ip=terminal.ip, username=self.config['ssh_user'], password=self.config.get('ssh_pass'), key_path=self.config.get('ssh_key_path'), timeout=self.config['ssh_timeout'])
         status = hw_info.get("status")
         if status == "SUCESSO":
-            terminal.status = "ONLINE"; self.log("INFO", f"Sucesso na coleta de {terminal.ip}")
+            terminal.status = "ONLINE"; self.log("INFO", t("log_collection_success", ip=terminal.ip))
         else:
             terminal.status = "OFFLINE" if status == "FALHA_CONEXAO" else status
-            self.log("WARNING", f"Falha em {terminal.ip}: {hw_info.get('erro', 'Falha geral')}")
+            self.log("WARNING", t("log_collection_failure", ip=terminal.ip, error=hw_info.get('erro', t("generic_failure"))))
         for key, value in hw_info.items(): setattr(terminal, key, value)
         terminal.dta_atualizacao = datetime.now()
         return terminal
@@ -177,36 +219,43 @@ class InventoryEngine:
                 df.to_csv(filename, index=False, sep=';', encoding='utf-8-sig', quoting=csv.QUOTE_ALL)
             else:
                 df.to_excel(filename, index=False, engine='openpyxl')
-            self.log("INFO", f"Resultados salvos com sucesso em '{filename}'")
-            self.log("OPEN_FILE", "Abrindo arquivo de resultado...", os.path.abspath(filename))
+            self.log("INFO", t("log_results_saved", filename=filename))
+            self.log("OPEN_FILE", t("log_opening_result_file"), os.path.abspath(filename))
         except Exception as e:
-            self.log("ERROR", f"Falha ao salvar planilha de resultados: {e}")
+            self.log("ERROR", t("log_spreadsheet_save_error", error=e))
 
     def _check_and_create_table(self, cursor: Any, table_name: str) -> bool:
         """Verifica se a tabela de destino existe no Oracle e, se não, tenta criá-la."""
         try:
             cursor.execute(f"SELECT 1 FROM {table_name} WHERE 1=0")
-            self.log("INFO", f"Tabela '{table_name}' encontrada."); return True
+            self.log("INFO", t("log_table_found", table=table_name)); return True
         except oracledb.DatabaseError as e:
             if "ORA-00942" in str(e):
-                self.log("WARNING", f"Tabela '{table_name}' não encontrada. Tentando criar...")
+                self.log("WARNING", t("log_table_not_found_creating", table=table_name))
                 pk_name = f"PK_{table_name.replace('.', '_')}"[:30]
                 create_sql = (f"CREATE TABLE {table_name} (NROEMPRESA NUMBER(4), NROCHECKOUT NUMBER(4), IP VARCHAR2(15), STATUS VARCHAR2(20), PLACA_MAE VARCHAR2(100), PROCESSADOR VARCHAR2(100), CORES_THREADS VARCHAR2(10), RAM VARCHAR2(20), TIPO_DISCO VARCHAR2(10), TAMANHO_DISCO VARCHAR2(20), DISTRO VARCHAR2(100), KERNEL VARCHAR2(20), DTAINCLUSAO DATE, DTAATUALIZACAO DATE, CONSTRAINT {pk_name} PRIMARY KEY (NROEMPRESA, NROCHECKOUT))")
-                try: cursor.execute(create_sql); self.log("INFO", f"Tabela '{table_name}' criada com sucesso."); return True
-                except Exception as ce: self.log("ERROR", f"Falha ao criar a tabela '{table_name}': {ce}"); return False
-            else: self.log("ERROR", f"Erro ao verificar a tabela '{table_name}': {e}"); raise e
+                try: cursor.execute(create_sql); self.log("INFO", t("log_table_created", table=table_name)); return True
+                except Exception as ce: self.log("ERROR", t("log_table_create_failed", table=table_name, error=ce)); return False
+            else: self.log("ERROR", t("log_table_check_error", table=table_name, error=e)); raise e
 
     def _save_to_oracle(self, results: List[Terminal]):
         """Salva os resultados em uma tabela Oracle usando um comando MERGE."""
         if any(r.nro_empresa is None or r.nro_checkout is None for r in results):
-            self.log("WARNING", "Oracle: Registros sem NROEMPRESA/NROCHECKOUT. Salvando em planilha."); self._save_to_spreadsheet(results); return
+            self.log("WARNING", t("log_oracle_missing_keys_fallback")); self._save_to_spreadsheet(results); return
         db_config, table_name = self.config['oracle_config'], self.config['oracle_table']
+        # A tabela de destino é interpolada diretamente no SQL abaixo (Oracle não aceita
+        # identificadores como bind variable), então validamos por whitelist antes de montar
+        # qualquer comando DDL/DML para evitar injeção via configuração adulterada.
+        if not is_valid_oracle_identifier(table_name):
+            self.log("ERROR", t("log_invalid_table_identifier", table=table_name)); return
         dsn = f"{db_config['host']}:{db_config['port']}/{db_config['service']}"
         merge_sql = (f"MERGE INTO {table_name} t USING (SELECT :nro_empresa AS NROEMPRESA, :nro_checkout AS NROCHECKOUT FROM DUAL) s ON (t.NROEMPRESA = s.NROEMPRESA AND t.NROCHECKOUT = s.NROCHECKOUT) WHEN MATCHED THEN UPDATE SET IP=:ip, STATUS=:status, PLACA_MAE=:placa_mae, PROCESSADOR=:processador, CORES_THREADS=:cores_threads, RAM=:ram, TIPO_DISCO=:disk_type, TAMANHO_DISCO=:disk_size, DISTRO=:distro, KERNEL=:kernel, DTAATUALIZACAO=:dta_atualizacao WHEN NOT MATCHED THEN INSERT (NROEMPRESA, NROCHECKOUT, IP, STATUS, PLACA_MAE, PROCESSADOR, CORES_THREADS, RAM, TIPO_DISCO, TAMANHO_DISCO, DISTRO, KERNEL, DTAINCLUSAO, DTAATUALIZACAO) VALUES (:nro_empresa, :nro_checkout, :ip, :status, :placa_mae, :processador, :cores_threads, :ram, :disk_type, :disk_size, :distro, :kernel, :dta_atualizacao, :dta_atualizacao)")
         try:
             with oracledb.connect(user=db_config['user'], password=db_config['password'], dsn=dsn) as conn:
                 with conn.cursor() as cursor:
-                    if not self._check_and_create_table(cursor, table_name): self.log("ERROR", "Abortado: tabela não pôde ser criada/encontrada."); return
+                    if not self._check_and_create_table(cursor, table_name): self.log("ERROR", t("log_table_creation_aborted", table=table_name)); return
                     cursor.executemany(merge_sql, [asdict(r) for r in results], batcherrors=True)
-                    conn.commit(); self.log("INFO", f"{cursor.rowcount} registros salvos/atualizados em '{table_name}'.")
-        except Exception as e: self.log("ERROR", f"Erro crítico ao salvar no Oracle: {e}")
+                    for batch_error in cursor.getbatcherrors():
+                        self.log("ERROR", t("log_oracle_batch_row_error", offset=batch_error.offset, error=batch_error.message))
+                    conn.commit(); self.log("INFO", t("log_oracle_records_saved", count=cursor.rowcount, table=table_name))
+        except Exception as e: self.log("ERROR", t("log_oracle_save_critical_error", error=e))
