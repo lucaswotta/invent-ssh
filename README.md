@@ -150,6 +150,7 @@ invent-ssh/
 - Não instala ou modifica software nas máquinas alvo
 - Não armazena credenciais permanentemente
 - Não executa comandos de escrita ou configuração
+- No Modo Oracle, valida que a query de busca é somente `SELECT` e que a tabela de destino é um identificador válido, antes de executar qualquer SQL
 
 ---
 
