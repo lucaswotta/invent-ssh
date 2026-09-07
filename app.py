@@ -13,6 +13,7 @@ import threading
 import queue
 import json
 import os
+import glob
 import platform
 import traceback
 import re
@@ -22,19 +23,25 @@ from datetime import datetime
 from tkinter import filedialog, messagebox
 from typing import Optional, Dict, Any
 
+# i18n depende apenas da stdlib, então pode ser importado incondicionalmente
+# mesmo antes da checagem de dependências de terceiros.
+from i18n import t, set_language, get_language, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, LANGUAGE_DISPLAY_NAMES
+
 # --- Importações condicionais para dependências ---
 # Esta estrutura garante que a verificação de dependências ocorra
 # antes de tentar importar os módulos necessários para a GUI.
 try:
     import customtkinter as ctk
     import pandas as pd
-    from core import InventoryEngine
+    from core import InventoryEngine, is_select_only_query, is_valid_oracle_identifier
 except ImportError:
     # As importações serão tratadas pelo verificador de dependências.
     # Se falhar, a aplicação não continuará.
     ctk = None
     pd = None
     InventoryEngine = None
+    is_select_only_query = None
+    is_valid_oracle_identifier = None
 
 # --- Constantes da Aplicação ---
 APP_VERSION = "0.1" # Versão Beta
@@ -109,19 +116,18 @@ def check_and_install_dependencies():
     root = tk.Tk()
     root.withdraw()
 
-    msg = (f"As seguintes dependências não foram encontradas:\n\n{', '.join(missing_packages)}\n\n"
-           f"Deseja instalá-las agora? (Requer conexão com a internet)")
+    msg = t("missing_deps_body", packages=', '.join(missing_packages))
 
-    if messagebox.askyesno("Dependências Ausentes", msg):
+    if messagebox.askyesno(t("missing_deps_title"), msg):
         try:
             # Tenta instalar os pacotes ausentes usando pip
             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing_packages])
-            messagebox.showinfo("Sucesso", "Dependências instaladas com sucesso!\nPor favor, reinicie a aplicação.")
+            messagebox.showinfo(t("deps_install_success_title"), t("deps_install_success_body"))
         except Exception as e:
-            messagebox.showerror("Erro na Instalação", f"Não foi possível instalar as dependências.\nErro: {e}\n\nInstale-as manualmente: pip install {' '.join(missing_packages)}")
+            messagebox.showerror(t("deps_install_error_title"), t("deps_install_error_body", error=e, packages=' '.join(missing_packages)))
         return False  # Requer reinicialização
     else:
-        messagebox.showwarning("Aviso", "A aplicação pode não funcionar corretamente sem as dependências.")
+        messagebox.showwarning(t("deps_skip_warning_title"), t("deps_skip_warning_body"))
         return True # Permite continuar, mas pode falhar
 
 # --- Classes da UI ---
@@ -145,7 +151,7 @@ class BaseModal(ctk.CTkToplevel):
 class WelcomeModal(BaseModal):
     """Modal de boas-vindas com foco na proposta de valor, segurança e usabilidade."""
     def __init__(self, master, config: dict):
-        super().__init__(master, f"Bem-vindo ao {APP_NAME}!", "750x550")
+        super().__init__(master, t("welcome_title", app_name=APP_NAME), "750x550")
         self.master = master
         self.config = config
 
@@ -160,24 +166,17 @@ class WelcomeModal(BaseModal):
             ctk.CTkLabel(parent, text=title, font=THEME["font_h2"], anchor="w").pack(fill="x", pady=(15, 5), padx=10)
             ctk.CTkLabel(parent, text=content, font=THEME["font_body"], anchor="w", justify="left", wraplength=680).pack(fill="x", padx=10, pady=(0, 10))
 
-        legacy_text = ("Esta aplicação nasceu de uma necessidade real: inventariar centenas de terminais Linux de forma rápida e confiável. O que era um script pessoal evoluiu para esta ferramenta, agora open-source, para que toda a comunidade possa se beneficiar de um processo automatizado e seguro.")
-        network_text = ("Para que a mágica aconteça, seu computador precisa se comunicar com as máquinas Linux na rede via SSH (porta 22). Garanta que não haja um firewall bloqueando esta porta e que você esteja conectado na mesma rede que os terminais (seja via cabo, Wi-Fi ou VPN).")
-        security_text = ("•  Suas credenciais são usadas apenas em memória durante a execução e NUNCA são salvas.\n"
-                         "•  Dê preferência ao uso de Chaves SSH. É o padrão da indústria e exponencialmente mais seguro que senhas.\n"
-                         "•  Execute o invent-ssh apenas em redes corporativas confiáveis. Evite redes públicas.\n"
-                         "•  Você é o guardião das suas credenciais. Use-as de acordo com as políticas da sua empresa.")
-
-        create_section(main_frame, "A Origem e o Código Aberto", legacy_text)
-        create_section(main_frame, "Conectividade de Rede: Como Funciona?", network_text)
-        create_section(main_frame, "Segurança é Inegociável", security_text)
+        create_section(main_frame, t("welcome_section1_title"), t("welcome_section1_body"))
+        create_section(main_frame, t("welcome_section2_title"), t("welcome_section2_body"))
+        create_section(main_frame, t("welcome_section3_title"), t("welcome_section3_body"))
 
         footer_frame = ctk.CTkFrame(self, fg_color="transparent")
         footer_frame.grid(row=1, column=0, padx=THEME["padding"], pady=(0, THEME["padding"]), sticky="ew")
         footer_frame.grid_columnconfigure(0, weight=1)
 
         self.show_again_var = ctk.BooleanVar(value=True)
-        ctk.CTkCheckBox(footer_frame, text="Não mostrar esta mensagem novamente", variable=self.show_again_var, onvalue=False, offvalue=True, font=THEME["font_body"]).grid(row=0, column=0, padx=5, sticky="w")
-        ctk.CTkButton(footer_frame, text="Entendi, vamos começar!", command=self.close_modal).grid(row=0, column=1, padx=5, sticky="e")
+        ctk.CTkCheckBox(footer_frame, text=t("welcome_checkbox_dont_show"), variable=self.show_again_var, onvalue=False, offvalue=True, font=THEME["font_body"]).grid(row=0, column=0, padx=5, sticky="w")
+        ctk.CTkButton(footer_frame, text=t("welcome_button_start"), command=self.close_modal).grid(row=0, column=1, padx=5, sticky="e")
 
     def on_closing_attempt(self):
         """Impede o fechamento acidental da janela de boas-vindas."""
@@ -232,7 +231,7 @@ class LogModal(BaseModal):
     e controla a interação do usuário durante a execução do inventário.
     """
     def __init__(self, master):
-        super().__init__(master, "Executando Inventário...", "700x400")
+        super().__init__(master, t("log_modal_title_running"), "700x400")
         self.master = master
         self.log_queue = master.log_queue
 
@@ -244,7 +243,7 @@ class LogModal(BaseModal):
         self.log_textbox = ctk.CTkTextbox(self, font=THEME["font_mono"], state="disabled")
         self.log_textbox.grid(row=1, column=0, padx=THEME["padding_sm"], pady=(0, THEME["padding_sm"]), sticky="nsew")
 
-        self.close_button = ctk.CTkButton(self, text="Fechar", command=self.destroy, state="disabled")
+        self.close_button = ctk.CTkButton(self, text=t("log_modal_close_button"), command=self.destroy, state="disabled")
         self.close_button.grid(row=2, column=0, padx=THEME["padding_sm"], pady=(5, THEME["padding_sm"]), sticky="ew")
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing_attempt)
@@ -277,17 +276,17 @@ class LogModal(BaseModal):
 
     def finish_process(self, final_message):
         """Finaliza o modal, habilitando o botão de fechar e exibindo um pop-up."""
-        self.title("Processo Concluído")
+        self.title(t("log_modal_title_finished"))
         self.progress_bar.set(1.0)
         self.master.reset_ui()
         self.close_button.configure(state="normal")
         self.protocol("WM_DELETE_WINDOW", self.destroy)
-        messagebox.showinfo("Concluído", final_message, parent=self)
+        messagebox.showinfo(t("log_modal_finished_title"), final_message, parent=self)
         self.grab_set()
 
     def on_closing_attempt(self):
         """Impede que o usuário feche o modal enquanto o processo está rodando."""
-        messagebox.showwarning("Atenção", "O inventário está em execução. Por favor, aguarde a finalização.", parent=self)
+        messagebox.showwarning(t("log_modal_close_warning_title"), t("log_modal_close_warning_body"), parent=self)
         self.grab_set()
 
 class SSHCredentialsFrame(ctk.CTkFrame):
@@ -297,33 +296,33 @@ class SSHCredentialsFrame(ctk.CTkFrame):
         self.config = config
         self.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self, text="Credenciais de Acesso SSH", font=THEME["font_h2"]).grid(row=0, column=0, columnspan=3, sticky="w", pady=(THEME["padding_sm"], 5))
+        ctk.CTkLabel(self, text=t("ssh_credentials_title"), font=THEME["font_h2"]).grid(row=0, column=0, columnspan=3, sticky="w", pady=(THEME["padding_sm"], 5))
 
-        ctk.CTkLabel(self, text="Usuário SSH*", font=THEME["font_body"]).grid(row=1, column=0, sticky="w")
+        ctk.CTkLabel(self, text=t("ssh_user_label"), font=THEME["font_body"]).grid(row=1, column=0, sticky="w")
         self.ssh_user_entry = ctk.CTkEntry(self, font=THEME["font_body"])
         self.ssh_user_entry.insert(0, self.config.get("last_ssh_user", ""))
         self.ssh_user_entry.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(0, THEME["padding_sm"]))
-        Tooltip(self.ssh_user_entry, "Usuário para a conexão SSH (ex: root, admin). Campo obrigatório.")
+        Tooltip(self.ssh_user_entry, t("ssh_user_tooltip"))
 
-        self.ssh_pass_entry = ctk.CTkEntry(self, show="*", placeholder_text="Senha SSH (se não usar chave)", font=THEME["font_body"])
+        self.ssh_pass_entry = ctk.CTkEntry(self, show="*", placeholder_text=t("ssh_pass_placeholder"), font=THEME["font_body"])
         self.ssh_pass_entry.grid(row=3, column=0, columnspan=3, sticky="ew", pady=(0, THEME["padding_sm"]))
-        Tooltip(self.ssh_pass_entry, "Senha do usuário SSH. Deixe em branco para usar uma Chave Privada.")
+        Tooltip(self.ssh_pass_entry, t("ssh_pass_tooltip"))
 
         key_frame = ctk.CTkFrame(self, fg_color="transparent")
         key_frame.grid(row=4, column=0, columnspan=3, sticky="ew")
         key_frame.grid_columnconfigure(0, weight=1)
 
-        self.ssh_key_entry = ctk.CTkEntry(key_frame, placeholder_text="Caminho para a Chave SSH Privada (recomendado)", font=THEME["font_body"])
+        self.ssh_key_entry = ctk.CTkEntry(key_frame, placeholder_text=t("ssh_key_placeholder"), font=THEME["font_body"])
         self.ssh_key_entry.insert(0, self.config.get("last_ssh_key_path", ""))
         self.ssh_key_entry.grid(row=0, column=0, sticky="ew")
-        Tooltip(self.ssh_key_entry, "Caminho completo para sua chave SSH privada (ex: C:/Users/Você/.ssh/id_rsa).\nÉ o método de autenticação mais seguro.")
+        Tooltip(self.ssh_key_entry, t("ssh_key_tooltip"))
 
-        self.browse_key_button = ctk.CTkButton(key_frame, text="Procurar...", width=120, command=self.browse_key_file)
+        self.browse_key_button = ctk.CTkButton(key_frame, text=t("browse_button"), width=120, command=self.browse_key_file)
         self.browse_key_button.grid(row=0, column=1, padx=(10, 0))
 
     def browse_key_file(self):
         """Abre uma janela para o usuário selecionar o arquivo da chave SSH privada."""
-        filepath = filedialog.askopenfilename(title="Selecionar Chave SSH Privada")
+        filepath = filedialog.askopenfilename(title=t("select_ssh_key_title"))
         if filepath:
             self.ssh_key_entry.delete(0, "end")
             self.ssh_key_entry.insert(0, filepath)
@@ -352,15 +351,18 @@ class App(ctk.CTk):
         super().__init__()
         self.title(f"{APP_NAME} v{APP_VERSION}")
         self.geometry("820x680")
-        self.resizable(False, False)
+        self.minsize(820, 680)
+        self.resizable(True, True)
 
         icon_path = resource_path(ICON_FILE)
         if os.path.exists(icon_path):
             self.iconbitmap(icon_path)
 
         self.is_running = False
+        self.current_engine: Optional[InventoryEngine] = None
         self.log_queue = queue.Queue()
         self.config = self.load_config()
+        set_language(self.config.get("language", DEFAULT_LANGUAGE))
 
         self.create_widgets()
         self.center_window()
@@ -390,15 +392,25 @@ class App(ctk.CTk):
 
         header_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
         header_frame.grid(row=0, column=0, padx=THEME["padding"], pady=(THEME["padding"], 6), sticky="ew")
-        ctk.CTkLabel(header_frame, text="Inventário de Hardware Linux via SSH", font=THEME["font_h1"]).pack(pady=5)
+        ctk.CTkLabel(header_frame, text=t("app_title"), font=THEME["font_h1"]).pack(pady=5)
+
+        # Os rótulos das abas são traduzidos, mas a lógica interna nunca compara contra
+        # esse texto diretamente: usamos `self.tab_labels`/`self.tab_key_by_label` para
+        # mapear de volta a uma chave estável ("home", "spreadsheet", ...), independente
+        # do idioma ativo.
+        self.tab_labels = {
+            "home": t("tab_home"),
+            "spreadsheet": t("tab_spreadsheet"),
+            "oracle": t("tab_oracle"),
+            "settings": t("tab_settings"),
+            "about": t("tab_about"),
+        }
+        self.tab_key_by_label = {label: key for key, label in self.tab_labels.items()}
 
         self.tab_view = ctk.CTkTabview(self, command=self.on_tab_change)
         self.tab_view.grid(row=1, column=0, padx=THEME["padding"], pady=6, sticky="nsew")
-        self.tab_view.add("Início")
-        self.tab_view.add("Modo Planilha")
-        self.tab_view.add("Modo Oracle")
-        self.tab_view.add("Configurações")
-        self.tab_view.add("Sobre")
+        for label in self.tab_labels.values():
+            self.tab_view.add(label)
 
         self.create_inicio_tab()
         self.create_spreadsheet_tab()
@@ -406,9 +418,13 @@ class App(ctk.CTk):
         self.create_config_tab()
         self.create_sobre_tab()
 
-        self.run_button = ctk.CTkButton(self, text="Iniciar Inventário", height=45, font=("Segoe UI", 18, "bold"), command=self.start_inventory_thread)
+        self.run_button = ctk.CTkButton(self, text=t("run_button_default"), height=45, font=("Segoe UI", 18, "bold"), command=self.start_inventory_thread)
         self.run_button.grid(row=2, column=0, padx=THEME["padding"], pady=(12, THEME["padding"]), sticky="ew")
-        Tooltip(self.run_button, "Inicia o processo de coleta de dados com as configurações da aba atual.")
+        Tooltip(self.run_button, t("run_button_tooltip"))
+
+    def get_active_tab_key(self) -> str:
+        """Retorna a chave estável ('home', 'spreadsheet', ...) da aba atualmente selecionada."""
+        return self.tab_key_by_label.get(self.tab_view.get())
 
     def on_tab_change(self, tab_name=None):
         """Chamado quando o usuário troca de aba para atualizar a UI."""
@@ -418,12 +434,12 @@ class App(ctk.CTk):
     def _update_ui_for_tab(self):
         """Atualiza o texto do botão principal e sua visibilidade com base na aba selecionada."""
         try:
-            selected_tab = self.tab_view.get()
-            if selected_tab == "Modo Planilha":
-                self.run_button.configure(text="▶ Iniciar Inventário via Planilha")
+            selected_key = self.get_active_tab_key()
+            if selected_key == "spreadsheet":
+                self.run_button.configure(text=t("run_button_spreadsheet"))
                 self.run_button.grid()
-            elif selected_tab == "Modo Oracle":
-                self.run_button.configure(text="▶ Iniciar Inventário via Oracle")
+            elif selected_key == "oracle":
+                self.run_button.configure(text=t("run_button_oracle"))
                 self.run_button.grid()
             else:
                 self.run_button.grid_remove() # Oculta o botão em abas não executáveis
@@ -433,32 +449,21 @@ class App(ctk.CTk):
 
     def create_inicio_tab(self):
         """Cria os widgets da aba 'Início'."""
-        tab = self.tab_view.tab("Início")
+        tab = self.tab_view.tab(self.tab_labels["home"])
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
 
         main_frame = ctk.CTkFrame(tab, fg_color="transparent")
         main_frame.grid(row=0, column=0, padx=30, pady=30, sticky="nsew")
 
-        welcome_text = (
-            "Bem-vindo ao invent-ssh!\n\n"
-            "Automatize o inventário de hardware de seus computadores Linux de forma simples e segura.\n\n"
-            "Como Começar:\n\n"
-            "1. Escolha sua fonte de dados:\n"
-            "   •  Modo Planilha: Se você tem uma lista de IPs em um arquivo .xlsx ou .csv.\n"
-            "   •  Modo Oracle: Se seus ativos estão registrados em um banco de dados Oracle.\n\n"
-            "2. Forneça as credenciais de acesso SSH na aba escolhida.\n\n"
-            "3. Clique no botão 'Iniciar Inventário' e acompanhe o progresso em tempo real.\n\n"
-            "Dica: Na aba 'Modo Planilha', use o botão [?] para gerar um arquivo modelo e garantir a formatação correta."
-        )
         textbox = ctk.CTkTextbox(main_frame, font=THEME["font_body"], wrap="word", fg_color="transparent")
-        textbox.insert("1.0", welcome_text)
+        textbox.insert("1.0", t("home_welcome_text"))
         textbox.configure(state="disabled")
         textbox.pack(expand=True, fill="both", pady=10)
 
     def create_spreadsheet_tab(self):
         """Cria os widgets da aba 'Modo Planilha'."""
-        tab = self.tab_view.tab("Modo Planilha")
+        tab = self.tab_view.tab(self.tab_labels["spreadsheet"])
         tab.grid_columnconfigure(0, weight=1)
 
         main_frame = ctk.CTkFrame(tab, fg_color="transparent")
@@ -467,41 +472,41 @@ class App(ctk.CTk):
 
         file_header_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         file_header_frame.grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 5))
-        ctk.CTkLabel(file_header_frame, text="Arquivo de Entrada (.xlsx ou .csv)*", font=THEME["font_h2"]).pack(side="left")
+        ctk.CTkLabel(file_header_frame, text=t("spreadsheet_file_label"), font=THEME["font_h2"]).pack(side="left")
         help_button = ctk.CTkButton(file_header_frame, text="?", width=28, height=28, command=self.create_template_spreadsheet)
         help_button.pack(side="left", padx=(10, 0))
-        Tooltip(help_button, "Clique para criar um arquivo de planilha modelo (.xlsx).")
+        Tooltip(help_button, t("spreadsheet_help_tooltip"))
 
-        self.file_entry = ctk.CTkEntry(main_frame, placeholder_text="Selecione o arquivo com a coluna obrigatória: IP (NROEMPRESA e NROCHECKOUT são opcionais)", font=THEME["font_body"])
+        self.file_entry = ctk.CTkEntry(main_frame, placeholder_text=t("spreadsheet_file_placeholder"), font=THEME["font_body"])
         self.file_entry.insert(0, self.config.get("last_file_path", ""))
         self.file_entry.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, THEME["padding"]))
-        Tooltip(self.file_entry, "Caminho para o arquivo de planilha.\nA coluna 'IP' é obrigatória. 'NROEMPRESA' e 'NROCHECKOUT' são opcionais.")
+        Tooltip(self.file_entry, t("spreadsheet_file_tooltip"))
 
-        browse_button = ctk.CTkButton(main_frame, text="Procurar...", width=120, command=self.browse_file)
+        browse_button = ctk.CTkButton(main_frame, text=t("browse_button"), width=120, command=self.browse_file)
         browse_button.grid(row=1, column=2, padx=(10, 0), pady=(0, THEME["padding"]))
 
         self.ssh_widgets_planilha = SSHCredentialsFrame(main_frame, self.config)
         self.ssh_widgets_planilha.grid(row=2, column=0, columnspan=3, sticky="ew")
 
-        ctk.CTkLabel(main_frame, text="Destino dos Dados", font=THEME["font_h2"]).grid(row=3, column=0, columnspan=3, sticky="w", pady=(THEME["padding"], 5))
-        ctk.CTkLabel(main_frame, text="Formato de Saída:", font=THEME["font_body"]).grid(row=4, column=0, sticky="w")
+        ctk.CTkLabel(main_frame, text=t("output_destination_label"), font=THEME["font_h2"]).grid(row=3, column=0, columnspan=3, sticky="w", pady=(THEME["padding"], 5))
+        ctk.CTkLabel(main_frame, text=t("output_format_label"), font=THEME["font_body"]).grid(row=4, column=0, sticky="w")
         self.spreadsheet_output_format_var = ctk.StringVar(value=self.config.get("spreadsheet_format", "XLSX"))
         spreadsheet_output_menu = ctk.CTkOptionMenu(main_frame, variable=self.spreadsheet_output_format_var, values=["XLSX", "CSV"])
         spreadsheet_output_menu.grid(row=4, column=1, sticky="w", columnspan=2)
-        Tooltip(spreadsheet_output_menu, "Escolha o formato do arquivo de relatório final.")
+        Tooltip(spreadsheet_output_menu, t("spreadsheet_output_format_tooltip"))
 
     def create_oracle_tab(self):
         """Cria os widgets da aba 'Modo Oracle'."""
-        tab = self.tab_view.tab("Modo Oracle")
+        tab = self.tab_view.tab(self.tab_labels["oracle"])
         tab.grid_columnconfigure((0, 1), weight=1, uniform="group1")
 
         connections_frame = ctk.CTkFrame(tab)
         connections_frame.grid(row=0, column=0, padx=(THEME["padding"], 7), pady=THEME["padding"], sticky="nsew")
         connections_frame.grid_columnconfigure(1, weight=1)
-        ctk.CTkLabel(connections_frame, text="Conexão Oracle", font=THEME["font_h2"]).grid(row=0, column=0, columnspan=2, padx=THEME["padding_sm"], pady=(THEME["padding_sm"],5), sticky="w")
+        ctk.CTkLabel(connections_frame, text=t("oracle_connection_title"), font=THEME["font_h2"]).grid(row=0, column=0, columnspan=2, padx=THEME["padding_sm"], pady=(THEME["padding_sm"],5), sticky="w")
 
         self.oracle_entries = {}
-        oracle_fields = [("USER", "Usuário*"), ("PASSWORD", "Senha*"), ("HOST", "Host/IP*"), ("PORT", "Porta*"), ("SERVICE", "Service Name*")]
+        oracle_fields = [("USER", t("oracle_field_user")), ("PASSWORD", t("oracle_field_password")), ("HOST", t("oracle_field_host")), ("PORT", t("oracle_field_port")), ("SERVICE", t("oracle_field_service"))]
         for i, (key, label) in enumerate(oracle_fields):
             ctk.CTkLabel(connections_frame, text=f"{label}:", font=THEME["font_body"]).grid(row=i+1, column=0, padx=THEME["padding_sm"], pady=5, sticky="w")
             entry = ctk.CTkEntry(connections_frame, show="*" if key == "PASSWORD" else None, font=THEME["font_body"])
@@ -509,7 +514,7 @@ class App(ctk.CTk):
             if key != "PASSWORD": entry.insert(0, default_val)
             entry.grid(row=i+1, column=1, padx=THEME["padding_sm"], pady=5, sticky="ew")
             self.oracle_entries[key.lower()] = entry
-            Tooltip(entry, f"Informação de '{label.replace('*', '')}' para conectar ao banco Oracle.")
+            Tooltip(entry, t("oracle_field_tooltip", label=label.replace('*', '')))
 
         ssh_dest_frame = ctk.CTkFrame(tab)
         ssh_dest_frame.grid(row=0, column=1, padx=(7, THEME["padding"]), pady=THEME["padding"], sticky="nsew")
@@ -518,20 +523,20 @@ class App(ctk.CTk):
         self.ssh_widgets_oracle = SSHCredentialsFrame(ssh_dest_frame, self.config)
         self.ssh_widgets_oracle.grid(row=0, column=0, sticky="ew", padx=THEME["padding_sm"])
 
-        ctk.CTkLabel(ssh_dest_frame, text="Destino dos Dados", font=THEME["font_h2"]).grid(row=1, column=0, padx=THEME["padding_sm"], pady=(15,5), sticky="w")
+        ctk.CTkLabel(ssh_dest_frame, text=t("output_destination_label"), font=THEME["font_h2"]).grid(row=1, column=0, padx=THEME["padding_sm"], pady=(15,5), sticky="w")
         self.oracle_save_to_db_var = ctk.BooleanVar(value=self.config.get("save_to_db", True))
-        oracle_db_checkbox = ctk.CTkCheckBox(ssh_dest_frame, text="Salvar resultados no banco de dados", variable=self.oracle_save_to_db_var, command=self.toggle_oracle_output_format, font=THEME["font_body"])
+        oracle_db_checkbox = ctk.CTkCheckBox(ssh_dest_frame, text=t("oracle_save_to_db_checkbox"), variable=self.oracle_save_to_db_var, command=self.toggle_oracle_output_format, font=THEME["font_body"])
         oracle_db_checkbox.grid(row=2, column=0, padx=THEME["padding_sm"], pady=5, sticky="w")
-        Tooltip(oracle_db_checkbox, "Se marcado, os resultados serão inseridos na tabela Oracle.\nSe desmarcado, será gerado um arquivo de planilha.")
+        Tooltip(oracle_db_checkbox, t("oracle_save_to_db_tooltip"))
 
-        self.oracle_output_format_label = ctk.CTkLabel(ssh_dest_frame, text="Formato de Saída:", font=THEME["font_body"])
+        self.oracle_output_format_label = ctk.CTkLabel(ssh_dest_frame, text=t("output_format_label"), font=THEME["font_body"])
         self.oracle_output_format_var = ctk.StringVar(value=self.config.get("oracle_output_format", "XLSX"))
         self.oracle_output_menu = ctk.CTkOptionMenu(ssh_dest_frame, variable=self.oracle_output_format_var, values=["XLSX", "CSV"])
         self.toggle_oracle_output_format()
 
     def create_config_tab(self):
         """Cria os widgets da aba 'Configurações'."""
-        tab = self.tab_view.tab("Configurações")
+        tab = self.tab_view.tab(self.tab_labels["settings"])
         tab.grid_columnconfigure(0, weight=1)
         main_frame = ctk.CTkFrame(tab, fg_color="transparent")
         main_frame.grid(row=0, column=0, sticky="nsew", padx=THEME["padding"], pady=THEME["padding"])
@@ -540,53 +545,69 @@ class App(ctk.CTk):
         perf_frame = ctk.CTkFrame(main_frame)
         perf_frame.grid(row=0, column=0, sticky="ew", pady=(0, THEME["padding"]))
         perf_frame.grid_columnconfigure(1, weight=1)
-        ctk.CTkLabel(perf_frame, text="Performance e Execução", font=THEME["font_h2"]).grid(row=0, column=0, columnspan=3, pady=THEME["padding_sm"], padx=THEME["padding_sm"], sticky="w")
+        ctk.CTkLabel(perf_frame, text=t("settings_performance_title"), font=THEME["font_h2"]).grid(row=0, column=0, columnspan=3, pady=THEME["padding_sm"], padx=THEME["padding_sm"], sticky="w")
 
-        ctk.CTkLabel(perf_frame, text="Processos Paralelos:", font=THEME["font_body"]).grid(row=1, column=0, sticky="w", padx=(15,10))
+        ctk.CTkLabel(perf_frame, text=t("settings_workers_label"), font=THEME["font_body"]).grid(row=1, column=0, sticky="w", padx=(15,10))
         self.workers_slider = ctk.CTkSlider(perf_frame, from_=1, to=50, number_of_steps=49)
         self.workers_slider.set(self.config.get("max_workers", 15))
         self.workers_slider.grid(row=1, column=1, sticky="ew")
         self.workers_label = ctk.CTkLabel(perf_frame, text=f"{int(self.workers_slider.get())}", width=40, font=THEME["font_body"])
         self.workers_label.grid(row=1, column=2, padx=(10, 15))
         self.workers_slider.configure(command=lambda v: self.workers_label.configure(text=f"{int(v)}"))
-        Tooltip(self.workers_slider, "Número máximo de computadores a serem processados simultaneamente.\nValores mais altos são mais rápidos, mas consomem mais recursos.")
+        Tooltip(self.workers_slider, t("settings_workers_tooltip"))
 
-        ctk.CTkLabel(perf_frame, text="Timeout SSH (segundos):", font=THEME["font_body"]).grid(row=2, column=0, sticky="w", padx=(15,10), pady=(15, 15))
+        ctk.CTkLabel(perf_frame, text=t("settings_timeout_label"), font=THEME["font_body"]).grid(row=2, column=0, sticky="w", padx=(15,10), pady=(15, 15))
         self.timeout_slider = ctk.CTkSlider(perf_frame, from_=5, to=60, number_of_steps=11)
         self.timeout_slider.set(self.config.get("ssh_timeout", 30))
         self.timeout_slider.grid(row=2, column=1, sticky="ew", pady=(15, 15))
         self.timeout_label = ctk.CTkLabel(perf_frame, text=f"{int(self.timeout_slider.get())}s", width=40, font=THEME["font_body"])
         self.timeout_label.grid(row=2, column=2, padx=(10, 15), pady=(15, 15))
         self.timeout_slider.configure(command=lambda v: self.timeout_label.configure(text=f"{int(v)}s"))
-        Tooltip(self.timeout_slider, "Tempo máximo em segundos para aguardar uma resposta de cada computador antes de desistir.")
+        Tooltip(self.timeout_slider, t("settings_timeout_tooltip"))
 
         oracle_defaults_frame = ctk.CTkFrame(main_frame)
-        oracle_defaults_frame.grid(row=1, column=0, sticky="ew")
+        oracle_defaults_frame.grid(row=1, column=0, sticky="ew", pady=(0, THEME["padding"]))
         oracle_defaults_frame.grid_columnconfigure(1, weight=1)
-        ctk.CTkLabel(oracle_defaults_frame, text="Padrões do Modo Oracle", font=THEME["font_h2"]).grid(row=0, column=0, columnspan=2, pady=THEME["padding_sm"], padx=THEME["padding_sm"], sticky="w")
+        ctk.CTkLabel(oracle_defaults_frame, text=t("settings_oracle_defaults_title"), font=THEME["font_h2"]).grid(row=0, column=0, columnspan=2, pady=THEME["padding_sm"], padx=THEME["padding_sm"], sticky="w")
 
-        ctk.CTkLabel(oracle_defaults_frame, text="Tabela Destino:", font=THEME["font_body"]).grid(row=1, column=0, sticky="w", padx=15)
-        self.config_oracle_table_entry = ctk.CTkEntry(oracle_defaults_frame, placeholder_text="OWNER.TABELA", font=THEME["font_body"])
+        ctk.CTkLabel(oracle_defaults_frame, text=t("settings_oracle_table_label"), font=THEME["font_body"]).grid(row=1, column=0, sticky="w", padx=15)
+        self.config_oracle_table_entry = ctk.CTkEntry(oracle_defaults_frame, placeholder_text=t("settings_oracle_table_placeholder"), font=THEME["font_body"])
         self.config_oracle_table_entry.insert(0, self.config.get("oracle_table", DEFAULT_ORACLE_TABLE))
         self.config_oracle_table_entry.grid(row=1, column=1, sticky="ew", padx=(10, 15))
-        Tooltip(self.config_oracle_table_entry, "Define a tabela padrão de destino para salvar os dados no Modo Oracle.")
+        Tooltip(self.config_oracle_table_entry, t("settings_oracle_table_tooltip"))
 
-        ctk.CTkLabel(oracle_defaults_frame, text="Query de Busca:", font=THEME["font_body"]).grid(row=2, column=0, sticky="w", pady=(10, 0), padx=15)
+        ctk.CTkLabel(oracle_defaults_frame, text=t("settings_oracle_query_label"), font=THEME["font_body"]).grid(row=2, column=0, sticky="w", pady=(10, 0), padx=15)
         self.config_oracle_query_textbox = ctk.CTkTextbox(oracle_defaults_frame, height=80, font=THEME["font_mono"])
         self.config_oracle_query_textbox.insert("1.0", self.config.get("oracle_query", DEFAULT_ORACLE_QUERY))
         self.config_oracle_query_textbox.grid(row=3, column=0, columnspan=2, sticky="ew", padx=15, pady=(0, 15))
-        Tooltip(self.config_oracle_query_textbox, "Define a query padrão para buscar os terminais no Modo Oracle.")
+        Tooltip(self.config_oracle_query_textbox, t("settings_oracle_query_tooltip"))
+
+        language_frame = ctk.CTkFrame(main_frame)
+        language_frame.grid(row=2, column=0, sticky="ew")
+        language_frame.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(language_frame, text=t("settings_language_title"), font=THEME["font_h2"]).grid(row=0, column=0, columnspan=2, pady=THEME["padding_sm"], padx=THEME["padding_sm"], sticky="w")
+        ctk.CTkLabel(language_frame, text=t("settings_language_label"), font=THEME["font_body"]).grid(row=1, column=0, sticky="w", padx=(15, 10), pady=(0, 15))
+        current_language = self.config.get("language", DEFAULT_LANGUAGE)
+        self.language_var = ctk.StringVar(value=LANGUAGE_DISPLAY_NAMES.get(current_language, LANGUAGE_DISPLAY_NAMES[DEFAULT_LANGUAGE]))
+        language_menu = ctk.CTkOptionMenu(language_frame, variable=self.language_var, values=list(LANGUAGE_DISPLAY_NAMES.values()), command=self.on_language_change)
+        language_menu.grid(row=1, column=1, sticky="w", padx=(0, 15), pady=(0, 15))
+        Tooltip(language_menu, t("settings_language_tooltip"))
+
+    def on_language_change(self, _selected_display_name: str = None):
+        """Persiste a preferência de idioma e avisa que é necessário reiniciar para aplicá-la."""
+        self.save_config()
+        messagebox.showinfo(t("settings_language_title"), t("settings_language_tooltip"), parent=self)
 
     def create_sobre_tab(self):
         """Cria os widgets da aba 'Sobre'."""
-        tab = self.tab_view.tab("Sobre")
+        tab = self.tab_view.tab(self.tab_labels["about"])
         main_frame = ctk.CTkFrame(tab, fg_color="transparent")
         main_frame.grid(row=0, column=0, sticky="nsew", padx=40, pady=40)
         main_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(main_frame, text=APP_NAME, font=THEME["font_h1"]).grid(row=0, column=0, columnspan=2, pady=(0, 20), sticky="w")
 
-        fields = {"Versão:": APP_VERSION, "Desenvolvido por:": "Lucas Motta", "Licença:": "MIT License", "GitHub:": "https://github.com/lucaswotta/invent-ssh", "LinkedIn:": "https://www.linkedin.com/in/lucaswotta"}
+        fields = {t("about_version"): APP_VERSION, t("about_developed_by"): "Lucas Motta", t("about_license"): "MIT License", t("about_github"): "https://github.com/lucaswotta/invent-ssh", t("about_linkedin"): "https://www.linkedin.com/in/lucaswotta"}
         link_font = ctk.CTkFont(family=THEME["font_family"], size=13, underline=True)
         row_index = 1
         for label_text, value_text in fields.items():
@@ -599,48 +620,34 @@ class App(ctk.CTk):
                 ctk.CTkLabel(main_frame, text=value_text, font=THEME["font_body"]).grid(row=row_index, column=1, sticky="w", pady=5)
             row_index += 1
 
-        help_button = ctk.CTkButton(main_frame, text="Ajuda: Por que alguns dados de hardware não são coletados?", command=self.open_help_modal)
+        help_button = ctk.CTkButton(main_frame, text=t("about_help_button"), command=self.open_help_modal)
         help_button.grid(row=row_index, column=0, columnspan=2, pady=(30, 0), sticky="ew")
 
     def open_help_modal(self):
         """Abre um modal com informações sobre a precisão da coleta de dados."""
-        modal = BaseModal(self, "Guia de Coleta de Dados", "650x500")
+        modal = BaseModal(self, t("help_modal_title"), "650x500")
         modal.grid_rowconfigure(0, weight=1)
 
         textbox = ctk.CTkTextbox(modal, wrap="word", font=THEME["font_body"])
         textbox.grid(row=0, column=0, padx=THEME["padding"], pady=THEME["padding"], sticky="nsew")
 
-        help_text = (
-            "A precisão da coleta de dados depende das ferramentas instaladas no computador Linux de destino.\n\n"
-            "Esta aplicação foi projetada para ser **segura e não-invasiva**. Ela apenas lê informações que o sistema operacional já disponibiliza e não instala nada.\n\n"
-            "----------------------------------------------------------------\n"
-            "**Como Melhorar a Acuracidade da Coleta:**\n\n"
-            "Para garantir 100% de sucesso, o ideal é que os terminais possuam as ferramentas de diagnóstico adequadas. A aplicação tenta usar os seguintes comandos, em ordem de preferência:\n\n"
-            "1. `inxi` (O mais completo e preferencial)\n"
-            "2. `dmidecode` e `lshw`\n"
-            "3. Comandos do `util-linux` (`lscpu`, `lsblk`)\n"
-            "4. Leitura de arquivos do sistema (`/proc`, `/sys`)\n\n"
-            "----------------------------------------------------------------\n"
-            "**Ação Recomendada:**\n\n"
-            "Converse com sua equipe de infraestrutura sobre a possibilidade de incluir o pacote `inxi` na imagem padrão dos seus terminais Linux. Isso garantirá a coleta de dados mais rica e precisa possível, sem esforço adicional."
-        )
-        textbox.insert("1.0", help_text)
+        textbox.insert("1.0", t("help_modal_body"))
         textbox.configure(state="disabled")
 
-        close_button = ctk.CTkButton(modal, text="Entendi", command=modal.destroy)
+        close_button = ctk.CTkButton(modal, text=t("help_modal_close_button"), command=modal.destroy)
         close_button.grid(row=1, column=0, padx=THEME["padding"], pady=(0, THEME["padding"]), sticky="ew")
 
     def create_template_spreadsheet(self):
         """Cria e salva um arquivo de planilha modelo para o usuário."""
         try:
-            filepath = filedialog.asksaveasfilename(title="Salvar Planilha Modelo", defaultextension=".xlsx", initialfile="modelo_inventario.xlsx", filetypes=[("Planilha Excel", "*.xlsx")])
+            filepath = filedialog.asksaveasfilename(title=t("save_template_title"), defaultextension=".xlsx", initialfile="modelo_inventario.xlsx", filetypes=[(t("excel_filetype_label"), "*.xlsx")])
             if not filepath: return
 
             df = pd.DataFrame({"IP": ["192.168.1.10", "192.168.1.11"], "NROEMPRESA": [1, 1], "NROCHECKOUT": [101, 102]})
             df.to_excel(filepath, index=False)
-            messagebox.showinfo("Modelo Criado", f"A planilha modelo foi salva com sucesso em:\n{filepath}")
+            messagebox.showinfo(t("template_created_title"), t("template_created_body", filepath=filepath))
         except Exception as e:
-            messagebox.showerror("Erro ao Criar Modelo", f"Ocorreu um erro:\n{e}")
+            messagebox.showerror(t("template_error_title"), t("template_error_body", error=e))
 
     def toggle_oracle_output_format(self):
         """Alterna a visibilidade das opções de formato de saída na aba Oracle."""
@@ -670,7 +677,7 @@ class App(ctk.CTk):
 
     def browse_file(self):
         """Abre uma janela para o usuário selecionar o arquivo de planilha de entrada."""
-        filepath = filedialog.askopenfilename(title="Selecionar planilha", filetypes=[("Planilha", "*.xlsx;*.csv"), ("Todos os arquivos", "*.*")])
+        filepath = filedialog.askopenfilename(title=t("select_spreadsheet_title"), filetypes=[(t("spreadsheet_filetype_label"), "*.xlsx;*.csv"), (t("all_files_label"), "*.*")])
         if filepath:
             self.file_entry.delete(0, "end")
             self.file_entry.insert(0, filepath)
@@ -682,27 +689,28 @@ class App(ctk.CTk):
         """
         if self.is_running: return
 
-        active_tab = self.tab_view.get()
-        if "Oracle" in active_tab:
-            msg = (f"Você está prestes a iniciar o inventário usando o banco de dados Oracle.\n\n"
-                   f"**Tabela de Destino:**\n{self.config_oracle_table_entry.get().strip()}\n\n"
-                   f"**Query de Origem:**\n{self.config_oracle_query_textbox.get('1.0', 'end-1c').strip()}\n\n"
-                   "Confirma as configurações e deseja continuar?")
-            if not messagebox.askyesno("Confirmar Configurações Oracle", msg, icon='question', parent=self):
+        active_key = self.get_active_tab_key()
+        if active_key == "oracle":
+            msg = t("confirm_oracle_body",
+                    table=self.config_oracle_table_entry.get().strip(),
+                    query=self.config_oracle_query_textbox.get('1.0', 'end-1c').strip())
+            if not messagebox.askyesno(t("confirm_oracle_title"), msg, icon='question', parent=self):
                 return
         try:
             engine_config = self.gather_config_from_ui()
             self.save_config() # Salva as configurações para a próxima sessão
             self.is_running = True
-            self.run_button.configure(state="disabled", text="Executando...")
+            self.run_button.configure(state="disabled", text=t("run_button_running"))
             LogModal(self)
-            # Inicia o motor em uma thread separada para não travar a UI
-            threading.Thread(target=lambda: InventoryEngine(engine_config, self.log_queue).run_inventory(), daemon=True).start()
+            # Guardamos a referência do engine para poder sinalizar cancelamento
+            # caso a janela seja fechada com a coleta ainda em andamento.
+            self.current_engine = InventoryEngine(engine_config, self.log_queue)
+            threading.Thread(target=self.current_engine.run_inventory, daemon=True).start()
         except ValueError as e:
-            messagebox.showerror("Erro de Configuração", str(e), parent=self)
+            messagebox.showerror(t("config_error_title"), str(e), parent=self)
             self.reset_ui()
         except Exception as e:
-            messagebox.showerror("Erro Inesperado", f"Ocorreu um erro ao iniciar: {e}", parent=self)
+            messagebox.showerror(t("unexpected_error_title"), t("unexpected_error_body", error=e), parent=self)
             logging.critical("Erro inesperado ao iniciar", exc_info=True)
             self.reset_ui()
 
@@ -710,7 +718,7 @@ class App(ctk.CTk):
         """Coleta as configurações específicas da aba 'Modo Planilha'."""
         filepath = self.file_entry.get().strip()
         if not filepath or not os.path.exists(filepath):
-            raise ValueError("Por favor, selecione um arquivo de planilha válido. O caminho não foi encontrado.")
+            raise ValueError(t("error_invalid_spreadsheet"))
         return {
             "mode": "Planilha",
             "filepath": filepath,
@@ -722,16 +730,21 @@ class App(ctk.CTk):
         oracle_config = {k: v.get().strip() for k, v in self.oracle_entries.items() if k != 'password'}
         oracle_config["password"] = self.oracle_entries["password"].get()
         if not all(oracle_config.values()):
-            raise ValueError("Por favor, preencha todas as credenciais de conexão Oracle.")
+            raise ValueError(t("error_oracle_fields_required"))
 
         oracle_query = self.config_oracle_query_textbox.get("1.0", "end-1c").strip()
         if not oracle_query:
-            raise ValueError("A Query de Busca na aba de Configurações não pode estar vazia.")
+            raise ValueError(t("error_oracle_query_empty"))
+        if not is_select_only_query(oracle_query):
+            raise ValueError(t("error_oracle_query_not_select"))
 
         save_to_db = self.oracle_save_to_db_var.get()
         oracle_table = self.config_oracle_table_entry.get().strip()
-        if save_to_db and not oracle_table:
-            raise ValueError("A Tabela de Destino é obrigatória para salvar no banco de dados. Verifique as Configurações.")
+        if save_to_db:
+            if not oracle_table:
+                raise ValueError(t("error_oracle_table_required"))
+            if not is_valid_oracle_identifier(oracle_table):
+                raise ValueError(t("error_oracle_table_invalid"))
 
         return {
             "mode": "Oracle",
@@ -744,16 +757,15 @@ class App(ctk.CTk):
 
     def _get_active_ssh_credentials(self) -> Dict[str, str]:
         """Obtém as credenciais SSH da aba atualmente selecionada."""
-        active_tab = self.tab_view.get()
-        widgets = self.ssh_widgets_planilha if "Planilha" in active_tab else self.ssh_widgets_oracle
+        widgets = self.ssh_widgets_planilha if self.get_active_tab_key() == "spreadsheet" else self.ssh_widgets_oracle
         return widgets.get_credentials()
 
     def _validate_ssh_credentials(self, ssh_creds: Dict[str, str]):
         """Valida se as credenciais SSH essenciais foram fornecidas."""
         if not ssh_creds.get("user"):
-            raise ValueError("O campo 'Usuário SSH' é obrigatório.")
+            raise ValueError(t("error_ssh_user_required"))
         if not ssh_creds.get("pass") and not ssh_creds.get("key_path"):
-            raise ValueError("É obrigatório fornecer uma Senha SSH ou o caminho para uma Chave Privada.")
+            raise ValueError(t("error_ssh_auth_required"))
 
     def gather_config_from_ui(self) -> Dict[str, Any]:
         """
@@ -773,13 +785,13 @@ class App(ctk.CTk):
         }
 
         # 2. Coleta configurações específicas do modo (Planilha ou Oracle)
-        active_tab = self.tab_view.get()
-        if "Planilha" in active_tab:
+        active_key = self.get_active_tab_key()
+        if active_key == "spreadsheet":
             config.update(self._gather_spreadsheet_config())
-        elif "Oracle" in active_tab:
+        elif active_key == "oracle":
             config.update(self._gather_oracle_config())
         else:
-            raise ValueError("Aba de execução inválida. Selecione 'Modo Planilha' ou 'Modo Oracle'.")
+            raise ValueError(t("error_invalid_tab"))
 
         # 3. Coleta e valida as credenciais SSH
         ssh_creds = self._get_active_ssh_credentials()
@@ -792,10 +804,18 @@ class App(ctk.CTk):
 
         return config
 
+    def _language_code_from_display_name(self, display_name: str) -> str:
+        """Converte o nome exibido no seletor de idioma (ex: 'English') de volta ao código ('en')."""
+        for code, name in LANGUAGE_DISPLAY_NAMES.items():
+            if name == display_name:
+                return code
+        return DEFAULT_LANGUAGE
+
     def reset_ui(self):
         """Restaura o estado da UI para 'não executando'."""
         self.is_running = False
-        self.run_button.configure(state="normal")
+        self.current_engine = None
+        self.run_button.configure(state="normal", text=t("run_button_default"))
         self.on_tab_change() # Restaura o texto dinâmico do botão
 
     def open_file(self, filepath: str):
@@ -808,7 +828,7 @@ class App(ctk.CTk):
             else: # Linux
                 subprocess.run(["xdg-open", filepath], check=True)
         except Exception as e:
-            messagebox.showwarning("Aviso", f"Não foi possível abrir o arquivo '{os.path.basename(filepath)}' automaticamente.\n\nEle está localizado em:\n{filepath}\n\nErro: {e}", parent=self)
+            messagebox.showwarning(t("open_file_warning_title"), t("open_file_warning_body", filename=os.path.basename(filepath), filepath=filepath, error=e), parent=self)
 
     def load_config(self) -> Dict[str, Any]:
         """
@@ -842,7 +862,8 @@ class App(ctk.CTk):
             "save_to_db": self.oracle_save_to_db_var.get(),
             "oracle_table": self.config_oracle_table_entry.get(),
             "oracle_query": self.config_oracle_query_textbox.get("1.0", "end-1c").strip(),
-            "show_welcome_modal": self.config.get("show_welcome_modal", True)
+            "show_welcome_modal": self.config.get("show_welcome_modal", True),
+            "language": self._language_code_from_display_name(self.language_var.get())
         }
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -853,7 +874,13 @@ class App(ctk.CTk):
     def on_closing(self):
         """Lida com o evento de fechamento da janela principal."""
         if self.is_running:
-            if messagebox.askyesno("Sair", "O inventário ainda está em execução. Deseja realmente sair e interromper o processo?"):
+            if messagebox.askyesno(t("exit_confirm_title"), t("exit_confirm_body")):
+                # Sinaliza cancelamento ao motor antes de destruir a janela: sem isso, as
+                # threads do ThreadPoolExecutor continuam processando TODOS os terminais
+                # pendentes em segundo plano (não são daemon), e o processo Python só
+                # encerra de fato após elas terminarem — mesmo com a janela já fechada.
+                if self.current_engine:
+                    self.current_engine.cancel()
                 self.destroy()
         else:
             self.save_config()
@@ -876,10 +903,26 @@ def sanitize_traceback(text: str) -> str:
         text = re.sub(p, r"\1[REDACTED]\2", text, flags=re.IGNORECASE)
     return text
 
+def _cleanup_old_files(directory: str, pattern: str, max_files: int) -> None:
+    """
+    Remove os arquivos mais antigos de `directory` que excedam `max_files`.
+    Evita que `logs/` e `reports/` cresçam indefinidamente, já que cada
+    execução gera um arquivo novo e nada os limpava antes.
+    """
+    if not os.path.isdir(directory):
+        return
+    files = sorted(glob.glob(os.path.join(directory, pattern)), key=os.path.getmtime, reverse=True)
+    for old_file in files[max_files:]:
+        try:
+            os.remove(old_file)
+        except OSError as e:
+            logging.warning(f"Não foi possível remover o arquivo antigo '{old_file}': {e}")
+
 def setup_logging():
     """Configura o sistema de logging para salvar logs detalhados em arquivos."""
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
+    _cleanup_old_files(log_dir, f"{APP_NAME}_*.log", max_files=20)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = os.path.join(log_dir, f"{APP_NAME}_{timestamp}.log")
     logging.basicConfig(
@@ -893,6 +936,7 @@ def main():
     """Função principal que inicializa e executa a aplicação."""
     try:
         setup_logging()
+        _cleanup_old_files("reports", "inventario_hardware_*.*", max_files=30)
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
         app = App()
@@ -903,9 +947,8 @@ def main():
         sanitized_error = sanitize_traceback(traceback.format_exc())
         log_file = "crash_log.txt"
         with open(log_file, "w", encoding='utf-8') as f:
-            f.write(f"A aplicação encontrou um erro fatal e foi encerrada.\n\n"
-                    f"Para mais detalhes, verifique o arquivo de log na pasta 'logs'.\n\n"
-                    f"{'='*20} ERRO CENSURADO {'='*20}\n{sanitized_error}")
+            f.write(f"{t('fatal_error_title')}\n\n{t('fatal_error_body', log_file=log_file)}\n\n"
+                    f"{'='*20} REDACTED {'='*20}\n{sanitized_error}")
 
         logging.critical("Erro fatal não tratado na aplicação:", exc_info=True)
 
@@ -915,12 +958,7 @@ def main():
             from tkinter import messagebox
             root = tk.Tk()
             root.withdraw()
-            messagebox.showerror(
-                "Erro Fatal",
-                f"A aplicação encontrou um erro e precisa ser fechada.\n\n"
-                f"Um log de erro CENSURADO foi salvo em '{log_file}'.\n"
-                f"Um log DETALHADO foi salvo na pasta 'logs'."
-            )
+            messagebox.showerror(t("fatal_error_title"), t("fatal_error_body", log_file=log_file))
         except Exception as inner_e:
             print(f"Erro fatal. Não foi possível exibir a caixa de diálogo de erro: {inner_e}")
 
@@ -935,5 +973,5 @@ if __name__ == "__main__":
             from tkinter import messagebox
             root = tk.Tk()
             root.withdraw()
-            messagebox.showerror("Erro de Importação", "Não foi possível importar as bibliotecas necessárias. A aplicação será encerrada.")
+            messagebox.showerror(t("import_error_title"), t("import_error_body"))
     sys.exit(0)
