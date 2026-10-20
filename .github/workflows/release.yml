@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and publish (for example v0.7.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Package · ${{ matrix.asset }}
+    runs-on: ${{ matrix.os }}
+    # The Intel macOS image is the one most likely to be retired; it must not block the release.
+    continue-on-error: ${{ matrix.optional }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, asset: linux-x86_64, optional: false }
+          - { os: windows-latest, asset: windows-x86_64, optional: false }
+          - { os: macos-latest, asset: macos-arm64, optional: false }
+          - { os: macos-15-intel, asset: macos-x86_64, optional: true }
+
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install packaging requirements
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-build.txt
+
+      - name: Build the native package
+        run: python build.py
+
+      - name: Name the release files
+        shell: bash
+        run: |
+          version=$(python -c "import build; print(build.read_app_version())")
+          name="invenux-${version}-${{ matrix.asset }}"
+          mkdir release
+          case "${{ runner.os }}" in
+            Linux)
+              mkdir "$name"
+              cp "dist/invenux-v${version}" "$name/invenux"
+              cp packaging/linux/invenux.desktop "$name/"
+              cp brand/icons/invenux-256.png "$name/invenux.png"
+              tar -czf "release/${name}.tar.gz" "$name"
+              ;;
+            Windows)
+              cp "dist/invenux-v${version}.exe" "release/${name}.exe"
+              ;;
+            macOS)
+              mv "dist/invenux-v${version}.app" "dist/Invenux.app"
+              ditto -c -k --keepParent "dist/Invenux.app" "release/${name}.zip"
+              ;;
+          esac
+          ls -la release
+
+      - name: Keep the files for the release job
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: release/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish the GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Collect the packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Checksums and notes
+        run: |
+          cd release && sha256sum * > SHA256SUMS && cat SHA256SUMS && cd ..
+          version="${TAG#v}"
+          awk -v v="$version" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md > notes.md
+          cat notes.md
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+
+      - name: Create the release
+        run: gh release create "$TAG" release/* --title "Invenux ${TAG}" --notes-file notes.md --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
