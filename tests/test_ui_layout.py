@@ -49,6 +49,19 @@ class DesktopUtilityUITests(unittest.TestCase):
         self.assertIn('id="popover-targets"', html)
         self.assertIn('id="popover-export"', html)
 
+    def test_interface_catalog_covers_three_languages(self):
+        import re
+
+        html = (Path(__file__).resolve().parents[1] / "ui" / "index.html").read_text(encoding="utf-8")
+        catalog = json.loads(re.search(r'<script id="i18n-catalog" type="application/json">(.*?)</script>', html, re.S).group(1))
+        self.assertEqual(set(catalog), {"pt-br", "en", "es"})
+        keys = set(catalog["en"])
+        for language, table in catalog.items():
+            self.assertEqual(set(table), keys, language)
+        used = set(re.findall(r'data-i18n(?:-html|-placeholder|-title)?="([^"]+)"', html))
+        used |= set(re.findall(r'tr\("([a-z][\w.]*)"', html))
+        self.assertEqual(used - keys, set())
+
     def test_inline_handlers_do_not_call_native_element_methods(self):
         # Inline handlers resolve names on the element first; togglePopover() was
         # silently taken by the browser's Popover API and the toolbar stopped opening.

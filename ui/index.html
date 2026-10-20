@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1126,6 +1126,286 @@
     }
   }
 
+  /* Spreadsheet tutorial: a 10 s loop from rows typed in, through the IP column, to collected hosts. */
+  .tutorial {
+    background: var(--bg-card-inner);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tut-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .tut-window {
+    background: var(--bg-card);
+    border: 1px solid var(--sep-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 118px;
+  }
+
+  .tut-bar {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--sep-subtle);
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  .tut-bar i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bg-control-hover);
+  }
+
+  .tut-bar span {
+    margin-left: 6px;
+  }
+
+  .tut-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr 1fr;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 10.5px;
+  }
+
+  .tut-cell {
+    padding: 5px 7px;
+    border-bottom: 1px solid var(--sep-subtle);
+    border-right: 1px solid var(--sep-subtle);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tut-head {
+    color: var(--text-secondary);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .tut-row {
+    animation: tut-appear 10s ease-out infinite;
+  }
+
+  .tut-row.r2 { animation-delay: 0.45s; }
+  .tut-row.r3 { animation-delay: 0.9s; }
+
+  .tut-ip {
+    animation-name: tut-appear, tut-ip;
+    animation-duration: 10s, 10s;
+    animation-iteration-count: infinite, infinite;
+  }
+
+  .tut-head.tut-ip {
+    animation-name: tut-ip;
+  }
+
+  .tut-flow {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .tut-flow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sys-blue);
+    animation: tut-flow 10s ease-in-out infinite;
+  }
+
+  .tut-flow i:nth-child(2) { animation-delay: 0.15s; }
+  .tut-flow i:nth-child(3) { animation-delay: 0.3s; }
+
+  .tut-hosts {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tut-host {
+    display: grid;
+    grid-template-columns: 10px auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--sep-subtle);
+    font-size: 10.5px;
+    color: var(--text-primary);
+    animation: tut-host 10s ease-out infinite;
+  }
+
+  .tut-host b {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    animation: tut-status 10s linear infinite;
+  }
+
+  .tut-host em {
+    font-style: normal;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: tut-hardware 10s ease-out infinite;
+  }
+
+  .tut-host.h2, .tut-host.h2 b, .tut-host.h2 em { animation-delay: 0.6s; }
+  .tut-host.h3, .tut-host.h3 b, .tut-host.h3 em { animation-delay: 1.2s; }
+
+  .tut-captions {
+    position: relative;
+    min-height: 20px;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  .tut-cap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+  }
+
+  .tut-cap b {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--sys-blue);
+    color: #fff;
+    font-size: 10.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tut-cap.c1 { animation: tut-caption-1 10s infinite; }
+  .tut-cap.c2 { animation: tut-caption-2 10s infinite; }
+  .tut-cap.c3 { animation: tut-caption-3 10s infinite; }
+
+  @keyframes tut-appear {
+    0%, 3% { opacity: 0; transform: translateY(4px); }
+    8%, 90% { opacity: 1; transform: none; }
+    96%, 100% { opacity: 0; }
+  }
+
+  @keyframes tut-ip {
+    0%, 22% { background: transparent; }
+    27%, 46% { background: rgba(10, 132, 255, 0.32); }
+    52%, 92% { background: rgba(10, 132, 255, 0.12); }
+    97%, 100% { background: transparent; }
+  }
+
+  @keyframes tut-flow {
+    0%, 40% { opacity: 0; transform: translateX(-10px); }
+    46% { opacity: 1; }
+    58% { opacity: 1; transform: translateX(10px); }
+    62%, 100% { opacity: 0; transform: translateX(10px); }
+  }
+
+  @keyframes tut-host {
+    0%, 46% { opacity: 0; transform: translateX(-6px); }
+    52%, 90% { opacity: 1; transform: none; }
+    96%, 100% { opacity: 0; }
+  }
+
+  @keyframes tut-status {
+    0%, 54% { background: var(--sys-orange); }
+    60%, 100% { background: var(--sys-green); }
+  }
+
+  @keyframes tut-hardware {
+    0%, 56% { opacity: 0; }
+    62%, 90% { opacity: 1; }
+    96%, 100% { opacity: 0; }
+  }
+
+  @keyframes tut-caption-1 {
+    0%, 1% { opacity: 0; }
+    4%, 30% { opacity: 1; }
+    33%, 100% { opacity: 0; }
+  }
+
+  @keyframes tut-caption-2 {
+    0%, 33% { opacity: 0; }
+    36%, 52% { opacity: 1; }
+    55%, 100% { opacity: 0; }
+  }
+
+  @keyframes tut-caption-3 {
+    0%, 55% { opacity: 0; }
+    58%, 92% { opacity: 1; }
+    96%, 100% { opacity: 0; }
+  }
+
+  @media (max-width: 680px) {
+    .tut-stage {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .tut-flow {
+      transform: rotate(90deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tutorial *, .tutorial *::before {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    .tut-ip { background: rgba(10, 132, 255, 0.12); }
+    .tut-host b { background: var(--sys-green); }
+    .tut-captions { display: flex; flex-direction: column; gap: 6px; }
+    .tut-cap { position: static; }
+  }
+
+  .lang-select {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 11.5px;
+    text-align: right;
+    max-width: 120px;
+    cursor: pointer;
+  }
+
+  .lang-select option {
+    background: #2C2C2E;
+    color: var(--text-primary);
+  }
+
+  .sheet-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .popover-link {
+    align-self: flex-start;
+    font-size: 12px;
+  }
+
   /* Inspector Pane */
   .inspector-pane {
     background: var(--bg-sidebar);
@@ -1428,29 +1708,29 @@
       </div>
       <div class="app-title-group">
         <span class="app-title">Invent-SSH</span>
-        <span class="app-version">Inventário Linux</span>
+        <span class="app-version" data-i18n="brand.sub">Inventário Linux</span>
       </div>
     </div>
 
-    <div class="sidebar-label">Visões</div>
+    <div class="sidebar-label" data-i18n="nav.label">Visões</div>
     <div id="main-nav" class="nav-list">
-      <button class="nav-btn active" title="Coleta" onclick="switchView('scan', this)">
+      <button class="nav-btn active" data-i18n-title="nav.scan" title="Coleta" onclick="switchView('scan', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/></svg>
-          Coleta
+          <span data-i18n="nav.scan">Coleta</span>
         </span>
         <span id="nav-count-scan" class="nav-count">0</span>
       </button>
-      <button class="nav-btn" title="Parque" onclick="switchView('dashboard', this)">
+      <button class="nav-btn" data-i18n-title="nav.fleet" title="Parque" onclick="switchView('dashboard', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round"/></svg>
-          Parque
+          <span data-i18n="nav.fleet">Parque</span>
         </span>
       </button>
-      <button class="nav-btn" title="Snapshots" onclick="switchView('history', this)">
+      <button class="nav-btn" data-i18n-title="nav.history" title="Snapshots" onclick="switchView('history', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
-          Snapshots
+          <span data-i18n="nav.history">Snapshots</span>
         </span>
         <span id="nav-count-snapshots" class="nav-count">0</span>
       </button>
@@ -1458,28 +1738,36 @@
 
     <div class="sidebar-footer">
       <div class="sidebar-footer-row">
-        <span>Concorrência</span>
-        <span id="footer-workers">32 conexões</span>
+        <span data-i18n="footer.workers">Concorrência</span>
+        <span id="footer-workers">32</span>
       </div>
       <div class="sidebar-footer-row">
-        <span>Timeout SSH</span>
-        <span id="footer-timeout">15 segundos</span>
+        <span data-i18n="footer.timeout">Timeout SSH</span>
+        <span id="footer-timeout">15</span>
       </div>
       <div class="sidebar-footer-row">
-        <span>Verificação</span>
-        <span id="footer-tofu">TOFU ativo</span>
+        <span data-i18n="footer.verify">Verificação</span>
+        <span id="footer-tofu">TOFU</span>
+      </div>
+      <div class="sidebar-footer-row">
+        <span data-i18n="footer.language">Idioma</span>
+        <select class="lang-select" aria-label="Idioma" data-i18n-title="footer.language" onchange="changeLanguage(this.value)">
+          <option value="auto" class="lang-auto">Automático</option>
+          <option value="pt-br">Português (Brasil)</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
       </div>
     </div>
   </aside>
 
   <!-- Main Content Area -->
   <main class="main-area">
-    <!-- Top Unified Toolbar -->
     <header class="toolbar">
       <div class="toolbar-group">
         <button id="targets-trigger" class="popover-trigger" onclick="togglePanel('targets')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="trigger-label">Alvos:</span>
+          <span class="trigger-label" data-i18n="tb.targets">Alvos:</span>
           <span id="targets-pill-value" class="trigger-value">Selecionar lista...</span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
@@ -1490,118 +1778,94 @@
           <span id="ssh-pill-value" class="trigger-value">Configurar acesso</span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-
       </div>
 
       <div class="toolbar-group">
-        <button class="btn" title="Como usar" onclick="openHelp()">
+        <button class="btn" data-i18n-title="tb.help" title="Como usar" onclick="openHelp()">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.6-2.4 2-2.4 3.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
-          <span class="btn-text">Como usar</span>
+          <span class="btn-text" data-i18n="tb.help">Como usar</span>
         </button>
-        <button id="export-trigger" class="btn" title="Exportar" onclick="togglePanel('export')">
+        <button id="export-trigger" class="btn" data-i18n-title="tb.export" title="Exportar" onclick="togglePanel('export')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span class="btn-text">Exportar</span>
+          <span class="btn-text" data-i18n="tb.export">Exportar</span>
         </button>
-        <button id="scan-btn" class="btn btn-primary" onclick="handleScanAction()">
-          Iniciar Coleta
-        </button>
+        <button id="scan-btn" class="btn btn-primary" onclick="handleScanAction()">Iniciar coleta</button>
       </div>
     </header>
 
-    <!-- Targets Popover -->
     <div id="popover-targets" class="popover">
-      <div class="popover-title">Lista de máquinas</div>
-      <div class="popover-text">
-        Planilha <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>
-        (ou <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>), uma máquina por linha.
-        Outras colunas, como <code>LOCATION</code> e <code>ASSET_TAG</code>, vão para os relatórios.
-      </div>
+      <div class="popover-title" data-i18n="tp.title">Lista de máquinas</div>
+      <div class="popover-text" data-i18n-html="tp.text"></div>
       <div class="popover-actions">
-        <button class="btn btn-primary" onclick="browseTargetFile()">Escolher planilha…</button>
-        <button class="btn" onclick="createTemplate()">Criar modelo</button>
+        <button class="btn btn-primary" onclick="browseTargetFile()" data-i18n="tp.choose">Escolher planilha…</button>
+        <button class="btn" onclick="createTemplate()" data-i18n="tp.template">Baixar planilha modelo</button>
       </div>
+      <button class="link-btn popover-link" onclick="openHelp()" data-i18n="tp.tutorial">Ver como funciona</button>
       <div id="target-summary" class="target-summary"></div>
       <div class="popover-divider"></div>
       <div class="field-group">
-        <label class="field-label">Ou cole o caminho do arquivo</label>
-        <input id="input-filepath" class="field-input" type="text" placeholder="/home/usuario/Documentos/maquinas.xlsx" onchange="loadTargetPath(this.value)">
+        <label class="field-label" for="input-filepath" data-i18n="tp.path_label">Ou cole o caminho do arquivo</label>
+        <input id="input-filepath" class="field-input" type="text" data-i18n-placeholder="tp.path_placeholder" onchange="loadTargetPath(this.value)">
       </div>
       <input id="file-upload-input" type="file" accept=".xlsx,.xlsm,.csv,.txt" style="display:none" onchange="uploadTargetFile(this)">
     </div>
 
-    <!-- SSH Popover -->
     <div id="popover-ssh" class="popover">
-      <div class="popover-title">Credenciais e Conexão SSH</div>
+      <div class="popover-title" data-i18n="sp.title">Credenciais e conexão SSH</div>
       <div class="field-group">
-        <label class="field-label">Usuário SSH</label>
-        <input id="input-ssh-user" class="field-input" type="text" placeholder="ex: root, admin" oninput="syncSshSettings()">
+        <label class="field-label" for="input-ssh-user" data-i18n="sp.user">Usuário SSH</label>
+        <input id="input-ssh-user" class="field-input" type="text" data-i18n-placeholder="sp.user_ph" oninput="syncSshSettings()">
       </div>
       <div class="field-group">
-        <label class="field-label">Chave Privada (ou em branco para senha)</label>
+        <label class="field-label" for="input-ssh-key" data-i18n="sp.key">Chave privada (ou em branco para senha)</label>
         <div class="field-input-row">
           <input id="input-ssh-key" class="field-input" type="text" placeholder="~/.ssh/id_ed25519" oninput="syncSshSettings()">
           <button class="btn" onclick="browseKeyFile()">...</button>
         </div>
       </div>
       <div class="field-group">
-        <label class="field-label">Senha SSH (opcional)</label>
-        <input id="input-ssh-pass" class="field-input" type="password" placeholder="Não armazenada em disco" oninput="syncSshSettings()">
+        <label class="field-label" for="input-ssh-pass" data-i18n="sp.pass">Senha SSH (opcional)</label>
+        <input id="input-ssh-pass" class="field-input" type="password" data-i18n-placeholder="sp.pass_ph" oninput="syncSshSettings()">
       </div>
       <div class="field-row">
         <div class="field-group">
-          <label class="field-label">Conexões simultâneas</label>
+          <label class="field-label" for="input-workers" data-i18n="sp.workers">Conexões simultâneas</label>
           <input id="input-workers" class="field-input" type="number" min="1" max="128" value="32" onchange="syncSshSettings()">
         </div>
         <div class="field-group">
-          <label class="field-label">Timeout (s)</label>
+          <label class="field-label" for="input-timeout" data-i18n="sp.timeout">Timeout (s)</label>
           <input id="input-timeout" class="field-input" type="number" min="2" max="120" value="15" onchange="syncSshSettings()">
         </div>
       </div>
       <label class="checkbox-row">
         <input id="input-tofu" type="checkbox" checked onchange="syncSshSettings()">
-        <span>Aceitar novas chaves no primeiro acesso (TOFU)</span>
+        <span data-i18n="sp.tofu">Aceitar novas chaves no primeiro acesso (TOFU)</span>
       </label>
     </div>
 
-    <!-- Export Popover -->
     <div id="popover-export" class="popover">
-      <button class="menu-item" onclick="exportReport('XLSX')">
-        <span>Planilha Excel</span>
-        <span>.xlsx</span>
-      </button>
-      <button class="menu-item" onclick="exportReport('HTML')">
-        <span>Relatório Interativo</span>
-        <span>.html</span>
-      </button>
-      <button class="menu-item" onclick="exportReport('CSV')">
-        <span>Dados Tabulares</span>
-        <span>.csv</span>
-      </button>
+      <button class="menu-item" onclick="exportReport('XLSX')"><span data-i18n="ep.xlsx">Planilha Excel</span><span>.xlsx</span></button>
+      <button class="menu-item" onclick="exportReport('HTML')"><span data-i18n="ep.html">Relatório interativo</span><span>.html</span></button>
+      <button class="menu-item" onclick="exportReport('CSV')"><span data-i18n="ep.csv">Dados tabulares</span><span>.csv</span></button>
       <div class="popover-divider"></div>
       <div id="export-dir" class="popover-text export-dir"></div>
-      <button class="menu-item" onclick="openLocation('reports')">
-        <span>Abrir pasta de relatórios</span>
-        <span></span>
-      </button>
+      <button class="menu-item" onclick="openLocation('reports')"><span data-i18n="ep.open_folder">Abrir pasta de relatórios</span><span></span></button>
     </div>
 
-    <!-- VIEW 1: COLETA -->
     <section id="view-scan" class="view active">
       <div class="subbar">
         <div class="segmented-control">
-          <button class="seg-btn active" onclick="setStatusFilter('ALL', this)">Todas <span id="count-all">0</span></button>
-          <button class="seg-btn" onclick="setStatusFilter('ONLINE', this)">Online <span id="count-online">0</span></button>
-          <button class="seg-btn" onclick="setStatusFilter('OFFLINE', this)">Offline <span id="count-offline">0</span></button>
-          <button class="seg-btn" onclick="setStatusFilter('ERROR', this)">Falha SSH <span id="count-error">0</span></button>
+          <button class="seg-btn active" onclick="setStatusFilter('ALL', this)"><span class="seg-label" data-i18n="f.all">Todas</span> <span id="count-all">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('ONLINE', this)"><span class="seg-label" data-i18n="f.online">Online</span> <span id="count-online">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('OFFLINE', this)"><span class="seg-label" data-i18n="f.offline">Offline</span> <span id="count-offline">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('ERROR', this)"><span class="seg-label" data-i18n="f.error">Falha SSH</span> <span id="count-error">0</span></button>
         </div>
 
         <div class="subbar-right">
-          <div id="status-banner" class="summary-inline">
-            <span>Pronto para coleta</span>
-          </div>
+          <div id="status-banner" class="summary-inline"><span></span></div>
           <div class="search-input-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="search-input" class="search-input" type="text" placeholder="Buscar máquina, IP, local, hardware..." oninput="renderScanTable()">
+            <input id="search-input" class="search-input" type="text" data-i18n-placeholder="search.ph" oninput="renderScanTable()">
           </div>
         </div>
       </div>
@@ -1610,124 +1874,135 @@
         <div class="table-pane">
           <div id="onboarding" class="onboarding">
             <div>
-              <div class="onboarding-title">Inventário de hardware em 3 passos</div>
-              <div class="onboarding-sub">
-                O Invent-SSH entra em cada máquina Linux por SSH, lê o hardware sem alterar nada
-                e monta a tabela, o painel do parque e os relatórios.
+              <div class="onboarding-title" data-i18n="ob.title">Inventário de hardware em 3 passos</div>
+              <div class="onboarding-sub" data-i18n="ob.sub"></div>
+            </div>
+            <div class="tutorial" aria-hidden="true">
+              <div class="tut-stage">
+                <div class="tut-window">
+                  <div class="tut-bar"><i></i><i></i><i></i><span data-i18n="tut.file">maquinas.xlsx</span></div>
+                  <div class="tut-grid">
+                    <span class="tut-cell tut-head tut-ip">IP</span><span class="tut-cell tut-head">LOCATION</span><span class="tut-cell tut-head">ASSET_TAG</span>
+                    <span class="tut-cell tut-row tut-ip">192.0.2.10</span><span class="tut-cell tut-row" data-i18n="tut.loc_a">Matriz</span><span class="tut-cell tut-row">PAT-0104</span>
+                    <span class="tut-cell tut-row r2 tut-ip">192.0.2.11</span><span class="tut-cell tut-row r2" data-i18n="tut.loc_a">Matriz</span><span class="tut-cell tut-row r2">PAT-0105</span>
+                    <span class="tut-cell tut-row r3 tut-ip">192.0.2.21</span><span class="tut-cell tut-row r3" data-i18n="tut.loc_b">Filial 2</span><span class="tut-cell tut-row r3">PAT-0419</span>
+                  </div>
+                </div>
+                <div class="tut-flow"><i></i><i></i><i></i></div>
+                <div class="tut-window">
+                  <div class="tut-bar"><i></i><i></i><i></i><span>Invent-SSH</span></div>
+                  <div class="tut-hosts">
+                    <div class="tut-host"><b></b><span>192.0.2.10</span><em>Core i3-8100 · 8 GB · SSD</em></div>
+                    <div class="tut-host h2"><b></b><span>192.0.2.11</span><em>Celeron J1800 · 4 GB · SSD</em></div>
+                    <div class="tut-host h3"><b></b><span>192.0.2.21</span><em>Pentium G5420 · 4 GB · SSD</em></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tut-captions">
+                <span class="tut-cap c1"><b>1</b><span data-i18n="tut.c1"></span></span>
+                <span class="tut-cap c2"><b>2</b><span data-i18n="tut.c2"></span></span>
+                <span class="tut-cap c3"><b>3</b><span data-i18n="tut.c3"></span></span>
               </div>
             </div>
             <div id="step-targets" class="step-card">
               <span class="step-num">1</span>
               <div>
-                <div class="step-title">Escolha a planilha de máquinas</div>
-                <div class="step-desc">
-                  Arquivo <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>, uma máquina por linha.
-                  Colunas como <code>LOCATION</code> são opcionais. Sem planilha pronta, crie o modelo e preencha.
-                  Também dá para arrastar o arquivo para esta janela.
-                </div>
+                <div class="step-title" data-i18n="ob.s1.title">Escolha a planilha de máquinas</div>
+                <div class="step-desc" data-i18n-html="ob.s1.desc"></div>
                 <div class="step-actions">
-                  <button class="btn btn-primary" onclick="browseTargetFile()">Escolher planilha…</button>
-                  <button class="btn" onclick="createTemplate()">Criar modelo</button>
+                  <button class="btn btn-primary" onclick="browseTargetFile()" data-i18n="tp.choose">Escolher planilha…</button>
+                  <button class="btn" onclick="createTemplate()" data-i18n="tp.template">Baixar planilha modelo</button>
                 </div>
               </div>
             </div>
             <div id="step-ssh" class="step-card">
               <span class="step-num">2</span>
               <div>
-                <div class="step-title">Informe o acesso SSH</div>
-                <div class="step-desc">
-                  Usuário e senha, ou chave privada. A senha fica só na memória enquanto o app está aberto.
-                </div>
+                <div class="step-title" data-i18n="ob.s2.title">Informe o acesso SSH</div>
+                <div class="step-desc" data-i18n="ob.s2.desc"></div>
                 <div class="step-actions">
-                  <button class="btn" onclick="event.stopPropagation(); togglePanel('ssh')">Configurar acesso</button>
+                  <button class="btn" onclick="event.stopPropagation(); togglePanel('ssh')" data-i18n="ob.s2.button">Configurar acesso</button>
                 </div>
               </div>
             </div>
             <div id="step-scan" class="step-card">
               <span class="step-num">3</span>
               <div>
-                <div class="step-title">Inicie a coleta</div>
-                <div class="step-desc">
-                  Cada máquina recebe uma conexão e um único comando de leitura: sistema, processador, memória,
-                  discos, placa-mãe, vídeo e rede. Nada é instalado ou gravado nela.
-                </div>
+                <div class="step-title" data-i18n="ob.s3.title">Inicie a coleta</div>
+                <div class="step-desc" data-i18n="ob.s3.desc"></div>
               </div>
             </div>
             <div class="onboarding-foot">
-              Formato da planilha, status e pastas dos arquivos:
-              <button class="link-btn" onclick="openHelp()">Como usar</button>
+              <span data-i18n="ob.foot">Formato da planilha, status e pastas dos arquivos:</span>
+              <button class="link-btn" onclick="openHelp()" data-i18n="tb.help">Como usar</button>
             </div>
           </div>
           <table id="hosts-table">
             <thead>
               <tr>
-                <th style="width: 10%;">Status</th>
-                <th style="width: 11%;">Endereço IP</th>
-                <th style="width: 12%;">Hostname</th>
-                <th style="width: 9%;">Local</th>
-                <th style="width: 16%;">Processador</th>
-                <th style="width: 9%;">Memória</th>
-                <th style="width: 11%;">Armazenamento</th>
-                <th style="width: 11%;">Sistema</th>
-                <th style="width: 11%;" title="Data e hora da última coleta da máquina">Coletado</th>
+                <th style="width: 10%;" data-i18n="col.status">Status</th>
+                <th style="width: 11%;" data-i18n="col.ip">Endereço IP</th>
+                <th style="width: 12%;" data-i18n="col.hostname">Hostname</th>
+                <th style="width: 9%;" data-i18n="col.location">Local</th>
+                <th style="width: 16%;" data-i18n="col.cpu">Processador</th>
+                <th style="width: 9%;" data-i18n="col.memory">Memória</th>
+                <th style="width: 11%;" data-i18n="col.storage">Armazenamento</th>
+                <th style="width: 11%;" data-i18n="col.system">Sistema</th>
+                <th style="width: 11%;" data-i18n="col.collected" data-i18n-title="col.collected_title">Coletado</th>
               </tr>
             </thead>
             <tbody id="hosts-tbody"></tbody>
           </table>
         </div>
 
-        <!-- Inspector -->
         <aside id="inspector-pane" class="inspector-pane"></aside>
       </div>
     </section>
 
-    <!-- VIEW 2: PARQUE -->
     <section id="view-dashboard" class="view">
       <div class="parque-content">
         <div class="summary-cards">
           <div class="stat-card">
-            <span class="stat-card-label">Total do Parque</span>
+            <span class="stat-card-label" data-i18n="db.total">Total do parque</span>
             <span id="stat-total" class="stat-card-value">0</span>
-            <span id="stat-locations" class="stat-card-note">0 unidades cadastradas</span>
+            <span id="stat-locations" class="stat-card-note"></span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-label">Máquinas Online</span>
+            <span class="stat-card-label" data-i18n="db.online">Máquinas online</span>
             <span id="stat-online" class="stat-card-value">0</span>
-            <span id="stat-avail" class="stat-card-note">0,0% de disponibilidade</span>
+            <span id="stat-avail" class="stat-card-note"></span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-label">Armazenamento em Flash</span>
-            <span id="stat-flash" class="stat-card-value">0,0%</span>
+            <span class="stat-card-label" data-i18n="db.flash">Armazenamento em flash</span>
+            <span id="stat-flash" class="stat-card-value">0%</span>
             <span id="stat-flash-note" class="stat-card-note">0 NVMe · 0 SSD · 0 HDD</span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-label">Memória Média por Host</span>
+            <span class="stat-card-label" data-i18n="db.ram">Memória média por host</span>
             <span id="stat-ram" class="stat-card-value">0 GB</span>
-            <span id="stat-ram-note" class="stat-card-note">hosts online coletados</span>
+            <span class="stat-card-note" data-i18n="db.ram_note">hosts online coletados</span>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="chart-card">
             <div class="chart-card-header">
-              <span class="chart-card-title">Armazenamento por Tipo</span>
-              <span class="chart-card-sub">hosts online</span>
+              <span class="chart-card-title" data-i18n="db.storage_title">Armazenamento por tipo</span>
+              <span class="chart-card-sub" data-i18n="db.online_hosts">hosts online</span>
             </div>
             <div id="dist-storage" class="dist-list"></div>
           </div>
-
           <div class="chart-card">
             <div class="chart-card-header">
-              <span class="chart-card-title">Capacidade de Memória RAM</span>
-              <span class="chart-card-sub">hosts online</span>
+              <span class="chart-card-title" data-i18n="db.ram_title">Capacidade de memória RAM</span>
+              <span class="chart-card-sub" data-i18n="db.online_hosts">hosts online</span>
             </div>
             <div id="dist-ram" class="dist-list"></div>
           </div>
-
           <div class="chart-card">
             <div class="chart-card-header">
-              <span class="chart-card-title">Distribuições Linux</span>
-              <span class="chart-card-sub">hosts online</span>
+              <span class="chart-card-title" data-i18n="db.distro_title">Distribuições Linux</span>
+              <span class="chart-card-sub" data-i18n="db.online_hosts">hosts online</span>
             </div>
             <div id="dist-distro" class="dist-list"></div>
           </div>
@@ -1735,15 +2010,15 @@
 
         <div class="table-card" style="flex: 1;">
           <div class="table-card-header">
-            <h3>Distribuição por Unidade / Local</h3>
+            <h3 data-i18n="db.locations_title">Distribuição por unidade / local</h3>
           </div>
           <div style="overflow-y: auto; flex: 1;">
             <table>
               <thead>
                 <tr>
-                  <th style="width: 24%;">Unidade / Local</th>
-                  <th style="width: 12%;">Total</th>
-                  <th style="width: 12%;">Online</th>
+                  <th style="width: 24%;" data-i18n="db.col_location">Unidade / local</th>
+                  <th style="width: 12%;" data-i18n="db.col_total">Total</th>
+                  <th style="width: 12%;" data-i18n="db.col_online">Online</th>
                   <th style="width: 13%;">NVMe / SSD</th>
                   <th style="width: 13%;">HDD</th>
                   <th style="width: 13%;">RAM ≤ 4 GB</th>
@@ -1757,32 +2032,31 @@
       </div>
     </section>
 
-    <!-- VIEW 3: SNAPSHOTS -->
     <section id="view-history" class="view">
       <div class="snapshots-layout">
         <aside class="snapshots-sidebar">
-          <div class="sidebar-label">Histórico Local</div>
+          <div class="sidebar-label" data-i18n="hi.label">Histórico local</div>
           <div id="snapshots-list"></div>
         </aside>
 
         <div class="snapshots-content">
           <div class="table-card" style="flex: 1;">
             <div class="table-card-header">
-              <h3 id="snapshot-diff-title">Alterações entre snapshots</h3>
+              <h3 id="snapshot-diff-title" data-i18n="hi.title">Alterações entre snapshots</h3>
               <div style="display:flex; gap:8px;">
-                <button class="btn" onclick="loadSnapshotIntoWorkspace()">Carregar na Coleta</button>
-                <button class="btn" onclick="exportSnapshotDiff()">Exportar Comparação</button>
+                <button class="btn" onclick="loadSnapshotIntoWorkspace()" data-i18n="hi.load">Carregar na Coleta</button>
+                <button class="btn" onclick="exportSnapshotDiff()" data-i18n="hi.export">Exportar comparação</button>
               </div>
             </div>
             <div style="overflow-y: auto; flex: 1;">
               <table>
                 <thead>
                   <tr>
-                    <th style="width: 15%;">Endereço IP</th>
-                    <th style="width: 18%;">Hostname</th>
-                    <th style="width: 17%;">Campo</th>
-                    <th style="width: 25%;">Valor Anterior</th>
-                    <th style="width: 25%;">Valor Atual</th>
+                    <th style="width: 15%;" data-i18n="col.ip">Endereço IP</th>
+                    <th style="width: 18%;" data-i18n="col.hostname">Hostname</th>
+                    <th style="width: 17%;" data-i18n="hi.col_field">Campo</th>
+                    <th style="width: 25%;" data-i18n="hi.col_before">Valor anterior</th>
+                    <th style="width: 25%;" data-i18n="hi.col_after">Valor atual</th>
                   </tr>
                 </thead>
                 <tbody id="snapshot-diff-tbody"></tbody>
@@ -1798,61 +2072,848 @@
 <div id="help-sheet" class="sheet-backdrop" onclick="if (event.target === this) closeHelp()">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="help-title">
     <div class="sheet-header">
-      <span id="help-title" class="sheet-title">Como usar o Invent-SSH</span>
-      <button class="btn btn-small" onclick="closeHelp()">Fechar</button>
+      <span id="help-title" class="sheet-title" data-i18n="hp.title">Como usar o Invent-SSH</span>
+      <div class="sheet-header-actions">
+        <select class="lang-select" aria-label="Idioma" data-i18n-title="footer.language" onchange="changeLanguage(this.value)">
+          <option value="auto" class="lang-auto">Automático</option>
+          <option value="pt-br">Português (Brasil)</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+        <button class="btn btn-small" onclick="closeHelp()" data-i18n="hp.close">Fechar</button>
+      </div>
     </div>
     <section class="sheet-section">
-      <h4>Passo a passo</h4>
+      <h4 data-i18n="tut.title">Como a planilha vira inventário</h4>
+      <div class="tutorial" aria-hidden="true">
+              <div class="tut-stage">
+                <div class="tut-window">
+                  <div class="tut-bar"><i></i><i></i><i></i><span data-i18n="tut.file">maquinas.xlsx</span></div>
+                  <div class="tut-grid">
+                    <span class="tut-cell tut-head tut-ip">IP</span><span class="tut-cell tut-head">LOCATION</span><span class="tut-cell tut-head">ASSET_TAG</span>
+                    <span class="tut-cell tut-row tut-ip">192.0.2.10</span><span class="tut-cell tut-row" data-i18n="tut.loc_a">Matriz</span><span class="tut-cell tut-row">PAT-0104</span>
+                    <span class="tut-cell tut-row r2 tut-ip">192.0.2.11</span><span class="tut-cell tut-row r2" data-i18n="tut.loc_a">Matriz</span><span class="tut-cell tut-row r2">PAT-0105</span>
+                    <span class="tut-cell tut-row r3 tut-ip">192.0.2.21</span><span class="tut-cell tut-row r3" data-i18n="tut.loc_b">Filial 2</span><span class="tut-cell tut-row r3">PAT-0419</span>
+                  </div>
+                </div>
+                <div class="tut-flow"><i></i><i></i><i></i></div>
+                <div class="tut-window">
+                  <div class="tut-bar"><i></i><i></i><i></i><span>Invent-SSH</span></div>
+                  <div class="tut-hosts">
+                    <div class="tut-host"><b></b><span>192.0.2.10</span><em>Core i3-8100 · 8 GB · SSD</em></div>
+                    <div class="tut-host h2"><b></b><span>192.0.2.11</span><em>Celeron J1800 · 4 GB · SSD</em></div>
+                    <div class="tut-host h3"><b></b><span>192.0.2.21</span><em>Pentium G5420 · 4 GB · SSD</em></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tut-captions">
+                <span class="tut-cap c1"><b>1</b><span data-i18n="tut.c1"></span></span>
+                <span class="tut-cap c2"><b>2</b><span data-i18n="tut.c2"></span></span>
+                <span class="tut-cap c3"><b>3</b><span data-i18n="tut.c3"></span></span>
+              </div>
+            </div>
+      <div class="step-actions">
+        <button class="btn btn-primary" onclick="closeHelp(); browseTargetFile()" data-i18n="tp.choose">Escolher planilha…</button>
+        <button class="btn" onclick="createTemplate()" data-i18n="tp.template">Baixar planilha modelo</button>
+      </div>
+    </section>
+    <section class="sheet-section">
+      <h4 data-i18n="hp.steps">Passo a passo</h4>
       <ol>
-        <li><strong>Alvos</strong>: escolha a planilha de máquinas ou arraste o arquivo para a janela.</li>
-        <li><strong>SSH</strong>: informe usuário e senha, ou chave privada.</li>
-        <li><strong>Iniciar Coleta</strong>: acompanhe cada máquina na tabela; clique numa linha para ver os detalhes.</li>
-        <li><strong>Exportar</strong>: gere a planilha Excel, o relatório HTML ou o CSV.</li>
-        <li><strong>Snapshots</strong>: cada coleta fica salva e é comparada com a anterior.</li>
+        <li data-i18n-html="hp.step1"></li>
+        <li data-i18n-html="hp.step2"></li>
+        <li data-i18n-html="hp.step3"></li>
+        <li data-i18n-html="hp.step4"></li>
+        <li data-i18n-html="hp.step5"></li>
       </ol>
     </section>
     <section class="sheet-section">
-      <h4>Onde ficam os arquivos</h4>
+      <h4 data-i18n="hp.folders">Onde ficam os arquivos</h4>
       <div id="help-paths" class="path-list"></div>
     </section>
     <section class="sheet-section">
-      <h4>Planilha de máquinas</h4>
-      <p>
-        Formatos <code>.xlsx</code>, <code>.xlsm</code> ou <code>.csv</code> (separador vírgula ou ponto e vírgula).
-        A primeira linha é o cabeçalho e cada linha seguinte é uma máquina.
-      </p>
+      <h4 data-i18n="hp.sheet">Planilha de máquinas</h4>
+      <p data-i18n-html="hp.sheet_p1"></p>
       <table class="mini-table">
-        <thead><tr><th>Coluna</th><th>Obrigatória</th><th>Uso</th></tr></thead>
+        <thead><tr><th data-i18n="hp.th_column">Coluna</th><th data-i18n="hp.th_required">Obrigatória</th><th data-i18n="hp.th_use">Uso</th></tr></thead>
         <tbody>
-          <tr><td><code>IP</code></td><td>Sim</td><td>Endereço ou nome da máquina. Também vale <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>, <code>IP_ADDRESS</code>, <code>ENDPOINT</code> ou <code>TARGET</code>.</td></tr>
-          <tr><td><code>LOCATION</code></td><td>Não</td><td>Unidade ou local; agrupa a visão Parque. Também vale <code>LOCAL</code>, <code>UNIDADE</code>, <code>FILIAL</code> ou <code>SETOR</code>.</td></tr>
-          <tr><td>Qualquer outra</td><td>Não</td><td>Copiada como está para a tabela e os relatórios, por exemplo <code>ASSET_TAG</code>, <code>OWNER</code> ou <code>NOTES</code>.</td></tr>
+          <tr><td><code>IP</code></td><td data-i18n="hp.yes">Sim</td><td data-i18n-html="hp.row_ip"></td></tr>
+          <tr><td><code>LOCATION</code></td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_location"></td></tr>
+          <tr><td data-i18n="hp.row_other_name">Qualquer outra</td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_other"></td></tr>
         </tbody>
       </table>
-      <p>Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A conexão usa a porta 22.</p>
+      <p data-i18n="hp.sheet_p2"></p>
     </section>
     <section class="sheet-section">
-      <h4>O que é coletado</h4>
-      <p>
-        Uma conexão SSH por máquina executa um único script de leitura: sistema e kernel, processador, memória e
-        módulos, discos e partições, placa-mãe e BIOS, vídeo, rede e tempo ligado. Nada é instalado, alterado ou
-        gravado na máquina. Campos que exigem root ou ferramentas ausentes aparecem como "—".
-      </p>
+      <h4 data-i18n="hp.collected">O que é coletado</h4>
+      <p data-i18n="hp.collected_p"></p>
     </section>
     <section class="sheet-section">
-      <h4>Status</h4>
+      <h4 data-i18n="hp.status">Status</h4>
       <ul>
-        <li><strong>Online</strong>: hardware coletado.</li>
-        <li><strong>Offline</strong>: a máquina não respondeu; o motivo aparece na linha (desligada, porta 22 fechada, tempo esgotado ou nome inexistente).</li>
-        <li><strong>Falha SSH</strong>: respondeu, mas recusou a senha ou a chave, ou a chave do host mudou desde o último acesso.</li>
+        <li data-i18n-html="hp.st_online"></li>
+        <li data-i18n-html="hp.st_offline"></li>
+        <li data-i18n-html="hp.st_error"></li>
       </ul>
     </section>
   </div>
 </div>
 
-<div id="drop-overlay" class="drop-overlay">Solte a planilha para carregar</div>
+<div id="drop-overlay" class="drop-overlay" data-i18n="drop.hint">Solte a planilha para carregar</div>
 
+<script id="i18n-catalog" type="application/json">
+{
+ "pt-br": {
+  "brand.sub": "Inventário Linux",
+  "nav.label": "Visões",
+  "nav.scan": "Coleta",
+  "nav.fleet": "Parque",
+  "nav.history": "Snapshots",
+  "footer.workers": "Concorrência",
+  "footer.timeout": "Timeout SSH",
+  "footer.verify": "Verificação",
+  "footer.language": "Idioma",
+  "footer.workers_value": "{n} conexões",
+  "footer.timeout_value": "{n} segundos",
+  "footer.tofu_on": "TOFU ativo",
+  "footer.strict": "Estrito",
+  "lang.auto": "Do sistema",
+  "lang.auto_title": "Segue o idioma do sistema ({lang})",
+  "tb.targets": "Alvos:",
+  "tb.targets_empty": "Selecionar lista...",
+  "tb.machines": "{n} máquinas",
+  "tb.ssh_empty": "Configurar acesso",
+  "tb.ssh_key": "chave {name}",
+  "tb.ssh_password": "senha",
+  "tb.ssh_configure": "configurar",
+  "tb.help": "Como usar",
+  "tb.export": "Exportar",
+  "tb.start": "Iniciar coleta",
+  "tb.cancel": "Cancelar coleta",
+  "tp.title": "Lista de máquinas",
+  "tp.text": "Planilha <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code> (ou <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>), uma máquina por linha. Outras colunas, como <code>LOCATION</code> e <code>ASSET_TAG</code>, vão para os relatórios.",
+  "tp.choose": "Escolher planilha…",
+  "tp.template": "Baixar planilha modelo",
+  "tp.tutorial": "Ver como funciona",
+  "tp.path_label": "Ou cole o caminho do arquivo",
+  "tp.path_placeholder": "/home/usuario/Documentos/maquinas.xlsx",
+  "ts.none": "Nenhuma planilha carregada. Você também pode arrastar o arquivo para a janela.",
+  "ts.snapshot": "Exibindo a última coleta salva. Escolha a planilha para coletar de novo.",
+  "ts.count": "{n} máquina(s)",
+  "ts.target_column": "Coluna de endereço",
+  "ts.other_columns": "Outras colunas",
+  "ts.rows_skipped": "Linhas sem IP ignoradas",
+  "ts.duplicates": "IPs repetidos ignorados (linhas)",
+  "sp.title": "Credenciais e conexão SSH",
+  "sp.user": "Usuário SSH",
+  "sp.user_ph": "ex.: root, admin",
+  "sp.key": "Chave privada (ou em branco para senha)",
+  "sp.pass": "Senha SSH (opcional)",
+  "sp.pass_ph": "Não armazenada em disco",
+  "sp.workers": "Conexões simultâneas",
+  "sp.timeout": "Timeout (s)",
+  "sp.tofu": "Aceitar novas chaves no primeiro acesso (TOFU)",
+  "ep.xlsx": "Planilha Excel",
+  "ep.html": "Relatório interativo",
+  "ep.csv": "Dados tabulares",
+  "ep.saved_in": "Salvos em {path}",
+  "ep.open_folder": "Abrir pasta de relatórios",
+  "f.all": "Todas",
+  "f.online": "Online",
+  "f.offline": "Offline",
+  "f.error": "Falha SSH",
+  "search.ph": "Buscar máquina, IP, local, hardware...",
+  "col.status": "Status",
+  "col.ip": "Endereço IP",
+  "col.hostname": "Hostname",
+  "col.location": "Local",
+  "col.cpu": "Processador",
+  "col.memory": "Memória",
+  "col.storage": "Armazenamento",
+  "col.system": "Sistema",
+  "col.collected": "Coletado",
+  "col.collected_title": "Data e hora da última coleta da máquina",
+  "table.no_match": "Nenhuma máquina corresponde ao filtro atual.",
+  "st.online": "Online",
+  "st.offline": "Offline",
+  "st.pending": "Pendente",
+  "st.auth": "Autenticação",
+  "st.hostkey": "Chave do host",
+  "st.ssh": "Falha SSH",
+  "ob.title": "Inventário de hardware em 3 passos",
+  "ob.sub": "O Invent-SSH entra em cada máquina Linux por SSH, lê o hardware sem alterar nada e monta a tabela, o painel do parque e os relatórios.",
+  "ob.s1.title": "Escolha a planilha de máquinas",
+  "ob.s1.desc": "Arquivo <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>, uma máquina por linha. Colunas como <code>LOCATION</code> são opcionais. Sem planilha pronta? Baixe o modelo e preencha. Também dá para arrastar o arquivo para esta janela.",
+  "ob.s2.title": "Informe o acesso SSH",
+  "ob.s2.desc": "Usuário e senha, ou chave privada. A senha fica só na memória enquanto o app está aberto.",
+  "ob.s2.button": "Configurar acesso",
+  "ob.s3.title": "Inicie a coleta",
+  "ob.s3.desc": "Cada máquina recebe uma conexão e um único comando de leitura: sistema, processador, memória, discos, placa-mãe, vídeo e rede. Nada é instalado ou gravado nela.",
+  "ob.foot": "Formato da planilha, status e pastas dos arquivos:",
+  "tut.title": "Como a planilha vira inventário",
+  "tut.c1": "Uma máquina por linha, com o endereço na coluna IP",
+  "tut.c2": "O Invent-SSH lê a coluna IP; as outras vão para os relatórios",
+  "tut.c3": "Cada máquina é coletada por SSH e aparece na tabela",
+  "tut.loc_a": "Matriz",
+  "tut.loc_b": "Filial 2",
+  "tut.file": "maquinas.xlsx",
+  "db.total": "Total do parque",
+  "db.locations": "{n} unidade(s) cadastrada(s)",
+  "db.online": "Máquinas online",
+  "db.avail": "{p}% de disponibilidade",
+  "db.flash": "Armazenamento em flash",
+  "db.ram": "Memória média por host",
+  "db.ram_note": "hosts online coletados",
+  "db.storage_title": "Armazenamento por tipo",
+  "db.ram_title": "Capacidade de memória RAM",
+  "db.distro_title": "Distribuições Linux",
+  "db.online_hosts": "hosts online",
+  "db.no_data": "Sem dados coletados",
+  "db.locations_title": "Distribuição por unidade / local",
+  "db.col_location": "Unidade / local",
+  "db.col_total": "Total",
+  "db.col_online": "Online",
+  "db.no_locations": "Nenhuma unidade para exibir.",
+  "an.SSD SATA / Flash": "SSD SATA / Flash",
+  "an.HDD Mecânico": "HDD mecânico",
+  "an.Até 4 GB": "Até 4 GB",
+  "an.16 GB ou superior": "16 GB ou superior",
+  "an.Não identificado": "Não identificado",
+  "an.Geral": "Geral",
+  "hi.label": "Histórico local",
+  "hi.title": "Alterações entre snapshots",
+  "hi.load": "Carregar na Coleta",
+  "hi.export": "Exportar comparação",
+  "hi.col_field": "Campo",
+  "hi.col_before": "Valor anterior",
+  "hi.col_after": "Valor atual",
+  "hi.none": "Nenhum snapshot salvo ainda.",
+  "hi.first": "Conclua uma coleta para registrar o primeiro snapshot local.",
+  "hi.since": "Alterações registradas desde {date}",
+  "hi.initial": "Snapshot inicial ({date}), sem base anterior para comparação",
+  "hi.no_changes": "Nenhuma alteração de hardware em relação ao snapshot anterior.",
+  "hi.card_hosts": "{n} hosts",
+  "hi.card_sub": "{online} online · {changes} alterações",
+  "hi.loaded": "Snapshot #{id} carregado na visão Coleta.",
+  "hi.saved": "Alterações salvas em {path}",
+  "field.status": "Status",
+  "field.processador": "Processador",
+  "field.ram": "Memória RAM",
+  "field.disk_type": "Tipo de armazenamento",
+  "field.disk_size": "Armazenamento",
+  "field.placa_mae": "Placa-mãe",
+  "field.distro": "Sistema operacional",
+  "field.kernel": "Kernel",
+  "in.select": "Selecione uma máquina na tabela para ver os detalhes de hardware.",
+  "in.empty": "Os detalhes de cada máquina aparecem aqui depois da coleta.",
+  "in.collected_at": "Coletado em {date} ({relative})",
+  "in.not_collected": "Ainda não coletada",
+  "in.waiting": "Aguardando coleta.",
+  "in.no_error": "Sem detalhes do erro.",
+  "in.diagnosis": "Diagnóstico",
+  "in.system": "Sistema",
+  "in.hardware": "Equipamento",
+  "in.cpu": "Processador",
+  "in.memory": "Memória",
+  "in.storage": "Armazenamento",
+  "in.video": "Vídeo",
+  "in.network": "Rede",
+  "in.collection": "Coleta",
+  "kv.distro": "Distribuição",
+  "kv.version": "Versão",
+  "kv.base": "Base",
+  "kv.kernel": "Kernel",
+  "kv.arch": "Arquitetura",
+  "kv.hostname": "Hostname",
+  "kv.desktop": "Ambiente gráfico",
+  "kv.displays": "Telas",
+  "kv.packages": "Pacotes",
+  "kv.init": "Init",
+  "kv.tz": "Fuso horário",
+  "kv.uptime": "Ligada há",
+  "kv.disk": "Disco (/)",
+  "kv.manufacturer": "Fabricante",
+  "kv.model": "Modelo",
+  "kv.board": "Placa-mãe",
+  "kv.bios": "BIOS",
+  "kv.virt": "Virtualização",
+  "kv.cores": "Núcleos / threads",
+  "kv.freq": "Frequência máx.",
+  "kv.sockets": "Soquetes",
+  "kv.vtx": "Extensão de virtualização",
+  "kv.total": "Total",
+  "kv.used": "Em uso",
+  "kv.available": "Disponível",
+  "kv.slots": "Slots",
+  "kv.max_capacity": "Capacidade máx.",
+  "kv.speed": "Velocidade",
+  "kv.gpu": "Placa de vídeo",
+  "kv.adapters": "Adaptadores",
+  "kv.coverage": "Cobertura dos dados",
+  "kv.collected_at": "Coletado em",
+  "in.slots_value": "{used} de {total} ocupados",
+  "in.slots_partial": "{used} ocupado(s)",
+  "in.physical": "Não detectada (máquina física)",
+  "rel.now": "agora",
+  "rel.min": "há {n} min",
+  "rel.hours": "há {n} h",
+  "rel.day": "há 1 dia",
+  "rel.days": "há {n} dias",
+  "bn.api_error": "Erro na comunicação com o motor local.",
+  "bn.offline": "Modo de visualização offline",
+  "bn.cancelling": "Cancelando coleta...",
+  "bn.template_saved": "Modelo salvo em {path}. Preencha a coluna IP e escolha o arquivo em Alvos.",
+  "bn.report_saved": "Relatório {format} salvo em {path}",
+  "bn.open": "Abrir",
+  "bn.open_folder": "Abrir pasta",
+  "drop.hint": "Solte a planilha para carregar",
+  "hp.title": "Como usar o Invent-SSH",
+  "hp.close": "Fechar",
+  "hp.steps": "Passo a passo",
+  "hp.step1": "<strong>Alvos</strong>: escolha a planilha de máquinas ou arraste o arquivo para a janela.",
+  "hp.step2": "<strong>SSH</strong>: informe usuário e senha, ou chave privada.",
+  "hp.step3": "<strong>Iniciar coleta</strong>: acompanhe cada máquina na tabela; clique numa linha para ver os detalhes.",
+  "hp.step4": "<strong>Exportar</strong>: gere a planilha Excel, o relatório HTML ou o CSV.",
+  "hp.step5": "<strong>Snapshots</strong>: cada coleta fica salva e é comparada com a anterior.",
+  "hp.folders": "Onde ficam os arquivos",
+  "hp.reports": "Relatórios",
+  "hp.data": "Histórico e chaves",
+  "hp.logs": "Logs",
+  "hp.sheet": "Planilha de máquinas",
+  "hp.sheet_p1": "Formatos <code>.xlsx</code>, <code>.xlsm</code> ou <code>.csv</code> (separador vírgula ou ponto e vírgula). A primeira linha é o cabeçalho e cada linha seguinte é uma máquina.",
+  "hp.th_column": "Coluna",
+  "hp.th_required": "Obrigatória",
+  "hp.th_use": "Uso",
+  "hp.yes": "Sim",
+  "hp.no": "Não",
+  "hp.row_ip": "Endereço ou nome da máquina. Também vale <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>, <code>IP_ADDRESS</code>, <code>ENDPOINT</code> ou <code>TARGET</code>.",
+  "hp.row_location": "Unidade ou local; agrupa a visão Parque. Também vale <code>LOCAL</code>, <code>UNIDADE</code>, <code>FILIAL</code> ou <code>SETOR</code>.",
+  "hp.row_other_name": "Qualquer outra",
+  "hp.row_other": "Copiada como está para a tabela e os relatórios, por exemplo <code>ASSET_TAG</code>, <code>OWNER</code> ou <code>NOTES</code>.",
+  "hp.sheet_p2": "Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A conexão usa a porta 22.",
+  "hp.collected": "O que é coletado",
+  "hp.collected_p": "Uma conexão SSH por máquina executa um único script de leitura: sistema e kernel, processador, memória e módulos, discos e partições, placa-mãe e BIOS, vídeo, rede e tempo ligado. Nada é instalado, alterado ou gravado na máquina. Campos que exigem root ou ferramentas ausentes aparecem como \"—\".",
+  "hp.status": "Status",
+  "hp.st_online": "<strong>Online</strong>: hardware coletado.",
+  "hp.st_offline": "<strong>Offline</strong>: a máquina não respondeu; o motivo aparece na linha (desligada, porta 22 fechada, tempo esgotado ou nome inexistente).",
+  "hp.st_error": "<strong>Falha SSH</strong>: respondeu, mas recusou a senha ou a chave, ou a chave do host mudou desde o último acesso."
+ },
+ "en": {
+  "brand.sub": "Linux inventory",
+  "nav.label": "Views",
+  "nav.scan": "Collection",
+  "nav.fleet": "Fleet",
+  "nav.history": "Snapshots",
+  "footer.workers": "Concurrency",
+  "footer.timeout": "SSH timeout",
+  "footer.verify": "Verification",
+  "footer.language": "Language",
+  "footer.workers_value": "{n} connections",
+  "footer.timeout_value": "{n} seconds",
+  "footer.tofu_on": "TOFU on",
+  "footer.strict": "Strict",
+  "lang.auto": "System",
+  "lang.auto_title": "Follows the system language ({lang})",
+  "tb.targets": "Targets:",
+  "tb.targets_empty": "Choose list...",
+  "tb.machines": "{n} machines",
+  "tb.ssh_empty": "Set up access",
+  "tb.ssh_key": "key {name}",
+  "tb.ssh_password": "password",
+  "tb.ssh_configure": "set up",
+  "tb.help": "How to use",
+  "tb.export": "Export",
+  "tb.start": "Start collection",
+  "tb.cancel": "Cancel collection",
+  "tp.title": "Machine list",
+  "tp.text": "A <code>.xlsx</code> or <code>.csv</code> spreadsheet with an <code>IP</code> column (or <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>), one machine per row. Other columns, such as <code>LOCATION</code> and <code>ASSET_TAG</code>, go to the reports.",
+  "tp.choose": "Choose spreadsheet…",
+  "tp.template": "Get the template",
+  "tp.tutorial": "See how it works",
+  "tp.path_label": "Or paste the file path",
+  "tp.path_placeholder": "/home/user/Documents/machines.xlsx",
+  "ts.none": "No spreadsheet loaded. You can also drag the file onto the window.",
+  "ts.snapshot": "Showing the last saved collection. Choose the spreadsheet to collect again.",
+  "ts.count": "{n} machine(s)",
+  "ts.target_column": "Address column",
+  "ts.other_columns": "Other columns",
+  "ts.rows_skipped": "Rows without an address skipped",
+  "ts.duplicates": "Repeated addresses skipped (rows)",
+  "sp.title": "SSH credentials and connection",
+  "sp.user": "SSH user",
+  "sp.user_ph": "e.g. root, admin",
+  "sp.key": "Private key (blank to use a password)",
+  "sp.pass": "SSH password (optional)",
+  "sp.pass_ph": "Never saved to disk",
+  "sp.workers": "Simultaneous connections",
+  "sp.timeout": "Timeout (s)",
+  "sp.tofu": "Accept new host keys on first connection (TOFU)",
+  "ep.xlsx": "Excel spreadsheet",
+  "ep.html": "Interactive report",
+  "ep.csv": "Tabular data",
+  "ep.saved_in": "Saved in {path}",
+  "ep.open_folder": "Open reports folder",
+  "f.all": "All",
+  "f.online": "Online",
+  "f.offline": "Offline",
+  "f.error": "SSH failure",
+  "search.ph": "Search machine, IP, location, hardware...",
+  "col.status": "Status",
+  "col.ip": "IP address",
+  "col.hostname": "Hostname",
+  "col.location": "Location",
+  "col.cpu": "Processor",
+  "col.memory": "Memory",
+  "col.storage": "Storage",
+  "col.system": "System",
+  "col.collected": "Collected",
+  "col.collected_title": "Date and time of the machine's last collection",
+  "table.no_match": "No machine matches the current filter.",
+  "st.online": "Online",
+  "st.offline": "Offline",
+  "st.pending": "Pending",
+  "st.auth": "Authentication",
+  "st.hostkey": "Host key",
+  "st.ssh": "SSH failure",
+  "ob.title": "Hardware inventory in 3 steps",
+  "ob.sub": "Invent-SSH connects to each Linux machine over SSH, reads the hardware without changing anything, and builds the table, the fleet view and the reports.",
+  "ob.s1.title": "Choose the machine spreadsheet",
+  "ob.s1.desc": "A <code>.xlsx</code> or <code>.csv</code> file with an <code>IP</code> column, one machine per row. Columns such as <code>LOCATION</code> are optional. No spreadsheet yet? Get the template and fill it in. You can also drag the file onto this window.",
+  "ob.s2.title": "Enter the SSH access",
+  "ob.s2.desc": "User and password, or a private key. The password stays in memory only while the app is open.",
+  "ob.s2.button": "Set up access",
+  "ob.s3.title": "Start the collection",
+  "ob.s3.desc": "Each machine gets one connection and a single read-only command: system, processor, memory, disks, motherboard, graphics and network. Nothing is installed or written on it.",
+  "ob.foot": "Spreadsheet format, statuses and file folders:",
+  "tut.title": "How the spreadsheet becomes an inventory",
+  "tut.c1": "One machine per row, with its address in the IP column",
+  "tut.c2": "Invent-SSH reads the IP column; the others go to the reports",
+  "tut.c3": "Each machine is collected over SSH and shows up in the table",
+  "tut.loc_a": "HQ",
+  "tut.loc_b": "Branch 2",
+  "tut.file": "machines.xlsx",
+  "db.total": "Fleet total",
+  "db.locations": "{n} location(s)",
+  "db.online": "Machines online",
+  "db.avail": "{p}% available",
+  "db.flash": "Flash storage",
+  "db.ram": "Average memory per host",
+  "db.ram_note": "online hosts collected",
+  "db.storage_title": "Storage by type",
+  "db.ram_title": "Memory capacity",
+  "db.distro_title": "Linux distributions",
+  "db.online_hosts": "online hosts",
+  "db.no_data": "No data collected",
+  "db.locations_title": "By site / location",
+  "db.col_location": "Site / location",
+  "db.col_total": "Total",
+  "db.col_online": "Online",
+  "db.no_locations": "No location to show.",
+  "an.SSD SATA / Flash": "SATA SSD / flash",
+  "an.HDD Mecânico": "Hard disk",
+  "an.Até 4 GB": "Up to 4 GB",
+  "an.16 GB ou superior": "16 GB or more",
+  "an.Não identificado": "Unidentified",
+  "an.Geral": "General",
+  "hi.label": "Local history",
+  "hi.title": "Changes between snapshots",
+  "hi.load": "Load into Collection",
+  "hi.export": "Export comparison",
+  "hi.col_field": "Field",
+  "hi.col_before": "Previous value",
+  "hi.col_after": "Current value",
+  "hi.none": "No snapshot saved yet.",
+  "hi.first": "Finish a collection to record the first local snapshot.",
+  "hi.since": "Changes recorded since {date}",
+  "hi.initial": "First snapshot ({date}), nothing earlier to compare with",
+  "hi.no_changes": "No hardware change since the previous snapshot.",
+  "hi.card_hosts": "{n} hosts",
+  "hi.card_sub": "{online} online · {changes} changes",
+  "hi.loaded": "Snapshot #{id} loaded into the Collection view.",
+  "hi.saved": "Changes saved to {path}",
+  "field.status": "Status",
+  "field.processador": "Processor",
+  "field.ram": "Memory",
+  "field.disk_type": "Storage type",
+  "field.disk_size": "Storage capacity",
+  "field.placa_mae": "Motherboard",
+  "field.distro": "Operating system",
+  "field.kernel": "Kernel",
+  "in.select": "Select a machine in the table to see its hardware.",
+  "in.empty": "Each machine's details show up here after the collection.",
+  "in.collected_at": "Collected on {date} ({relative})",
+  "in.not_collected": "Not collected yet",
+  "in.waiting": "Waiting for collection.",
+  "in.no_error": "No error details.",
+  "in.diagnosis": "Diagnosis",
+  "in.system": "System",
+  "in.hardware": "Machine",
+  "in.cpu": "Processor",
+  "in.memory": "Memory",
+  "in.storage": "Storage",
+  "in.video": "Graphics",
+  "in.network": "Network",
+  "in.collection": "Collection",
+  "kv.distro": "Distribution",
+  "kv.version": "Version",
+  "kv.base": "Based on",
+  "kv.kernel": "Kernel",
+  "kv.arch": "Architecture",
+  "kv.hostname": "Hostname",
+  "kv.desktop": "Desktop",
+  "kv.displays": "Displays",
+  "kv.packages": "Packages",
+  "kv.init": "Init",
+  "kv.tz": "Time zone",
+  "kv.uptime": "Uptime",
+  "kv.disk": "Disk (/)",
+  "kv.manufacturer": "Manufacturer",
+  "kv.model": "Model",
+  "kv.board": "Motherboard",
+  "kv.bios": "BIOS",
+  "kv.virt": "Virtualization",
+  "kv.cores": "Cores / threads",
+  "kv.freq": "Max frequency",
+  "kv.sockets": "Sockets",
+  "kv.vtx": "Virtualization extension",
+  "kv.total": "Total",
+  "kv.used": "In use",
+  "kv.available": "Available",
+  "kv.slots": "Slots",
+  "kv.max_capacity": "Max capacity",
+  "kv.speed": "Speed",
+  "kv.gpu": "Graphics card",
+  "kv.adapters": "Adapters",
+  "kv.coverage": "Data coverage",
+  "kv.collected_at": "Collected on",
+  "in.slots_value": "{used} of {total} populated",
+  "in.slots_partial": "{used} populated",
+  "in.physical": "Not detected (physical machine)",
+  "rel.now": "just now",
+  "rel.min": "{n} min ago",
+  "rel.hours": "{n} h ago",
+  "rel.day": "1 day ago",
+  "rel.days": "{n} days ago",
+  "bn.api_error": "Could not reach the local engine.",
+  "bn.offline": "Offline view",
+  "bn.cancelling": "Cancelling collection...",
+  "bn.template_saved": "Template saved to {path}. Fill in the IP column and choose the file in Targets.",
+  "bn.report_saved": "{format} report saved to {path}",
+  "bn.open": "Open",
+  "bn.open_folder": "Open folder",
+  "drop.hint": "Drop the spreadsheet to load it",
+  "hp.title": "How to use Invent-SSH",
+  "hp.close": "Close",
+  "hp.steps": "Step by step",
+  "hp.step1": "<strong>Targets</strong>: choose the machine spreadsheet or drag the file onto the window.",
+  "hp.step2": "<strong>SSH</strong>: enter the user and password, or a private key.",
+  "hp.step3": "<strong>Start collection</strong>: follow each machine in the table; click a row to see its details.",
+  "hp.step4": "<strong>Export</strong>: create the Excel spreadsheet, the HTML report or the CSV.",
+  "hp.step5": "<strong>Snapshots</strong>: every collection is saved and compared with the previous one.",
+  "hp.folders": "Where files are kept",
+  "hp.reports": "Reports",
+  "hp.data": "History and keys",
+  "hp.logs": "Logs",
+  "hp.sheet": "Machine spreadsheet",
+  "hp.sheet_p1": "Formats <code>.xlsx</code>, <code>.xlsm</code> or <code>.csv</code> (comma or semicolon). The first row is the header and every following row is a machine.",
+  "hp.th_column": "Column",
+  "hp.th_required": "Required",
+  "hp.th_use": "Use",
+  "hp.yes": "Yes",
+  "hp.no": "No",
+  "hp.row_ip": "Address or name of the machine. <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>, <code>IP_ADDRESS</code>, <code>ENDPOINT</code> or <code>TARGET</code> also work.",
+  "hp.row_location": "Site or room; groups the Fleet view. <code>SITE</code> and <code>DEPARTMENT</code> also work.",
+  "hp.row_other_name": "Any other",
+  "hp.row_other": "Copied as is to the table and the reports, for example <code>ASSET_TAG</code>, <code>OWNER</code> or <code>NOTES</code>.",
+  "hp.sheet_p2": "Rows without an address and repeated addresses are skipped and listed after loading. Connections use port 22.",
+  "hp.collected": "What is collected",
+  "hp.collected_p": "One SSH connection per machine runs a single read-only script: system and kernel, processor, memory and modules, disks and partitions, motherboard and BIOS, graphics, network and uptime. Nothing is installed, changed or written on the machine. Fields that need root or missing tools show as \"—\".",
+  "hp.status": "Statuses",
+  "hp.st_online": "<strong>Online</strong>: hardware collected.",
+  "hp.st_offline": "<strong>Offline</strong>: the machine did not answer; the row says why (powered off, port 22 closed, time limit or unknown name).",
+  "hp.st_error": "<strong>SSH failure</strong>: it answered but rejected the password or key, or its host key changed since the last connection."
+ },
+ "es": {
+  "brand.sub": "Inventario Linux",
+  "nav.label": "Vistas",
+  "nav.scan": "Recopilación",
+  "nav.fleet": "Parque",
+  "nav.history": "Instantáneas",
+  "footer.workers": "Concurrencia",
+  "footer.timeout": "Límite SSH",
+  "footer.verify": "Verificación",
+  "footer.language": "Idioma",
+  "footer.workers_value": "{n} conexiones",
+  "footer.timeout_value": "{n} segundos",
+  "footer.tofu_on": "TOFU activo",
+  "footer.strict": "Estricto",
+  "lang.auto": "Del sistema",
+  "lang.auto_title": "Sigue el idioma del sistema ({lang})",
+  "tb.targets": "Destinos:",
+  "tb.targets_empty": "Elegir lista...",
+  "tb.machines": "{n} equipos",
+  "tb.ssh_empty": "Configurar acceso",
+  "tb.ssh_key": "clave {name}",
+  "tb.ssh_password": "contraseña",
+  "tb.ssh_configure": "configurar",
+  "tb.help": "Cómo usar",
+  "tb.export": "Exportar",
+  "tb.start": "Iniciar recopilación",
+  "tb.cancel": "Cancelar recopilación",
+  "tp.title": "Lista de equipos",
+  "tp.text": "Hoja <code>.xlsx</code> o <code>.csv</code> con una columna <code>IP</code> (o <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>), un equipo por fila. Las demás columnas, como <code>LOCATION</code> y <code>ASSET_TAG</code>, pasan a los informes.",
+  "tp.choose": "Elegir hoja…",
+  "tp.template": "Obtener la plantilla",
+  "tp.tutorial": "Ver cómo funciona",
+  "tp.path_label": "O pegue la ruta del archivo",
+  "tp.path_placeholder": "/home/usuario/Documentos/equipos.xlsx",
+  "ts.none": "No hay ninguna hoja cargada. También puede arrastrar el archivo a la ventana.",
+  "ts.snapshot": "Mostrando la última recopilación guardada. Elija la hoja para recopilar de nuevo.",
+  "ts.count": "{n} equipo(s)",
+  "ts.target_column": "Columna de dirección",
+  "ts.other_columns": "Otras columnas",
+  "ts.rows_skipped": "Filas sin dirección omitidas",
+  "ts.duplicates": "Direcciones repetidas omitidas (filas)",
+  "sp.title": "Credenciales y conexión SSH",
+  "sp.user": "Usuario SSH",
+  "sp.user_ph": "p. ej., root, admin",
+  "sp.key": "Clave privada (en blanco para usar contraseña)",
+  "sp.pass": "Contraseña SSH (opcional)",
+  "sp.pass_ph": "Nunca se guarda en disco",
+  "sp.workers": "Conexiones simultáneas",
+  "sp.timeout": "Tiempo límite (s)",
+  "sp.tofu": "Aceptar claves nuevas en el primer acceso (TOFU)",
+  "ep.xlsx": "Hoja de Excel",
+  "ep.html": "Informe interactivo",
+  "ep.csv": "Datos tabulares",
+  "ep.saved_in": "Guardados en {path}",
+  "ep.open_folder": "Abrir carpeta de informes",
+  "f.all": "Todos",
+  "f.online": "En línea",
+  "f.offline": "Sin conexión",
+  "f.error": "Fallo SSH",
+  "search.ph": "Buscar equipo, IP, ubicación, hardware...",
+  "col.status": "Estado",
+  "col.ip": "Dirección IP",
+  "col.hostname": "Hostname",
+  "col.location": "Ubicación",
+  "col.cpu": "Procesador",
+  "col.memory": "Memoria",
+  "col.storage": "Almacenamiento",
+  "col.system": "Sistema",
+  "col.collected": "Recopilado",
+  "col.collected_title": "Fecha y hora de la última recopilación del equipo",
+  "table.no_match": "Ningún equipo coincide con el filtro actual.",
+  "st.online": "En línea",
+  "st.offline": "Sin conexión",
+  "st.pending": "Pendiente",
+  "st.auth": "Autenticación",
+  "st.hostkey": "Clave del host",
+  "st.ssh": "Fallo SSH",
+  "ob.title": "Inventario de hardware en 3 pasos",
+  "ob.sub": "Invent-SSH se conecta a cada equipo Linux por SSH, lee el hardware sin cambiar nada y arma la tabla, la vista del parque y los informes.",
+  "ob.s1.title": "Elija la hoja de equipos",
+  "ob.s1.desc": "Archivo <code>.xlsx</code> o <code>.csv</code> con una columna <code>IP</code>, un equipo por fila. Columnas como <code>LOCATION</code> son opcionales. ¿No tiene una hoja? Obtenga la plantilla y rellénela. También puede arrastrar el archivo a esta ventana.",
+  "ob.s2.title": "Indique el acceso SSH",
+  "ob.s2.desc": "Usuario y contraseña, o una clave privada. La contraseña solo queda en memoria mientras la app está abierta.",
+  "ob.s2.button": "Configurar acceso",
+  "ob.s3.title": "Inicie la recopilación",
+  "ob.s3.desc": "Cada equipo recibe una conexión y un único comando de lectura: sistema, procesador, memoria, discos, placa base, vídeo y red. No se instala ni se escribe nada en él.",
+  "ob.foot": "Formato de la hoja, estados y carpetas de archivos:",
+  "tut.title": "Cómo la hoja se convierte en inventario",
+  "tut.c1": "Un equipo por fila, con la dirección en la columna IP",
+  "tut.c2": "Invent-SSH lee la columna IP; las demás pasan a los informes",
+  "tut.c3": "Cada equipo se recopila por SSH y aparece en la tabla",
+  "tut.loc_a": "Sede",
+  "tut.loc_b": "Sucursal 2",
+  "tut.file": "equipos.xlsx",
+  "db.total": "Total del parque",
+  "db.locations": "{n} ubicación(es)",
+  "db.online": "Equipos en línea",
+  "db.avail": "{p}% de disponibilidad",
+  "db.flash": "Almacenamiento flash",
+  "db.ram": "Memoria media por equipo",
+  "db.ram_note": "equipos en línea recopilados",
+  "db.storage_title": "Almacenamiento por tipo",
+  "db.ram_title": "Capacidad de memoria RAM",
+  "db.distro_title": "Distribuciones Linux",
+  "db.online_hosts": "equipos en línea",
+  "db.no_data": "Sin datos recopilados",
+  "db.locations_title": "Distribución por sede / ubicación",
+  "db.col_location": "Sede / ubicación",
+  "db.col_total": "Total",
+  "db.col_online": "En línea",
+  "db.no_locations": "No hay ubicaciones para mostrar.",
+  "an.SSD SATA / Flash": "SSD SATA / flash",
+  "an.HDD Mecânico": "Disco duro",
+  "an.Até 4 GB": "Hasta 4 GB",
+  "an.16 GB ou superior": "16 GB o más",
+  "an.Não identificado": "No identificado",
+  "an.Geral": "General",
+  "hi.label": "Historial local",
+  "hi.title": "Cambios entre instantáneas",
+  "hi.load": "Cargar en Recopilación",
+  "hi.export": "Exportar comparación",
+  "hi.col_field": "Campo",
+  "hi.col_before": "Valor anterior",
+  "hi.col_after": "Valor actual",
+  "hi.none": "Aún no hay instantáneas guardadas.",
+  "hi.first": "Complete una recopilación para registrar la primera instantánea local.",
+  "hi.since": "Cambios registrados desde {date}",
+  "hi.initial": "Instantánea inicial ({date}), sin base anterior para comparar",
+  "hi.no_changes": "Ningún cambio de hardware respecto a la instantánea anterior.",
+  "hi.card_hosts": "{n} equipos",
+  "hi.card_sub": "{online} en línea · {changes} cambios",
+  "hi.loaded": "Instantánea #{id} cargada en la vista Recopilación.",
+  "hi.saved": "Cambios guardados en {path}",
+  "field.status": "Estado",
+  "field.processador": "Procesador",
+  "field.ram": "Memoria RAM",
+  "field.disk_type": "Tipo de almacenamiento",
+  "field.disk_size": "Capacidad de almacenamiento",
+  "field.placa_mae": "Placa base",
+  "field.distro": "Sistema operativo",
+  "field.kernel": "Kernel",
+  "in.select": "Seleccione un equipo en la tabla para ver su hardware.",
+  "in.empty": "Los detalles de cada equipo aparecen aquí tras la recopilación.",
+  "in.collected_at": "Recopilado el {date} ({relative})",
+  "in.not_collected": "Aún no recopilado",
+  "in.waiting": "Esperando la recopilación.",
+  "in.no_error": "Sin detalles del error.",
+  "in.diagnosis": "Diagnóstico",
+  "in.system": "Sistema",
+  "in.hardware": "Equipo",
+  "in.cpu": "Procesador",
+  "in.memory": "Memoria",
+  "in.storage": "Almacenamiento",
+  "in.video": "Vídeo",
+  "in.network": "Red",
+  "in.collection": "Recopilación",
+  "kv.distro": "Distribución",
+  "kv.version": "Versión",
+  "kv.base": "Base",
+  "kv.kernel": "Kernel",
+  "kv.arch": "Arquitectura",
+  "kv.hostname": "Hostname",
+  "kv.desktop": "Entorno gráfico",
+  "kv.displays": "Pantallas",
+  "kv.packages": "Paquetes",
+  "kv.init": "Init",
+  "kv.tz": "Zona horaria",
+  "kv.uptime": "Encendido hace",
+  "kv.disk": "Disco (/)",
+  "kv.manufacturer": "Fabricante",
+  "kv.model": "Modelo",
+  "kv.board": "Placa base",
+  "kv.bios": "BIOS",
+  "kv.virt": "Virtualización",
+  "kv.cores": "Núcleos / hilos",
+  "kv.freq": "Frecuencia máx.",
+  "kv.sockets": "Zócalos",
+  "kv.vtx": "Extensión de virtualización",
+  "kv.total": "Total",
+  "kv.used": "En uso",
+  "kv.available": "Disponible",
+  "kv.slots": "Ranuras",
+  "kv.max_capacity": "Capacidad máx.",
+  "kv.speed": "Velocidad",
+  "kv.gpu": "Tarjeta gráfica",
+  "kv.adapters": "Adaptadores",
+  "kv.coverage": "Cobertura de datos",
+  "kv.collected_at": "Recopilado el",
+  "in.slots_value": "{used} de {total} ocupadas",
+  "in.slots_partial": "{used} ocupada(s)",
+  "in.physical": "No detectada (equipo físico)",
+  "rel.now": "ahora",
+  "rel.min": "hace {n} min",
+  "rel.hours": "hace {n} h",
+  "rel.day": "hace 1 día",
+  "rel.days": "hace {n} días",
+  "bn.api_error": "Error de comunicación con el motor local.",
+  "bn.offline": "Vista sin conexión",
+  "bn.cancelling": "Cancelando la recopilación...",
+  "bn.template_saved": "Plantilla guardada en {path}. Rellene la columna IP y elija el archivo en Destinos.",
+  "bn.report_saved": "Informe {format} guardado en {path}",
+  "bn.open": "Abrir",
+  "bn.open_folder": "Abrir carpeta",
+  "drop.hint": "Suelte la hoja para cargarla",
+  "hp.title": "Cómo usar Invent-SSH",
+  "hp.close": "Cerrar",
+  "hp.steps": "Paso a paso",
+  "hp.step1": "<strong>Destinos</strong>: elija la hoja de equipos o arrastre el archivo a la ventana.",
+  "hp.step2": "<strong>SSH</strong>: indique usuario y contraseña, o una clave privada.",
+  "hp.step3": "<strong>Iniciar recopilación</strong>: siga cada equipo en la tabla; haga clic en una fila para ver los detalles.",
+  "hp.step4": "<strong>Exportar</strong>: genere la hoja de Excel, el informe HTML o el CSV.",
+  "hp.step5": "<strong>Instantáneas</strong>: cada recopilación se guarda y se compara con la anterior.",
+  "hp.folders": "Dónde se guardan los archivos",
+  "hp.reports": "Informes",
+  "hp.data": "Historial y claves",
+  "hp.logs": "Registros",
+  "hp.sheet": "Hoja de equipos",
+  "hp.sheet_p1": "Formatos <code>.xlsx</code>, <code>.xlsm</code> o <code>.csv</code> (coma o punto y coma). La primera fila es el encabezado y cada fila siguiente es un equipo.",
+  "hp.th_column": "Columna",
+  "hp.th_required": "Obligatoria",
+  "hp.th_use": "Uso",
+  "hp.yes": "Sí",
+  "hp.no": "No",
+  "hp.row_ip": "Dirección o nombre del equipo. También valen <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>, <code>IP_ADDRESS</code>, <code>ENDPOINT</code> o <code>TARGET</code>.",
+  "hp.row_location": "Sede o sala; agrupa la vista Parque. También valen <code>UBICACION</code>, <code>SEDE</code> o <code>SUCURSAL</code>.",
+  "hp.row_other_name": "Cualquier otra",
+  "hp.row_other": "Se copia tal cual a la tabla y los informes, por ejemplo <code>ASSET_TAG</code>, <code>OWNER</code> o <code>NOTES</code>.",
+  "hp.sheet_p2": "Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar. La conexión usa el puerto 22.",
+  "hp.collected": "Qué se recopila",
+  "hp.collected_p": "Una conexión SSH por equipo ejecuta un único script de lectura: sistema y kernel, procesador, memoria y módulos, discos y particiones, placa base y BIOS, vídeo, red y tiempo encendido. No se instala, cambia ni escribe nada en el equipo. Los campos que requieren root o herramientas ausentes aparecen como \"—\".",
+  "hp.status": "Estados",
+  "hp.st_online": "<strong>En línea</strong>: hardware recopilado.",
+  "hp.st_offline": "<strong>Sin conexión</strong>: el equipo no respondió; la fila indica el motivo (apagado, puerto 22 cerrado, tiempo agotado o nombre inexistente).",
+  "hp.st_error": "<strong>Fallo SSH</strong>: respondió, pero rechazó la contraseña o la clave, o su clave de host cambió desde el último acceso."
+ }
+}
+</script>
 <script>
+  const I18N = JSON.parse(document.getElementById("i18n-catalog").textContent);
+  const LOCALES = { "pt-br": "pt-BR", en: "en-US", es: "es-ES" };
+  const LANGUAGE_NAMES = { "pt-br": "Português", en: "English", es: "Español" };
+  let currentLang = "en";
+
+  function tr(key, vars) {
+    let text = (I18N[currentLang] || {})[key] ?? I18N.en[key] ?? key;
+    for (const [name, value] of Object.entries(vars || {})) text = text.replaceAll(`{${name}}`, value);
+    return text;
+  }
+
+  function fmt(value, digits = 1) {
+    return new Intl.NumberFormat(LOCALES[currentLang], { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Number(value) || 0);
+  }
+
+  function applyTranslations() {
+    document.documentElement.lang = LOCALES[currentLang];
+    document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = tr(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = tr(el.dataset.i18nHtml); });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = tr(el.dataset.i18nPlaceholder); });
+    document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = tr(el.dataset.i18nTitle); });
+  }
+
+  function syncLanguageSelects(cfg) {
+    const autoTitle = tr("lang.auto_title", { lang: LANGUAGE_NAMES[cfg.system_language] || "English" });
+    document.querySelectorAll(".lang-select").forEach(select => {
+      select.querySelector(".lang-auto").textContent = tr("lang.auto");
+      select.title = autoTitle;
+      select.value = cfg.language_choice || "auto";
+    });
+  }
+
+  async function changeLanguage(choice) {
+    try {
+      const res = await api("/api/config", "POST", { language: choice });
+      appState.config = res.config;
+      const state = await api("/api/state");
+      applyServerState(state);
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
   const SESSION_TOKEN = window.__INVENT_TOKEN__ || "";
   let appState = {
     config: {},
@@ -1879,7 +2940,7 @@
     const res = await fetch(path, opts);
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || "Erro na comunicação com o motor local.");
+      throw new Error(data.error || tr("bn.api_error"));
     }
     return data;
   }
@@ -1913,7 +2974,7 @@
 
   function hostLocation(rec) {
     const meta = rec.metadata || {};
-    for (const k of ["LOCATION", "SITE", "LOCAL", "LOCALIZACAO", "LOCALIZAÇÃO", "UNIDADE", "FILIAL", "DEPARTMENT", "SETOR"]) {
+    for (const k of ["LOCATION", "SITE", "LOCAL", "LOCALIZACAO", "LOCALIZAÇÃO", "UNIDADE", "FILIAL", "DEPARTMENT", "SETOR", "UBICACION", "UBICACIÓN", "SEDE", "SUCURSAL"]) {
       if (cleanValue(meta[k])) return cleanValue(meta[k]);
     }
     return "—";
@@ -1978,17 +3039,17 @@
   function renderPaths() {
     const p = appState.paths || {};
     const rows = [
-      ["reports", "Relatórios", p.reports],
-      ["data", "Histórico e chaves", p.data],
-      ["logs", "Logs", p.logs]
+      ["reports", tr("hp.reports"), p.reports],
+      ["data", tr("hp.data"), p.data],
+      ["logs", tr("hp.logs"), p.logs]
     ];
     document.getElementById("help-paths").innerHTML = rows.map(([key, label, path]) => `
       <div class="path-row">
         <span>${label}</span>
         <span class="path-value" title="${escapeHtml(path || "")}">${escapeHtml(shortPath(path) || "—")}</span>
-        <button class="btn btn-small" onclick="openLocation('${key}')">Abrir pasta</button>
+        <button class="btn btn-small" onclick="openLocation('${key}')">${tr("bn.open_folder")}</button>
       </div>`).join("");
-    document.getElementById("export-dir").textContent = p.reports ? `Salvos em ${shortPath(p.reports)}` : "";
+    document.getElementById("export-dir").textContent = p.reports ? tr("ep.saved_in", { path: shortPath(p.reports) }) : "";
     document.getElementById("export-dir").title = p.reports || "";
   }
 
@@ -2028,22 +3089,22 @@
     const el = document.getElementById("target-summary");
     if (!info.filename) {
       el.innerHTML = appState.records.length
-        ? "Exibindo a última coleta salva. Escolha a planilha para coletar de novo."
-        : "Nenhuma planilha carregada. Você também pode arrastar o arquivo para a janela.";
+        ? tr("ts.snapshot")
+        : tr("ts.none");
       return;
     }
     const lines = [
-      `<strong>${escapeHtml(info.filename)}</strong>: ${info.count} máquina(s)`,
-      `Coluna de endereço: <code>${escapeHtml(info.target_column)}</code>`
+      `<strong>${escapeHtml(info.filename)}</strong>: ${tr("ts.count", { n: info.count })}`,
+      `${tr("ts.target_column")}: <code>${escapeHtml(info.target_column)}</code>`
     ];
     if (info.extra_columns && info.extra_columns.length) {
-      lines.push(`Outras colunas: ${info.extra_columns.map(c => `<code>${escapeHtml(c)}</code>`).join(" ")}`);
+      lines.push(`${tr("ts.other_columns")}: ${info.extra_columns.map(c => `<code>${escapeHtml(c)}</code>`).join(" ")}`);
     }
     if (info.rows_without_target && info.rows_without_target.length) {
-      lines.push(`Linhas sem IP ignoradas: ${info.rows_without_target.join(", ")}`);
+      lines.push(`${tr("ts.rows_skipped")}: ${info.rows_without_target.join(", ")}`);
     }
     if (info.duplicate_rows && info.duplicate_rows.length) {
-      lines.push(`IPs repetidos ignorados (linhas): ${info.duplicate_rows.join(", ")}`);
+      lines.push(`${tr("ts.duplicates")}: ${info.duplicate_rows.join(", ")}`);
     }
     el.innerHTML = lines.join("<br>");
   }
@@ -2060,26 +3121,26 @@
     const filename = filepath ? filepath.split(/[\\/]/).pop() : "";
     const count = appState.records.length;
     document.getElementById("targets-pill-value").textContent =
-      filename ? `${filename} (${count})` : (count ? `${count} máquinas` : "Selecionar lista...");
+      filename ? `${filename} (${count})` : (count ? tr("tb.machines", { n: count }) : tr("tb.targets_empty"));
     document.getElementById("input-filepath").value = filepath;
 
     const user = (document.getElementById("input-ssh-user").value || cfg.ssh_user || "").trim();
     const keyPath = (document.getElementById("input-ssh-key").value || cfg.ssh_key_path || "").trim();
     const hasPass = Boolean(document.getElementById("input-ssh-pass").value);
-    let authLabel = "configurar";
+    let authLabel = tr("tb.ssh_configure");
     if (keyPath) {
-      authLabel = "chave " + keyPath.split(/[\\/]/).pop();
+      authLabel = tr("tb.ssh_key", { name: keyPath.split(/[\\/]/).pop() });
     } else if (hasPass) {
-      authLabel = "senha";
+      authLabel = tr("tb.ssh_password");
     }
-    document.getElementById("ssh-pill-value").textContent = user ? `${user} · ${authLabel}` : "Configurar acesso";
+    document.getElementById("ssh-pill-value").textContent = user ? `${user} · ${authLabel}` : tr("tb.ssh_empty");
 
     const workers = parseInt(document.getElementById("input-workers").value || cfg.max_workers || 32, 10);
     const timeout = parseInt(document.getElementById("input-timeout").value || cfg.ssh_timeout || 15, 10);
     const tofu = document.getElementById("input-tofu").checked;
-    document.getElementById("footer-workers").textContent = `${workers} conexões`;
-    document.getElementById("footer-timeout").textContent = `${timeout} segundos`;
-    document.getElementById("footer-tofu").textContent = tofu ? "TOFU ativo" : "Estrito";
+    document.getElementById("footer-workers").textContent = tr("footer.workers_value", { n: workers });
+    document.getElementById("footer-timeout").textContent = tr("footer.timeout_value", { n: timeout });
+    document.getElementById("footer-tofu").textContent = tofu ? tr("footer.tofu_on") : tr("footer.strict");
     renderOnboarding();
   }
 
@@ -2107,12 +3168,12 @@
 
   function classifyStatus(statusRaw) {
     const st = String(statusRaw || "PENDING").toUpperCase();
-    if (st === "ONLINE") return { group: "ONLINE", dot: "online", label: "Online" };
-    if (st === "OFFLINE") return { group: "OFFLINE", dot: "offline", label: "Offline" };
-    if (st === "PENDING") return { group: "PENDING", dot: "pending", label: "Pendente" };
-    if (st === "FALHA_AUTH") return { group: "ERROR", dot: "warn", label: "Autenticação" };
-    if (st === "ERRO_CHAVE_HOST") return { group: "ERROR", dot: "warn", label: "Chave Host" };
-    return { group: "ERROR", dot: "warn", label: "Falha SSH" };
+    if (st === "ONLINE") return { group: "ONLINE", dot: "online", label: tr("st.online") };
+    if (st === "OFFLINE") return { group: "OFFLINE", dot: "offline", label: tr("st.offline") };
+    if (st === "PENDING") return { group: "PENDING", dot: "pending", label: tr("st.pending") };
+    if (st === "FALHA_AUTH") return { group: "ERROR", dot: "warn", label: tr("st.auth") };
+    if (st === "ERRO_CHAVE_HOST") return { group: "ERROR", dot: "warn", label: tr("st.hostkey") };
+    return { group: "ERROR", dot: "warn", label: tr("st.ssh") };
   }
 
   function renderScanTable() {
@@ -2149,7 +3210,7 @@
     const tbody = document.getElementById("hosts-tbody");
     renderOnboarding();
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Nenhuma máquina corresponde ao filtro atual.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${tr("table.no_match")}</td></tr>`;
       renderInspector(null);
       return;
     }
@@ -2198,22 +3259,22 @@
   }
 
   function formatCollected(value) {
-    if (!value) return { short: "—", full: "Ainda não coletada", relative: "" };
+    if (!value) return { short: "—", full: tr("in.not_collected"), relative: "" };
     const date = new Date(String(value).replace(" ", "T"));
     if (isNaN(date)) return { short: String(value), full: String(value), relative: "" };
-    const pad = (n) => String(n).padStart(2, "0");
-    const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    const day = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+    const locale = LOCALES[currentLang];
+    const time = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    const day = date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
     const today = new Date().toDateString() === date.toDateString();
     const minutes = Math.round((Date.now() - date.getTime()) / 60000);
-    let relative = "agora";
-    if (minutes >= 2880) relative = `há ${Math.round(minutes / 1440)} dias`;
-    else if (minutes >= 1440) relative = "há 1 dia";
-    else if (minutes >= 60) relative = `há ${Math.round(minutes / 60)} h`;
-    else if (minutes >= 1) relative = `há ${minutes} min`;
+    let relative = tr("rel.now");
+    if (minutes >= 2880) relative = tr("rel.days", { n: Math.round(minutes / 1440) });
+    else if (minutes >= 1440) relative = tr("rel.day");
+    else if (minutes >= 60) relative = tr("rel.hours", { n: Math.round(minutes / 60) });
+    else if (minutes >= 1) relative = tr("rel.min", { n: minutes });
     return {
       short: today ? time : `${day} ${time}`,
-      full: `${day}/${date.getFullYear()} ${time}:${pad(date.getSeconds())}`,
+      full: date.toLocaleString(locale, { dateStyle: "short", timeStyle: "medium" }),
       relative
     };
   }
@@ -2238,14 +3299,14 @@
   function slotsLabel(value) {
     const text = cleanValue(value);
     const full = /^(\d+) of (\d+) populated$/.exec(text);
-    if (full) return `${full[1]} de ${full[2]} ocupados`;
+    if (full) return tr("in.slots_value", { used: full[1], total: full[2] });
     const partial = /^(\d+) populated$/.exec(text);
-    return partial ? `${partial[1]} ocupado(s)` : text;
+    return partial ? tr("in.slots_partial", { used: partial[1] }) : text;
   }
 
   function virtualizationLabel(value) {
     const text = cleanValue(value);
-    return text.startsWith("Not detected") ? "Não detectada (máquina física)" : text;
+    return text.startsWith("Not detected") ? tr("in.physical") : text;
   }
 
   function renderInspector(rec) {
@@ -2253,8 +3314,8 @@
     if (!rec) {
       pane.innerHTML = `<div class="empty-state">${
         appState.records.length
-          ? "Selecione uma máquina na tabela para ver os detalhes de hardware."
-          : "Os detalhes de cada máquina aparecem aqui depois da coleta."
+          ? tr("in.select")
+          : tr("in.empty")
       }</div>`;
       return;
     }
@@ -2272,13 +3333,13 @@
         </div>
         <span class="inspector-sub">${escapeHtml(rec.ip)}${location !== "—" ? " · " + escapeHtml(location) : ""}</span>
         <span class="inspector-meta" title="${escapeHtml(collected.full)}">${
-          rec.dta_atualizacao ? `Coletado em ${escapeHtml(collected.full)} (${escapeHtml(collected.relative)})` : "Ainda não coletada"
+          rec.dta_atualizacao ? escapeHtml(tr("in.collected_at", { date: collected.full, relative: collected.relative })) : tr("in.not_collected")
         }</span>
       </div>`;
 
     if (cls.group !== "ONLINE") {
-      const reason = cls.group === "PENDING" ? "Aguardando coleta." : (cleanValue(rec.erro) || "Sem detalhes do erro.");
-      pane.innerHTML = header + inspectorSection("Diagnóstico", multiline(reason));
+      const reason = cls.group === "PENDING" ? tr("in.waiting") : (cleanValue(rec.erro) || tr("in.no_error"));
+      pane.innerHTML = header + inspectorSection(tr("in.diagnosis"), multiline(reason));
       return;
     }
 
@@ -2287,61 +3348,62 @@
     const storageLines = cleanValue(det.storage_devices) || (cleanValue(rec.disk_type) ? `${rec.disk_type} · ${rec.disk_size || ""}` : "—");
 
     pane.innerHTML = header
-      + inspectorSection("Sistema",
-          kv("Distribuição", det.os_name || rec.distro)
-          + kv("Versão", det.os_version)
-          + kv("Base", det.os_like)
-          + kv("Kernel", rec.kernel)
-          + kv("Arquitetura", det.architecture)
-          + kv("Hostname", det.hostname)
-          + kv("Ambiente gráfico", session)
-          + kv("Telas", displays)
-          + kv("Pacotes", det.packages)
-          + kv("Init", det.init_system)
-          + kv("Fuso horário", det.timezone)
-          + kv("Ligada há", det.uptime)
-          + kv("Disco (/)", det.root_disk_usage))
-      + inspectorSection("Equipamento",
-          kv("Fabricante", det.manufacturer)
-          + kv("Modelo", det.model)
-          + kv("Placa-mãe", rec.placa_mae)
-          + kv("BIOS", det.bios)
-          + kv("Virtualização", virtualizationLabel(det.virtualization)))
-      + inspectorSection("Processador",
-          kv("Modelo", rec.processador)
-          + kv("Núcleos / threads", rec.cores_threads)
-          + kv("Frequência máx.", det.cpu_max_frequency)
-          + kv("Soquetes", det.cpu_sockets)
-          + kv("Extensão de virtualização", det.cpu_virtualization))
-      + inspectorSection("Memória",
-          kv("Total", rec.ram)
-          + kv("Em uso", det.ram_used)
-          + kv("Disponível", det.ram_available)
-          + kv("Slots", slotsLabel(det.ram_slots))
-          + kv("Capacidade máx.", det.ram_max_capacity)
-          + kv("Velocidade", det.ram_speed)
+      + inspectorSection(tr("in.system"),
+          kv(tr("kv.distro"), det.os_name || rec.distro)
+          + kv(tr("kv.version"), det.os_version)
+          + kv(tr("kv.base"), det.os_like)
+          + kv(tr("kv.kernel"), rec.kernel)
+          + kv(tr("kv.arch"), det.architecture)
+          + kv(tr("kv.hostname"), det.hostname)
+          + kv(tr("kv.desktop"), session)
+          + kv(tr("kv.displays"), displays)
+          + kv(tr("kv.packages"), det.packages)
+          + kv(tr("kv.init"), det.init_system)
+          + kv(tr("kv.tz"), det.timezone)
+          + kv(tr("kv.uptime"), det.uptime)
+          + kv(tr("kv.disk"), det.root_disk_usage))
+      + inspectorSection(tr("in.hardware"),
+          kv(tr("kv.manufacturer"), det.manufacturer)
+          + kv(tr("kv.model"), det.model)
+          + kv(tr("kv.board"), rec.placa_mae)
+          + kv(tr("kv.bios"), det.bios)
+          + kv(tr("kv.virt"), virtualizationLabel(det.virtualization)))
+      + inspectorSection(tr("in.cpu"),
+          kv(tr("kv.model"), rec.processador)
+          + kv(tr("kv.cores"), rec.cores_threads)
+          + kv(tr("kv.freq"), det.cpu_max_frequency)
+          + kv(tr("kv.sockets"), det.cpu_sockets)
+          + kv(tr("kv.vtx"), det.cpu_virtualization))
+      + inspectorSection(tr("in.memory"),
+          kv(tr("kv.total"), rec.ram)
+          + kv(tr("kv.used"), det.ram_used)
+          + kv(tr("kv.available"), det.ram_available)
+          + kv(tr("kv.slots"), slotsLabel(det.ram_slots))
+          + kv(tr("kv.max_capacity"), det.ram_max_capacity)
+          + kv(tr("kv.speed"), det.ram_speed)
           + multiline(det.ram_modules))
-      + inspectorSection("Armazenamento", multiline(storageLines))
-      + inspectorSection("Vídeo", multiline(det.gpu) || kv("Placa de vídeo", ""))
-      + inspectorSection("Rede", multiline(det.network_adapters) || kv("Adaptadores", ""))
-      + inspectorSection("Coleta",
-          kv("Cobertura dos dados", det.coverage_percent)
-          + kv("Coletado em", collected.full));
+      + inspectorSection(tr("in.storage"), multiline(storageLines))
+      + inspectorSection(tr("in.video"), multiline(det.gpu) || kv(tr("kv.gpu"), ""))
+      + inspectorSection(tr("in.network"), multiline(det.network_adapters) || kv(tr("kv.adapters"), ""))
+      + inspectorSection(tr("in.collection"),
+          kv(tr("kv.coverage"), det.coverage_percent)
+          + kv(tr("kv.collected_at"), collected.full));
   }
 
   function renderDistList(containerId, items) {
     const el = document.getElementById(containerId);
     if (!items || !items.length) {
-      el.innerHTML = `<div style="color:var(--text-tertiary); font-size:12px;">Sem dados coletados</div>`;
+      el.innerHTML = `<div style="color:var(--text-tertiary); font-size:12px;">${tr("db.no_data")}</div>`;
       return;
     }
     const tones = ["blue", "teal", "green", "purple"];
     el.innerHTML = items.map((item, idx) => {
       const tone = item.tone || tones[idx % tones.length];
-      const pct = Number(item.percent || 0).toFixed(1).replace(".", ",");
+      const pct = fmt(item.percent || 0);
+      const label = (I18N.en[`an.${item.label}`] ? tr(`an.${item.label}`) : item.label);
       return `<div class="dist-item">
         <div class="dist-item-top">
-          <span>${escapeHtml(item.label)}</span>
+          <span>${escapeHtml(label)}</span>
           <span class="dist-item-count">${item.count} (${pct}%)</span>
         </div>
         <div class="dist-bar-bg"><div class="dist-bar-fill ${tone === "blue" ? "" : tone}" style="width: ${Math.min(100, item.percent || 0)}%;"></div></div>
@@ -2353,12 +3415,12 @@
     const a = appState.analytics;
     if (!a) return;
     document.getElementById("stat-total").textContent = a.total;
-    document.getElementById("stat-locations").textContent = `${a.locations_count} unidade(s) cadastrada(s)`;
+    document.getElementById("stat-locations").textContent = tr("db.locations", { n: a.locations_count });
     document.getElementById("stat-online").textContent = a.online;
-    document.getElementById("stat-avail").textContent = `${String(a.availability_pct).replace(".", ",")}% de disponibilidade`;
-    document.getElementById("stat-flash").textContent = `${String(a.flash_pct).replace(".", ",")}%`;
+    document.getElementById("stat-avail").textContent = tr("db.avail", { p: fmt(a.availability_pct) });
+    document.getElementById("stat-flash").textContent = `${fmt(a.flash_pct)}%`;
     document.getElementById("stat-flash-note").textContent = `${a.nvme_count} NVMe · ${a.ssd_count} SSD · ${a.hdd_count} HDD`;
-    document.getElementById("stat-ram").textContent = `${String(a.avg_ram_gb).replace(".", ",")} GB`;
+    document.getElementById("stat-ram").textContent = `${fmt(a.avg_ram_gb)} GB`;
 
     renderDistList("dist-storage", a.storage_distribution);
     renderDistList("dist-ram", a.ram_distribution);
@@ -2366,12 +3428,12 @@
 
     const tbody = document.getElementById("locations-tbody");
     if (!a.locations || !a.locations.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhuma unidade para exibir.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${tr("db.no_locations")}</td></tr>`;
       return;
     }
     tbody.innerHTML = a.locations.map(loc => `
       <tr>
-        <td>${escapeHtml(loc.location)}</td>
+        <td>${escapeHtml(loc.location === "Geral" ? tr("an.Geral") : loc.location)}</td>
         <td>${loc.total}</td>
         <td>${loc.online}</td>
         <td>${loc.flash}</td>
@@ -2387,9 +3449,9 @@
     document.getElementById("nav-count-snapshots").textContent = list.length;
     const container = document.getElementById("snapshots-list");
     if (!list.length) {
-      container.innerHTML = `<div style="padding:12px; color:var(--text-tertiary); font-size:12px;">Nenhum snapshot salvo ainda.</div>`;
+      container.innerHTML = `<div style="padding:12px; color:var(--text-tertiary); font-size:12px;">${tr("hi.none")}</div>`;
       document.getElementById("snapshot-diff-tbody").innerHTML =
-        `<tr><td colspan="5" class="empty-state">Conclua uma coleta para registrar o primeiro snapshot local.</td></tr>`;
+        `<tr><td colspan="5" class="empty-state">${tr("hi.first")}</td></tr>`;
       return;
     }
 
@@ -2402,9 +3464,9 @@
       return `<div class="snap-card ${active}" onclick="selectSnapshot(${snap.id})">
         <div class="snap-card-top">
           <span>${escapeHtml(snap.created_at)}</span>
-          <span>${snap.total_hosts} hosts</span>
+          <span>${tr("hi.card_hosts", { n: snap.total_hosts })}</span>
         </div>
-        <div class="snap-card-sub">${snap.online_hosts} online · ${snap.changes_count} alterações</div>
+        <div class="snap-card-sub">${tr("hi.card_sub", { online: snap.online_hosts, changes: snap.changes_count })}</div>
       </div>`;
     }).join("");
   }
@@ -2417,20 +3479,20 @@
       appState.selectedSnapshotDiff = diff;
       const titleEl = document.getElementById("snapshot-diff-title");
       if (diff.base_snapshot) {
-        titleEl.textContent = `Alterações registradas desde ${diff.base_snapshot.created_at}`;
+        titleEl.textContent = tr("hi.since", { date: diff.base_snapshot.created_at });
       } else {
-        titleEl.textContent = `Snapshot inicial (${diff.snapshot.created_at}) — sem base anterior para comparação`;
+        titleEl.textContent = tr("hi.initial", { date: diff.snapshot.created_at });
       }
       const tbody = document.getElementById("snapshot-diff-tbody");
       if (!diff.changes || !diff.changes.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma alteração de hardware detectada em relação ao snapshot anterior.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${tr("hi.no_changes")}</td></tr>`;
         return;
       }
       tbody.innerHTML = diff.changes.map(c => `
         <tr>
           <td>${escapeHtml(c.ip)}</td>
           <td>${escapeHtml(c.hostname)}</td>
-          <td class="cell-secondary">${escapeHtml(c.field)}</td>
+          <td class="cell-secondary">${escapeHtml(c.field_key ? tr(`field.${c.field_key}`) : c.field)}</td>
           <td class="cell-secondary">${escapeHtml(c.previous_value)}</td>
           <td>${escapeHtml(c.current_value)}</td>
         </tr>
@@ -2446,7 +3508,7 @@
       const data = await api(`/api/snapshots/${appState.selectedSnapshotId}/load`, "POST");
       applyServerState(data);
       switchView("scan", document.querySelector("#main-nav .nav-btn"));
-      setBanner(`Snapshot #${appState.selectedSnapshotId} carregado na visão Coleta.`);
+      setBanner(tr("hi.loaded", { id: appState.selectedSnapshotId }));
     } catch (err) {
       setBanner(err.message);
     }
@@ -2456,7 +3518,7 @@
     if (!appState.selectedSnapshotId) return;
     try {
       const res = await api(`/api/snapshots/${appState.selectedSnapshotId}/diff/export`, "POST");
-      setBanner(`Alterações salvas em ${res.path}`, res.path);
+      setBanner(tr("hi.saved", { path: res.path }), res.path);
     } catch (err) {
       setBanner(err.message);
     }
@@ -2464,8 +3526,8 @@
 
   function setBanner(text, filePath) {
     const actions = filePath
-      ? `<button class="btn btn-small" data-path="${escapeHtml(filePath)}" onclick="openFile(this.dataset.path)">Abrir</button>
-         <button class="btn btn-small" onclick="openLocation('reports')">Abrir pasta</button>`
+      ? `<button class="btn btn-small" data-path="${escapeHtml(filePath)}" onclick="openFile(this.dataset.path)">${tr("bn.open")}</button>
+         <button class="btn btn-small" onclick="openLocation('reports')">${tr("bn.open_folder")}</button>`
       : "";
     document.getElementById("status-banner").innerHTML =
       `<span title="${escapeHtml(text)}">${escapeHtml(text)}</span>${actions}`;
@@ -2568,7 +3630,7 @@
     try {
       const res = await api("/api/targets/template", "POST");
       closePopovers();
-      setBanner(`Modelo salvo em ${res.path}. Preencha a coluna IP e escolha o arquivo em Alvos.`, res.path);
+      setBanner(tr("bn.template_saved", { path: res.path }), res.path);
     } catch (err) {
       setBanner(err.message);
     }
@@ -2578,7 +3640,7 @@
     closePopovers();
     try {
       const res = await api("/api/export", "POST", { format });
-      setBanner(`Relatório ${format} salvo em ${res.path}`, res.path);
+      setBanner(tr("bn.report_saved", { format, path: res.path }), res.path);
     } catch (err) {
       setBanner(err.message);
     }
@@ -2588,7 +3650,7 @@
     if (appState.scanning) {
       try {
         await api("/api/scan/cancel", "POST");
-        setBanner("Cancelando coleta...");
+        setBanner(tr("bn.cancelling"));
       } catch (err) {
         setBanner(err.message);
       }
@@ -2602,10 +3664,10 @@
       startPolling();
     } catch (err) {
       setBanner(err.message);
-      if (err.message.toLowerCase().includes("ssh")) {
-        togglePanel("ssh");
-      } else if (err.message.toLowerCase().includes("alvo") || err.message.toLowerCase().includes("planilha")) {
+      if (!(appState.config || {}).filepath) {
         togglePanel("targets");
+      } else if (!sshConfigured()) {
+        togglePanel("ssh");
       }
     }
   }
@@ -2630,6 +3692,11 @@
   function applyServerState(data) {
     if (data.config) {
       appState.config = data.config;
+      if (data.config.language && data.config.language !== currentLang) {
+        currentLang = data.config.language;
+        applyTranslations();
+      }
+      syncLanguageSelects(data.config);
       if (!document.getElementById("input-ssh-user").value && data.config.ssh_user) {
         document.getElementById("input-ssh-user").value = data.config.ssh_user;
       }
@@ -2667,10 +3734,10 @@
 
     const scanBtn = document.getElementById("scan-btn");
     if (appState.scanning) {
-      scanBtn.textContent = "Cancelar Coleta";
+      scanBtn.textContent = tr("tb.cancel");
       scanBtn.className = "btn btn-danger";
     } else {
-      scanBtn.textContent = "Iniciar Coleta";
+      scanBtn.textContent = tr("tb.start");
       scanBtn.className = "btn btn-primary";
     }
 
@@ -2685,6 +3752,8 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
+    currentLang = window.__INVENT_LANG__ || "en";
+    applyTranslations();
     setInterval(() => api("/api/ping").catch(() => {}), 20000);
     try {
       const data = await api("/api/state");
@@ -2696,7 +3765,7 @@
         startPolling();
       }
     } catch (err) {
-      setBanner("Modo de visualização offline");
+      setBanner(tr("bn.offline"));
     }
   });
 </script>

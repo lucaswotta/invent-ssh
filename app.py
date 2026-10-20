@@ -316,7 +316,7 @@ class InventoryController:
         changes = self.snapshot_store.compute_diff(snapshot_id)["changes"]
         if not changes:
             raise ValueError(t("app_no_changes_to_export"))
-        return save_snapshot_diff(changes, get_reports_dir(), snapshot_id)
+        return save_snapshot_diff(changes, get_reports_dir(), snapshot_id, get_language())
 
     def load_snapshot_into_workspace(self, snapshot_id: int) -> dict[str, Any]:
         snap = self.snapshot_store.get_snapshot(snapshot_id)
@@ -523,7 +523,8 @@ def create_http_server(
                 html_text = ui_html_path.read_text(encoding="utf-8")
                 injected = html_text.replace(
                     "<head>",
-                    f'<head>\n<script>window.__INVENT_TOKEN__ = {json.dumps(session_token)};</script>',
+                    f'<head>\n<script>window.__INVENT_TOKEN__ = {json.dumps(session_token)};'
+                    f'window.__INVENT_LANG__ = {json.dumps(get_language())};</script>',
                     1,
                 )
                 body = injected.encode("utf-8")
