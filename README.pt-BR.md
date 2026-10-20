@@ -227,6 +227,10 @@ Sim, veja a linha de comando acima. Ela exige chave privada.
 - O tipo de armazenamento usa o nome do barramento e a flag de rotação do kernel, então discos virtuais podem aparecer como SSD.
 - A linha de comando aceita só chave privada, não senha.
 
+## Próximos passos
+
+O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): janela nativa nos pacotes, instaladores assinados, agente SSH e jump host, porta e usuário por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
+
 ## Contribuir
 
 Pull requests são bem-vindos. O [CONTRIBUTING.md](CONTRIBUTING.md) explica o ambiente, os testes, como adicionar um idioma e como os prints e GIFs deste README são gerados a partir de um parque fictício (`scripts/demo_server.py`, `scripts/capture_media.mjs`).
