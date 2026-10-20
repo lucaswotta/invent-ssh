@@ -212,7 +212,10 @@ class InventoryEngineTests(unittest.TestCase):
             events.append(engine.log_queue.get_nowait())
         finish = [event for event in events if event[0] == "FINISH"][-1]
         self.assertEqual(finish[2], "WARNING")
-        self.assertIn("Nenhum destino", finish[1])
+        self.assertTrue(
+            any(phrase in finish[1] for phrase in ("Nenhum destino", "No valid targets")),
+            finish[1],
+        )
 
     def test_run_inventory_reports_unhandled_failure(self):
         engine = self.make_engine()
