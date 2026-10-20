@@ -216,8 +216,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "log_collection_success": "Sucesso na coleta de {ip}",
         "log_collection_failure": "Falha em {ip}: {error}",
         "generic_failure": "Falha geral",
-        "log_results_saved": "Resultados salvos com sucesso em '{filename}'",
-        "log_opening_result_file": "Abrindo arquivo de resultado...",
         "log_spreadsheet_save_error": "Falha ao salvar planilha de resultados: {error}",
 
         # --- Mensagens de Coleta de Hardware (inspector.py) ---
@@ -423,8 +421,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "log_collection_success": "Successfully collected data from {ip}",
         "log_collection_failure": "Failure on {ip}: {error}",
         "generic_failure": "General failure",
-        "log_results_saved": "Results saved successfully to '{filename}'",
-        "log_opening_result_file": "Opening result file...",
         "log_spreadsheet_save_error": "Failed to save results spreadsheet: {error}",
 
         # --- Hardware Collection Messages (inspector.py) ---

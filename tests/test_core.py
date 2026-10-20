@@ -189,7 +189,6 @@ class InventoryEngineTests(unittest.TestCase):
             with (
                 patch.object(engine, "_load_from_spreadsheet", return_value=targets),
                 patch.object(engine, "_execute_collection", return_value=results),
-                patch.object(engine, "_save_results") as save_results,
             ):
                 engine.run_inventory()
         finally:
@@ -201,7 +200,6 @@ class InventoryEngineTests(unittest.TestCase):
         finish = [event for event in events if event[0] == "FINISH"][-1]
         self.assertEqual(finish[2], "WARNING")
         self.assertIn("1 acessíveis, 1 com falha", finish[1])
-        save_results.assert_called_once_with(results)
 
     def test_run_inventory_does_not_report_empty_input_as_success(self):
         engine = self.make_engine()
