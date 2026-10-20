@@ -861,7 +861,9 @@ def get_hardware_info(
         with _KNOWN_HOSTS_LOCK:
             if known_hosts.is_file():
                 try:
-                    client.load_host_keys(str(known_hosts))
+                    # load_host_keys() would make AutoAddPolicy save this stale
+                    # copy itself, outside the lock; _remember_host_key() merges.
+                    client.get_host_keys().load(str(known_hosts))
                 except OSError:
                     pass
         client.set_missing_host_key_policy(
