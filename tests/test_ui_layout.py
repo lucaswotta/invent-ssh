@@ -49,6 +49,18 @@ class DesktopUtilityUITests(unittest.TestCase):
         self.assertIn('id="popover-targets"', html)
         self.assertIn('id="popover-export"', html)
 
+    def test_inline_handlers_do_not_call_native_element_methods(self):
+        # Inline handlers resolve names on the element first; togglePopover() was
+        # silently taken by the browser's Popover API and the toolbar stopped opening.
+        import re
+
+        html = (Path(__file__).resolve().parents[1] / "ui" / "index.html").read_text(encoding="utf-8")
+        called = set(re.findall(r'on\w+="(?:[^"]*?;\s*)?(\w+)\(', html))
+        native = {"togglePopover", "showPopover", "hidePopover", "click", "focus", "blur",
+                  "remove", "animate", "closest", "matches", "scroll", "select", "submit", "reset"}
+        self.assertEqual(called & native, set())
+        self.assertIn("togglePanel", called)
+
     def test_local_http_server_enforces_token_and_loads_targets(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
