@@ -78,6 +78,8 @@ class LauncherTests(unittest.TestCase):
         self.assertTrue(webview.create_window.call_args.kwargs["text_select"])
         closed_event.__iadd__.assert_called_once_with(on_close)
         webview.start.assert_called_once()
+        # WinForms raises on a PNG icon and kills the process (0xE0434352).
+        self.assertIsNone(webview.start.call_args.kwargs["icon"])
         browser_open.assert_not_called()
 
 

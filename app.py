@@ -694,7 +694,9 @@ def launch_desktop_window(
             window.events.closed += on_close
             # The Linux package bundles Qt only; probing GTK first would just log an ImportError.
             gui = "qt" if linux and getattr(sys, "frozen", False) else None
-            webview.start(gui=gui, icon=str(resource_path("brand/icons/invenux-256.png")))
+            # Windows and macOS take the icon from the .exe/.app; WinForms rejects a PNG here.
+            icon = str(resource_path("brand/icons/invenux-256.png")) if linux else None
+            webview.start(gui=gui, icon=icon)
             return
         except Exception as exc:
             log.info("pywebview window unavailable: %s", exc)
