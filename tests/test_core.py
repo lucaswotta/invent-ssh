@@ -55,6 +55,17 @@ class InventoryEngineTests(unittest.TestCase):
         self.assertEqual(targets[0].metadata["LOCATION"], "Lab")
         self.assertEqual(targets[0].metadata["OWNER"], "Infra")
         self.assertEqual(targets[0].metadata["NOTES"], "memory upgrade")
+        self.assertEqual(engine.load_summary["rows_without_target"], [3])
+
+    def test_loader_skips_repeated_addresses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "assets.csv"
+            path.write_text("IP,Location\n10.0.0.1,A\n10.0.0.2,A\n10.0.0.1,B\n,,\n", encoding="utf-8")
+            engine = self.make_engine(filepath=str(path))
+            targets = engine._load_from_spreadsheet()
+        self.assertEqual([target.ip for target in targets], ["10.0.0.1", "10.0.0.2"])
+        self.assertEqual(engine.load_summary["duplicate_rows"], [4])
+        self.assertEqual(engine.load_summary["rows_without_target"], [])
 
     def test_loader_reads_xlsx_and_preserves_typed_metadata(self):
         from openpyxl import Workbook
