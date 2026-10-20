@@ -227,6 +227,10 @@ Sí, vea la línea de comandos arriba. Requiere clave privada.
 - El tipo de almacenamiento usa el nombre del bus y el indicador de rotación del kernel, así que los discos virtuales pueden aparecer como SSD.
 - La línea de comandos solo acepta clave privada, no contraseña.
 
+## Próximos pasos
+
+El trabajo previsto y los problemas conocidos están en las [issues](https://github.com/lucaswotta/invenux/issues): ventana nativa en los paquetes, instaladores firmados, agente SSH y jump host, puerto y usuario por equipo, recopilaciones programadas con informe de cambios, comparación entre dos instantáneas cualesquiera, tema claro y accesibilidad. Los comentarios y pull requests en cualquiera de ellas son bienvenidos.
+
 ## Contribuir
 
 Los pull requests son bienvenidos. [CONTRIBUTING.md](CONTRIBUTING.md) explica el entorno, las pruebas, cómo añadir un idioma y cómo se generan las capturas y los GIF de este README a partir de un parque ficticio (`scripts/demo_server.py`, `scripts/capture_media.mjs`).

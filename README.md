@@ -227,6 +227,10 @@ Yes, see the command line above. It needs a private key.
 - Storage type uses the transport name and the kernel's rotational flag, so virtual disks can appear as SSD.
 - The command line accepts a private key only, not a password.
 
+## Roadmap
+
+Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): a native window in the release packages, signed installers, SSH agent and jump host, per-machine port and user, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
+
 ## Contributing
 
 Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, tests, how to add a language and how the screenshots and GIFs in this README are regenerated from a fictional fleet (`scripts/demo_server.py`, `scripts/capture_media.mjs`).
