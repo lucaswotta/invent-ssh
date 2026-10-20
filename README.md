@@ -99,9 +99,9 @@ Get the file for your system from the [latest release](https://github.com/lucasw
 | --- | --- | --- |
 | Windows 10/11 (x86_64) | `invenux-<version>-windows-x86_64.exe` | Run it. SmartScreen warns about an unsigned program: **More info**, then **Run anyway**. |
 | macOS (Apple Silicon or Intel) | `invenux-<version>-macos-arm64.zip` or `-macos-x86_64.zip` | Unzip and open `Invenux.app`. The first time, right-click it and choose **Open**, because the app is not notarized. |
-| Linux (x86_64, glibc 2.35 or newer) | `invenux-<version>-linux-x86_64.tar.gz` | Extract and run `./invenux`, or install the menu entry as shown below. |
+| Linux (x86_64, glibc 2.35 or newer) | `invenux-<version>-linux-x86_64.tar.xz` | Extract and run `./install.sh` to add it to the application menu, or run `./invenux` from the folder. |
 
-The packages are not code-signed; `SHA256SUMS` in the release lists the checksums. They open the interface in your default browser; for a native window, run from source with pywebview or GTK.
+The packages are not code-signed; `SHA256SUMS` in the release lists the checksums. Each one opens its own window: WebView2 on Windows (part of Windows 10 and 11), WebKit on macOS and a bundled Qt WebEngine on Linux, which is why the Linux download is about 135 MB.
 
 ### From source
 
@@ -118,20 +118,14 @@ python3 app.py
 
 The window uses [pywebview](https://pywebview.flowrl.com/) when it is installed, then GTK WebKit2 on Linux (`python3-gi` and `gir1.2-webkit2-4.1` on Debian and Ubuntu, available to a venv created with `--system-site-packages`), and otherwise opens the interface in your default browser. In the browser the program stops about 3 minutes after the tab is closed.
 
-**Native package.** `python build.py` creates a single executable for the system you run it on (PyInstaller is not a cross-compiler). Pushing a `v*` tag builds the Linux, Windows and macOS packages in CI and publishes them as a GitHub release.
+**Native package.** `python build.py` creates the package for the system you run it on (PyInstaller is not a cross-compiler): one `.exe` on Windows, a folder on Linux and an app bundle on macOS. Pushing a `v*` tag builds the Linux, Windows and macOS packages in CI and publishes them as a GitHub release.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.7.0
+python3 build.py                   # dist/invenux-v0.8.0
 ```
 
-On Linux, add the program to the application menu (from the extracted release folder):
-
-```sh
-install -Dm755 invenux ~/.local/bin/invenux
-install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
-```
+On Linux, `./install.sh` in the extracted release folder copies the program to `~/.local/lib/invenux`, links `~/.local/bin/invenux` and adds the menu entry and icon, without sudo. `./install.sh --uninstall` removes them and keeps history and reports.
 
 ## How to use
 
@@ -209,7 +203,7 @@ Check the **Slots** line in the machine details: it shows how many slots are pop
 The row says why. "Did not answer on the network" means no reply at all within about 3 seconds (often powered off or a wrong address); "Connection refused on port N" means it is on but SSH is stopped, blocked or listening on another port (set it in the SSH panel); "No answer within N s" means a firewall or a slow link, so raise the timeout in the SSH panel.
 
 **Is there an installer?**
-Not yet: each release has a single executable per system (an app bundle on macOS). See [Download](#download).
+Not yet: Windows gets one `.exe`, macOS an app bundle and Linux a folder with `install.sh`. See [Download](#download).
 
 **Can it inventory Windows or macOS machines?**
 No. The targets must be Linux with SSH. The program itself runs on Linux, Windows and macOS.
@@ -229,7 +223,7 @@ Yes, see the command line above. It needs a private key.
 
 ## Roadmap
 
-Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): a native window in the release packages, signed installers, SSH agent and jump host, per-machine port and user, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
+Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): signed installers, SSH agent and jump host, per-machine port and user, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
 
 ## Contributing
 
