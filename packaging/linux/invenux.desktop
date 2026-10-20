@@ -12,4 +12,4 @@ Icon=invenux
 Terminal=false
 Categories=System;Monitor;
 Keywords=inventory;hardware;ssh;linux;inventario;
-StartupWMClass=Invenux
+StartupWMClass=invenux

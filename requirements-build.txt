@@ -1,2 +1,6 @@
 -r requirements.txt
 pyinstaller>=6.10,<7.0
+# Native window: WebView2 on Windows and WebKit on macOS come with the system;
+# Linux distributions differ too much, so the package carries Qt WebEngine.
+pywebview>=6.2,<7.0; sys_platform != "linux"
+pywebview[pyside6]>=6.2,<7.0; sys_platform == "linux"
