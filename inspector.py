@@ -132,42 +132,72 @@ def _parse_meminfo(output: str) -> dict[str, int]:
     return result
 
 
+def _module_size_label(amount: float, unit: str) -> str:
+    # dmidecode reports binary units (a 4096 MB module is 4 GB).
+    if unit == "MB" and amount >= 1024:
+        return f"{amount / 1024:g} GB"
+    return f"{amount:g} {unit}"
+
+
 def _parse_memory_devices(output: str) -> dict[str, str]:
     blocks = re.split(r"(?m)^\s*Memory Device\s*$", output)
     installed: list[dict[str, Any]] = []
+    slots = 0
+
+    def field(block: str, name: str) -> str:
+        match = re.search(rf"(?m)^\s*{name}:\s*(.+?)\s*$", block)
+        return _clean_string(match.group(1)) if match else ""
+
     for block in blocks[1:]:
-        size_match = re.search(r"(?m)^\s*Size:\s*(.+?)\s*$", block)
-        if not size_match:
+        size_text = field(block, "Size")
+        if not size_text:
             continue
-        size_text = _clean_string(size_match.group(1))
+        slots += 1
         if size_text.casefold() in {"no module installed", "not installed", "unknown", "not specified"}:
             continue
         number = re.match(r"^([\d.]+)\s*(KB|MB|GB|TB)\b", size_text, re.I)
         if not number:
             continue
         amount, unit = float(number.group(1)), number.group(2).upper()
-        size_bytes = amount * {"KB": 1000, "MB": 1000**2, "GB": 1000**3, "TB": 1000**4}[unit]
-        type_match = re.search(r"(?m)^\s*Type:\s*(.+?)\s*$", block)
-        speed_match = re.search(r"(?m)^\s*(?:Configured Memory Speed|Speed):\s*(\d+)\s*(?:MT/s|MHz)", block)
+        size_bytes = amount * {"KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}[unit]
+        speed_match = re.search(r"(?m)^\s*(?:Configured Memory Speed|Configured Clock Speed|Speed):\s*(\d+)\s*(?:MT/s|MHz)", block)
+        vendor = " ".join(
+            value for value in (field(block, "Manufacturer"), field(block, "Part Number"))
+            if _available(value) and not re.fullmatch(r"(?:0x)?[0-9A-F]{4,}", value, re.I)
+        )
         installed.append({
             "bytes": int(size_bytes),
-            "type": _clean_string(type_match.group(1)) if type_match else "",
+            "size": _module_size_label(amount, unit),
+            "type": field(block, "Type"),
             "speed": int(speed_match.group(1)) if speed_match else 0,
+            "slot": field(block, "Locator") or field(block, "Bank Locator") or f"slot {slots}",
+            "vendor": vendor,
         })
 
     types = []
     for module in installed:
-        match = re.search(r"\bDDR[2-5]\b|\bDDR\b", module["type"], re.I)
+        match = re.search(r"\bDDR[2-5]\b|\bDDR\b|\bLPDDR[2-5]X?\b", module["type"], re.I)
         if match:
             label = match.group(0).upper()
             if label not in types:
                 types.append(label)
     speeds = sorted({module["speed"] for module in installed if module["speed"] > 0})
     total = sum(module["bytes"] for module in installed)
+    module_lines = []
+    for module in installed:
+        parts = [module["slot"], f"{module['size']} {module['type']}".strip()]
+        if module["speed"]:
+            parts.append(f"{module['speed']} MT/s")
+        if module["vendor"]:
+            parts.append(module["vendor"])
+        module_lines.append(" · ".join(parts))
+    max_capacity = re.search(r"(?m)^\s*Maximum Capacity:\s*(.+?)\s*$", output)
     return {
         "ram_type": " / ".join(types) if types else "N/A",
-        "ram_speed": f"{min(speeds)} MT/s" if len(speeds) == 1 else " / ".join(f"{speed} MT/s" for speed in speeds) if speeds else "N/A",
-        "ram_slots": f"{len(installed)} populated" if installed else "N/A",
+        "ram_speed": " / ".join(f"{speed} MT/s" for speed in speeds) if speeds else "N/A",
+        "ram_slots": f"{len(installed)} of {slots} populated" if slots else "N/A",
+        "ram_modules": "\n".join(module_lines) if module_lines else "N/A",
+        "ram_max_capacity": _clean_string(max_capacity.group(1)) if max_capacity else "N/A",
         "ram_module_total_bytes": str(total) if total else "0",
     }
 
@@ -433,6 +463,39 @@ printf '%s\n' '__INVENT_SSH_BEGIN_netlink__'
 if command -v ip >/dev/null 2>&1; then ip -o link show 2>/dev/null || true; fi
 printf '%s\n' '__INVENT_SSH_END_netlink__'
 
+printf '%s\n' '__INVENT_SSH_BEGIN_packages__'
+if command -v dpkg-query >/dev/null 2>&1; then printf 'dpkg %s\n' "$(dpkg-query -f '.\n' -W 2>/dev/null | wc -l)"; fi
+if command -v rpm >/dev/null 2>&1; then printf 'rpm %s\n' "$(rpm -qa 2>/dev/null | wc -l)"; fi
+if command -v pacman >/dev/null 2>&1; then printf 'pacman %s\n' "$(pacman -Qq 2>/dev/null | wc -l)"; fi
+if command -v apk >/dev/null 2>&1; then printf 'apk %s\n' "$(apk info 2>/dev/null | wc -l)"; fi
+printf '%s\n' '__INVENT_SSH_END_packages__'
+
+printf '%s\n' '__INVENT_SSH_BEGIN_session__'
+printf 'init=%s\n' "$(cat /proc/1/comm 2>/dev/null)"
+ps -eo comm= 2>/dev/null | sort -u
+printf '%s\n' '__INVENT_SSH_END_session__'
+
+printf '%s\n' '__INVENT_SSH_BEGIN_displays__'
+for s in /sys/class/drm/card*-*/status; do
+  [ -r "$s" ] || continue
+  [ "$(cat "$s" 2>/dev/null)" = connected ] || continue
+  d=${s%/status}
+  printf '%s %s\n' "${d##*/}" "$(head -n 1 "$d/modes" 2>/dev/null)"
+done
+printf '%s\n' '__INVENT_SSH_END_displays__'
+
+printf '%s\n' '__INVENT_SSH_BEGIN_timezone__'
+if [ -r /etc/timezone ]; then cat /etc/timezone; else readlink /etc/localtime 2>/dev/null || true; fi
+printf '%s\n' '__INVENT_SSH_END_timezone__'
+
+printf '%s\n' '__INVENT_SSH_BEGIN_rootfs__'
+df -P -k / 2>/dev/null | tail -n 1
+printf '%s\n' '__INVENT_SSH_END_rootfs__'
+
+printf '%s\n' '__INVENT_SSH_BEGIN_ipv4__'
+if command -v ip >/dev/null 2>&1; then ip -o -4 addr show 2>/dev/null || true; fi
+printf '%s\n' '__INVENT_SSH_END_ipv4__'
+
 printf '%s\n' '__INVENT_SSH_BEGIN_netdetails__'
 for p in /sys/class/net/*; do
   [ -e "$p" ] || continue
@@ -446,7 +509,8 @@ for p in /sys/class/net/*; do
   driver=""
   if [ -n "$driver_path" ]; then driver=$(basename "$driver_path" 2>/dev/null); fi
   [ "$driver" = "." ] && driver=""
-  printf '%s|%s|%s|%s\n' "$name" "$state" "$speed" "$driver"
+  mac=$(cat "$p/address" 2>/dev/null || true)
+  printf '%s|%s|%s|%s|%s\n' "$name" "$state" "$speed" "$driver" "$mac"
 done
 printf '%s\n' '__INVENT_SSH_END_netdetails__'
 
@@ -481,8 +545,8 @@ def _parse_probe_sections(output: str) -> dict[str, str]:
     current: Optional[str] = None
     chunks: list[str] = []
     for line in output.splitlines():
-        begin = re.fullmatch(r"__INVENT_SSH_BEGIN_([a-z_]+)__", line.strip())
-        end = re.fullmatch(r"__INVENT_SSH_END_([a-z_]+)__", line.strip())
+        begin = re.fullmatch(r"__INVENT_SSH_BEGIN_([a-z0-9_]+)__", line.strip())
+        end = re.fullmatch(r"__INVENT_SSH_END_([a-z0-9_]+)__", line.strip())
         if begin:
             current = begin.group(1)
             chunks = []
@@ -511,19 +575,94 @@ def _parse_dmi_section(output: str) -> dict[str, str]:
 def _parse_network_details(output: str) -> list[dict[str, str]]:
     adapters: list[dict[str, str]] = []
     for line in output.splitlines():
-        parts = line.split("|", 3)
-        if len(parts) != 4:
+        parts = line.split("|", 4)
+        if len(parts) not in {4, 5}:
             continue
-        name, state, speed, driver = (_clean_string(value) for value in parts)
+        name, state, speed, driver, mac = (_clean_string(value) for value in [*parts, ""][:5])
         if not name or name == "lo":
             continue
         if state.casefold() in {"", "unknown", "notpresent", "not present"}:
             state = "unknown"
-        adapter = {"name": name, "state": state, "speed_mbps": "", "driver": driver or "N/A"}
+        adapter = {"name": name, "state": state, "speed_mbps": "", "driver": driver or "N/A", "mac": mac}
         if speed.isdigit() and int(speed) > 0:
             adapter["speed_mbps"] = speed
         adapters.append(adapter)
     return adapters
+
+
+_DESKTOP_PROCESSES = {
+    "gnome-shell": "GNOME", "plasmashell": "KDE Plasma", "cinnamon": "Cinnamon",
+    "mate-session": "MATE", "xfce4-session": "Xfce", "lxqt-session": "LXQt",
+    "lxsession": "LXDE", "budgie-panel": "Budgie", "enlightenment": "Enlightenment",
+}
+_WINDOW_MANAGERS = {
+    "openbox": "Openbox", "xfwm4": "Xfwm4", "marco": "Marco", "muffin": "Muffin",
+    "kwin_x11": "KWin", "kwin_wayland": "KWin", "mutter": "Mutter", "metacity": "Metacity",
+    "compiz": "Compiz", "fluxbox": "Fluxbox", "icewm": "IceWM", "i3": "i3", "sway": "Sway",
+}
+
+
+def _parse_session(output: str) -> dict[str, str]:
+    """Infer init, desktop and display server from process names (ps comm)."""
+    init = ""
+    names = set()
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("init="):
+            init = line[len("init="):]
+        elif line:
+            names.add(line)
+    desktop = next((label for process, label in _DESKTOP_PROCESSES.items() if process in names), "")
+    manager = next((label for process, label in _WINDOW_MANAGERS.items() if process in names), "")
+    if names & {"Xwayland", "sway", "kwin_wayland"}:
+        server = "Wayland"
+    elif names & {"Xorg", "X"}:
+        server = "X11"
+    else:
+        server = ""
+    session = " + ".join(value for value in (desktop, manager) if value)
+    return {
+        "init_system": init or "N/A",
+        "desktop": session or "N/A",
+        "display_server": server or "N/A",
+    }
+
+
+def _parse_packages(output: str) -> str:
+    counts = []
+    for line in output.splitlines():
+        manager, _, count = line.strip().partition(" ")
+        if count.isdigit() and int(count) > 0:
+            counts.append(f"{int(count)} ({manager})")
+    return ", ".join(counts) or "N/A"
+
+
+def _parse_displays(output: str) -> str:
+    displays = []
+    for line in output.splitlines():
+        connector, _, mode = line.strip().partition(" ")
+        if connector:
+            connector = re.sub(r"^card\d+-", "", connector)
+            displays.append(f"{connector} {mode}".strip())
+    return "\n".join(displays) or "N/A"
+
+
+def _parse_rootfs(output: str) -> str:
+    fields = output.split()
+    if len(fields) < 5 or not fields[1].isdigit() or not fields[2].isdigit():
+        return "N/A"
+    total, used = int(fields[1]) * 1024, int(fields[2]) * 1024
+    percent = round(100 * used / total) if total else 0
+    return f"{_format_capacity(used)} / {_format_capacity(total)} ({percent}%)"
+
+
+def _parse_ipv4(output: str) -> dict[str, list[str]]:
+    addresses: dict[str, list[str]] = {}
+    for line in output.splitlines():
+        match = re.match(r"^\s*\d+:\s+(\S+)\s+inet\s+(\S+)", line)
+        if match and match.group(1) != "lo":
+            addresses.setdefault(match.group(1), []).append(match.group(2))
+    return addresses
 
 
 def _count_cpu_list(value: str) -> int:
@@ -726,14 +865,29 @@ def _collect_linux_hardware(
              "speed_mbps": "", "driver": "N/A"}
             for item in _parse_network_interfaces(sections.get("netlink", ""))
         ]
+    ipv4 = _parse_ipv4(sections.get("ipv4", ""))
     network_lines = []
     for adapter in net_details:
         components = [adapter["name"], adapter["state"]]
+        components.extend(ipv4.get(adapter["name"], []))
         if adapter["speed_mbps"]:
             components.append(f"{adapter['speed_mbps']} Mbps")
         if _available(adapter["driver"]):
             components.append(f"driver {adapter['driver']}")
+        if adapter.get("mac") and adapter["mac"] != "00:00:00:00:00:00":
+            components.append(f"MAC {adapter['mac']}")
         network_lines.append(" · ".join(components))
+    session = _parse_session(sections.get("session", ""))
+    timezone = _clean_string(sections.get("timezone", "")).split("zoneinfo/")[-1] or "N/A"
+    os_version = (
+        os_release.get("VERSION") or os_release.get("VERSION_ID") or os_release.get("DISTRIB_RELEASE") or ""
+    )
+    codename = (
+        os_release.get("VERSION_CODENAME") or os_release.get("UBUNTU_CODENAME")
+        or os_release.get("DISTRIB_CODENAME") or ""
+    )
+    if codename and codename.casefold() not in os_version.casefold():
+        os_version = f"{os_version} ({codename})".strip()
 
     uptime = _format_uptime(sections.get("uptime", ""))
     virtualization = _clean_string(sections.get("virtualization", "")) or "N/A"
@@ -757,6 +911,16 @@ def _collect_linux_hardware(
     ]
 
     details = {
+        "os_name": _clean_string(os_release.get("NAME") or os_release.get("DISTRIB_ID")) or distro,
+        "os_version": _clean_string(os_version) or "N/A",
+        "os_like": _clean_string(os_release.get("ID_LIKE")) or "N/A",
+        "desktop": session["desktop"],
+        "display_server": session["display_server"],
+        "displays": _parse_displays(sections.get("displays", "")),
+        "packages": _parse_packages(sections.get("packages", "")),
+        "init_system": session["init_system"],
+        "timezone": timezone,
+        "root_disk_usage": _parse_rootfs(sections.get("rootfs", "")),
         "hostname": hostname,
         "manufacturer": manufacturer,
         "model": model,
@@ -770,6 +934,8 @@ def _collect_linux_hardware(
         "cpu_virtualization": virtualization_extension,
         "ram_speed": memory_devices.get("ram_speed", "N/A"),
         "ram_slots": memory_devices.get("ram_slots", "N/A"),
+        "ram_modules": memory_devices.get("ram_modules", "N/A"),
+        "ram_max_capacity": memory_devices.get("ram_max_capacity", "N/A"),
         "ram_used": _format_gib(used_bytes),
         "ram_available": _format_gib(available_bytes),
         "storage_devices": "\n".join(drive_lines) if drive_lines else "N/A",

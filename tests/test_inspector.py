@@ -39,15 +39,47 @@ class HardwareParserTests(unittest.TestCase):
         self.assertEqual(parsed["MemTotal"], 16384000 * 1024)
         self.assertEqual(parsed["MemAvailable"], 8192000 * 1024)
 
-    def test_memory_device_parser_ignores_empty_slots(self):
-        parsed = inspector._parse_memory_devices(
-            "Memory Device\n\tSize: 16 GB\n\tType: DDR4\n\tSpeed: 3200 MT/s\n"
-            "Memory Device\n\tSize: No Module Installed\n\tType: Unknown\n"
+    def test_memory_device_parser_counts_every_slot(self):
+        array = (
+            "Handle 0x0007, DMI type 16, 23 bytes\nPhysical Memory Array\n"
+            "\tMaximum Capacity: 32 GB\n\tNumber Of Devices: 2\n\n"
         )
-        self.assertEqual(parsed["ram_type"], "DDR4")
-        self.assertEqual(parsed["ram_speed"], "3200 MT/s")
-        self.assertEqual(parsed["ram_slots"], "1 populated")
-        self.assertEqual(int(parsed["ram_module_total_bytes"]), 16_000_000_000)
+        module = (
+            "Handle 0x0008, DMI type 17, 40 bytes\nMemory Device\n\tTotal Width: 64 bits\n"
+            "\tSize: 4096 MB\n\tForm Factor: DIMM\n\tLocator: {slot}\n\tBank Locator: BANK 0\n"
+            "\tType: DDR4\n\tSpeed: 2400 MT/s\n\tManufacturer: Kingston\n"
+            "\tSerial Number: 12345678\n\tPart Number: 99U5701-001.A00G\n"
+            "\tConfigured Clock Speed: 2400 MT/s\n\n"
+        )
+        empty = (
+            "Handle 0x000A, DMI type 17, 40 bytes\nMemory Device\n\tSize: No Module Installed\n"
+            "\tLocator: ChannelB-DIMM0\n\tType: Unknown\n\tSpeed: Unknown\n"
+            "\tManufacturer: Not Specified\n\tPart Number: Not Specified\n\n"
+        )
+        one = inspector._parse_memory_devices(array + module.format(slot="ChannelA-DIMM0") + empty)
+        self.assertEqual(one["ram_slots"], "1 of 2 populated")
+        self.assertEqual(one["ram_type"], "DDR4")
+        self.assertEqual(one["ram_speed"], "2400 MT/s")
+        self.assertEqual(one["ram_max_capacity"], "32 GB")
+        self.assertEqual(one["ram_modules"], "ChannelA-DIMM0 · 4 GB DDR4 · 2400 MT/s · Kingston 99U5701-001.A00G")
+        self.assertEqual(int(one["ram_module_total_bytes"]), 4 * 1024**3)
+
+        two = inspector._parse_memory_devices(
+            array + module.format(slot="ChannelA-DIMM0") + module.format(slot="ChannelB-DIMM0")
+        )
+        self.assertEqual(two["ram_slots"], "2 of 2 populated")
+        self.assertEqual(two["ram_modules"].count("\n"), 1)
+
+    def test_system_details_like_fastfetch(self):
+        self.assertEqual(inspector._parse_packages("dpkg 1834\nrpm 0\n"), "1834 (dpkg)")
+        self.assertEqual(inspector._parse_displays("card0-HDMI-A-1 1920x1080\n"), "HDMI-A-1 1920x1080")
+        self.assertEqual(inspector._parse_rootfs("/dev/sda1 117000000 45000000 66000000 41% /"), "46 GB / 120 GB (38%)")
+        session = inspector._parse_session("init=systemd\nXorg\nlxsession\nopenbox\nsshd\n")
+        self.assertEqual(session, {"init_system": "systemd", "desktop": "LXDE + Openbox", "display_server": "X11"})
+        self.assertEqual(
+            inspector._parse_ipv4("2: eth0    inet 10.0.0.8/24 brd 10.0.0.255 scope global eth0\n1: lo    inet 127.0.0.1/8 scope host lo\n"),
+            {"eth0": ["10.0.0.8/24"]},
+        )
 
     def test_lsblk_preserves_each_physical_drive_and_detects_medium(self):
         parsed = inspector._parse_lsblk(json.dumps({
@@ -150,7 +182,8 @@ class HardwareParserTests(unittest.TestCase):
             "lspci": "00:02.0 VGA compatible controller [0300]: Example GPU [1234:5678]\n",
             "drm": "PCI_ID=1234:5678\n",
             "netlink": "2: enp1s0: <BROADCAST,MULTICAST,UP> mtu 1500 state UP mode DEFAULT\n",
-            "netdetails": "enp1s0|up|1000|e1000e\n",
+            "netdetails": "enp1s0|up|1000|e1000e|52:54:00:12:34:56\n",
+            "ipv4": "2: enp1s0    inet 10.0.0.8/24 brd 10.0.0.255 scope global enp1s0\n",
             "uptime": "90061.32 123.00",
             "virtualization": "kvm",
             "dmi": "",
@@ -201,6 +234,8 @@ class HardwareParserTests(unittest.TestCase):
         self.assertIn("Example GPU", details["hardware_details"]["gpu"])
         self.assertIn("enp1s0", details["hardware_details"]["network_adapters"])
         self.assertIn("1000 Mbps", details["hardware_details"]["network_adapters"])
+        self.assertIn("10.0.0.8/24", details["hardware_details"]["network_adapters"])
+        self.assertIn("MAC 52:54:00:12:34:56", details["hardware_details"]["network_adapters"])
         self.assertEqual(details["hardware_details"]["uptime"], "1d 1h 1m")
         self.assertEqual(details["hardware_details"]["virtualization"], "kvm")
         self.assertEqual(details["hardware_details"]["system_serial"], "Not collected (opt-in)")
