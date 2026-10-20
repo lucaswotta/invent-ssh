@@ -1326,7 +1326,8 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function cleanValue(val) {
@@ -1506,7 +1507,7 @@
         ? `${cleanValue(r.distro)}${cleanValue(r.kernel) ? ` (${cleanValue(r.kernel).split("-")[0]})` : ""}`
         : "—";
 
-      return `<tr class="${selected}" onclick="selectHost('${escapeHtml(r.ip)}')">
+      return `<tr class="${selected}" data-ip="${escapeHtml(r.ip)}" onclick="selectHost(this.dataset.ip)">
         <td><span class="status-cell"><span class="dot ${cls.dot}"></span>${escapeHtml(cls.label)}</span></td>
         <td>${escapeHtml(r.ip)}</td>
         <td>${escapeHtml(hostname)}</td>
@@ -1712,24 +1713,14 @@
     }
   }
 
-  function exportSnapshotDiff() {
-    const diff = appState.selectedSnapshotDiff;
-    if (!diff || !diff.changes || !diff.changes.length) {
-      setBanner("Não há alterações neste snapshot para exportar.");
-      return;
+  async function exportSnapshotDiff() {
+    if (!appState.selectedSnapshotId) return;
+    try {
+      const res = await api(`/api/snapshots/${appState.selectedSnapshotId}/diff/export`, "POST");
+      setBanner(`Alterações salvas em ${res.path}`);
+    } catch (err) {
+      setBanner(err.message);
     }
-    const lines = ["IP;Hostname;Campo;Valor Anterior;Valor Atual"];
-    for (const c of diff.changes) {
-      lines.push([c.ip, c.hostname, c.field, c.previous_value, c.current_value]
-        .map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(";"));
-    }
-    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `snapshot_diff_${appState.selectedSnapshotId}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   function setBanner(text) {
@@ -1908,6 +1899,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
+    setInterval(() => api("/api/ping").catch(() => {}), 20000);
     try {
       const data = await api("/api/state");
       applyServerState(data);
