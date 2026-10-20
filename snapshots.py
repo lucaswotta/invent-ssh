@@ -53,7 +53,8 @@ def _extract_hostname(record: Mapping[str, Any]) -> str:
 def _extract_location(record: Mapping[str, Any]) -> str:
     meta = record.get("metadata") or {}
     if isinstance(meta, Mapping):
-        for key in ("LOCATION", "SITE", "LOCAL", "LOCALIZACAO", "LOCALIZAÇÃO", "UNIDADE", "FILIAL", "DEPARTMENT", "SETOR"):
+        for key in ("LOCATION", "SITE", "LOCAL", "LOCALIZACAO", "LOCALIZAÇÃO", "UNIDADE", "FILIAL", "DEPARTMENT",
+                    "SETOR", "UBICACION", "UBICACIÓN", "SEDE", "SUCURSAL"):
             candidate = _clean(meta.get(key))
             if candidate:
                 return candidate
@@ -118,6 +119,7 @@ def compute_records_diff(
                     "ip": ip,
                     "hostname": hostname,
                     "field": field_label,
+                    "field_key": field_key,
                     "previous_value": before,
                     "current_value": after,
                 })
