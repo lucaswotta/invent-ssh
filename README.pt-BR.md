@@ -11,7 +11,7 @@ Language: [English](README.md)
 - Pacotes Python de execução (`requirements.txt`):
   - `openpyxl>=3.1.0,<4.0.0`
   - `paramiko>=3.3.0,<5.0.0`
-- Backends opcionais para janela nativa: `pywebview` ou `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); na ausência de ambos, abre no navegador padrão do sistema.
+- Backends opcionais para janela nativa: `pywebview` ou `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); na ausência de ambos, abre no navegador padrão do sistema. No modo navegador, o processo encerra cerca de 3 minutos depois que a aba é fechada. Os executáveis empacotados não incluem nenhum dos dois e sempre usam o navegador.
 
 ## Instalação
 
@@ -59,11 +59,14 @@ Os caminhos de dados seguem as convenções do sistema operacional em `paths.py`
 - Snapshots e chaves TOFU: `~/.local/share/invent-ssh/snapshots.db` e `~/.local/share/invent-ssh/known_hosts`.
 - Relatórios exportados: `~/Documents/Invent-SSH Reports/`.
 
+Relatórios só são gravados ao usar `Exportar` ou a linha de comando. As chaves de host SSH usam confiança no primeiro uso (TOFU) por padrão; veja [SECURITY.md](SECURITY.md).
+
 Senhas SSH permanecem apenas em memória durante a sessão ativa e nunca são gravadas em `config.json`.
 
 ## Limitações
 
-- Os alvos devem ser máquinas Linux acessíveis por SSH; destinos Windows e macOS não são suportados pelo coletor.
+- Os alvos devem ser máquinas Linux acessíveis por SSH na porta `22`; destinos Windows e macOS não são suportados pelo coletor.
+- A interface é em português; relatórios exportados e mensagens de log seguem o idioma do sistema (`pt-br` ou `en`).
 - A coleta é somente de leitura e executa um único script POSIX por host (`inspector.py`). Campos que exigem privilégios elevados (`dmidecode`, número de série) ou utilitários ausentes (`lscpu`, `lsblk`, `lspci`) retornam `N/A`.
 - A classificação de armazenamento (`NVMe`, `SSD / flash`, `HDD`) utiliza o barramento e o indicador de rotação do kernel Linux (`ROTA`), que pode classificar discos virtuais como mídia não rotativa.
 

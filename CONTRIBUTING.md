@@ -10,7 +10,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python -m pip install -r requirements-build.txt
 python -m unittest discover -s tests -v
-python -m compileall -q app.py core.py inspector.py reporting.py i18n.py paths.py build.py tests
+python -m compileall -q app.py core.py inspector.py reporting.py snapshots.py i18n.py paths.py build.py tests
 python build.py --console
 ```
 

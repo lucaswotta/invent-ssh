@@ -35,8 +35,9 @@ app.py (InventoryController + local HTTP/JSON server + native WebView/browser sh
 
 ## Security Boundaries
 
-- Local API endpoints require the per-process `X-Invent-Token` header.
+- Local API endpoints require the per-process `X-Invent-Token` header and a `Host` of `127.0.0.1` or `localhost`, which blocks DNS rebinding.
+- In browser mode the page pings `/api/ping` every 20 s and the process exits after 180 s without requests.
 - SSH passwords exist only in process memory and are stripped from `public_config()` and `config.json`.
-- Host keys are checked against system `known_hosts` and `~/.local/share/invent-ssh/known_hosts`. When `trust_unknown_hosts` (TOFU) is enabled, newly discovered host keys are persisted so subsequent key changes trigger `BadHostKeyException`.
+- Host keys are checked against system `known_hosts` and `~/.local/share/invent-ssh/known_hosts`. When `trust_unknown_hosts` (TOFU, the default) is enabled, newly discovered host keys are merged into that file under a lock so subsequent key changes trigger `BadHostKeyException`.
 - Spreadsheet exports prefix values starting with `=`, `+`, `-`, or `@` with `'` to prevent formula execution.
 - HTML exports escape all collected and user-supplied strings.
