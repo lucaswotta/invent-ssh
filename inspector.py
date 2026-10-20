@@ -995,7 +995,7 @@ def _collect_linux_hardware(
 _UNREACHABLE_ERRNOS = {errno.EHOSTUNREACH, errno.ENETUNREACH, getattr(errno, "EHOSTDOWN", errno.EHOSTUNREACH)}
 
 
-def _connection_failure(exc: BaseException, ip: str, timeout: int) -> Optional[str]:
+def _connection_failure(exc: BaseException, ip: str, timeout: int, port: int = 22) -> Optional[str]:
     """Name the network cause; None when the error is not a connection failure."""
     if isinstance(exc, socket.gaierror):
         return t("hw_dns_failed", ip=ip)
@@ -1005,7 +1005,7 @@ def _connection_failure(exc: BaseException, ip: str, timeout: int) -> Optional[s
     if isinstance(exc, paramiko.ssh_exception.NoValidConnectionsError):
         exc = next(iter(exc.errors.values()), exc)
     if isinstance(exc, ConnectionRefusedError) or getattr(exc, "errno", None) == errno.ECONNREFUSED:
-        return t("hw_connection_refused")
+        return t("hw_connection_refused", port=port)
     if getattr(exc, "errno", None) in _UNREACHABLE_ERRNOS:
         return t("hw_host_unreachable")
     return None
@@ -1038,6 +1038,7 @@ def get_hardware_info(
     timeout: int = 30,
     trust_unknown_hosts: bool = False,
     include_sensitive_identifiers: bool = False,
+    port: int = 22,
 ) -> dict[str, Any]:
     """Connect to one explicitly supplied host and discover Linux hardware read-only."""
     client = paramiko.SSHClient()
@@ -1083,6 +1084,7 @@ def get_hardware_info(
 
         client.connect(
             hostname=ip,
+            port=port,
             username=username,
             password=password or None,
             pkey=pkey,
@@ -1093,7 +1095,9 @@ def get_hardware_info(
             look_for_keys=False,
         )
         if trust_unknown_hosts:
-            _remember_host_key(known_hosts, ip, client.get_transport().get_remote_server_key())
+            # known_hosts names a non-default port as [host]:port, as OpenSSH and paramiko do.
+            host_name = ip if port == 22 else f"[{ip}]:{port}"
+            _remember_host_key(known_hosts, host_name, client.get_transport().get_remote_server_key())
         return _collect_linux_hardware(
             client,
             include_sensitive_identifiers=include_sensitive_identifiers,
@@ -1104,13 +1108,13 @@ def get_hardware_info(
     except FileNotFoundError:
         return {"status": "FALHA_AUTH", "erro": t("hw_key_not_found", key_path=key_path)}
     except (socket.timeout, socket.gaierror, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as exc:
-        return {"status": "FALHA_CONEXAO", "erro": _connection_failure(exc, ip, timeout) or str(exc)}
+        return {"status": "FALHA_CONEXAO", "erro": _connection_failure(exc, ip, timeout, port) or str(exc)}
     except paramiko.ssh_exception.BadHostKeyException:
         return {"status": "ERRO_CHAVE_HOST", "erro": t("hw_host_key_mismatch", ip=ip)}
     except paramiko.SSHException as exc:
         return {"status": "ERRO_SSH", "erro": t("hw_ssh_error", error=exc)}
     except (OSError, ValueError, TypeError) as exc:
-        reason = _connection_failure(exc, ip, timeout)
+        reason = _connection_failure(exc, ip, timeout, port)
         if reason:
             return {"status": "FALHA_CONEXAO", "erro": reason}
         return {"status": "ERRO_DESCONHECIDO", "erro": t("hw_unknown_error", error=exc)}

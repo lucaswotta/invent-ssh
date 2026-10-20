@@ -39,7 +39,7 @@ from reporting import create_template_workbook, save_report, save_snapshot_diff,
 from snapshots import SnapshotStore, compute_fleet_analytics
 
 APP_BRAND = "Invenux"
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.7.0"
 # Browsers throttle timers in hidden tabs to about one per minute.
 BROWSER_IDLE_TIMEOUT_SECONDS = 180
 
@@ -113,6 +113,7 @@ class InventoryController:
             "ssh_pass": "",
             "max_workers": 32,
             "ssh_timeout": 15,
+            "ssh_port": 22,
             "trust_unknown_hosts": True,
             "include_sensitive_identifiers": False,
             "output_format": "XLSX",
@@ -129,6 +130,7 @@ class InventoryController:
                     defaults["ssh_key_path"] = str(saved.get("last_ssh_key_path") or saved.get("ssh_key_path") or "")
                     defaults["max_workers"] = max(1, min(int(saved.get("max_workers", 32)), 128))
                     defaults["ssh_timeout"] = max(2, min(int(saved.get("ssh_timeout", 15)), 120))
+                    defaults["ssh_port"] = _valid_port(saved.get("ssh_port", 22))
                     defaults["trust_unknown_hosts"] = bool(saved.get("trust_unknown_hosts", True))
                     defaults["include_sensitive_identifiers"] = bool(saved.get("include_sensitive_identifiers", False))
                     defaults["output_format"] = str(saved.get("report_format") or saved.get("output_format") or "XLSX").upper()
@@ -148,6 +150,7 @@ class InventoryController:
             "last_ssh_key_path": self.config.get("ssh_key_path", ""),
             "max_workers": int(self.config.get("max_workers", 32)),
             "ssh_timeout": int(self.config.get("ssh_timeout", 15)),
+            "ssh_port": int(self.config.get("ssh_port", 22)),
             "trust_unknown_hosts": bool(self.config.get("trust_unknown_hosts", True)),
             "include_sensitive_identifiers": bool(self.config.get("include_sensitive_identifiers", False)),
             "report_format": str(self.config.get("output_format", "XLSX")).upper(),
@@ -196,6 +199,8 @@ class InventoryController:
                 self.config["max_workers"] = max(1, min(int(updates["max_workers"]), 128))
             if "ssh_timeout" in updates:
                 self.config["ssh_timeout"] = max(2, min(int(updates["ssh_timeout"]), 120))
+            if "ssh_port" in updates:
+                self.config["ssh_port"] = _valid_port(updates["ssh_port"])
             if "trust_unknown_hosts" in updates:
                 self.config["trust_unknown_hosts"] = bool(updates["trust_unknown_hosts"])
             if "include_sensitive_identifiers" in updates:
@@ -430,6 +435,14 @@ class InventoryController:
                 )
             except Exception:
                 logging.getLogger(__name__).warning("Failed to save local snapshot", exc_info=True)
+
+
+def _valid_port(value: Any) -> int:
+    try:
+        port = int(value)
+    except (TypeError, ValueError):
+        return 22
+    return port if 1 <= port <= 65535 else 22
 
 
 def _row_list(rows: list[int], limit: int = 5) -> str:
@@ -734,6 +747,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--input", type=str, help="Collect from this spreadsheet on the command line.")
     parser.add_argument("--user", type=str, help="SSH user for a command-line collection.")
     parser.add_argument("--key", type=str, help="SSH private key for a command-line collection.")
+    parser.add_argument("--ssh-port", type=int, default=22, help="SSH port of the machines (default: 22).")
     parser.add_argument("--output-format", type=str, default="XLSX", choices=["XLSX", "CSV", "HTML"])
     args = parser.parse_args(argv)
 
@@ -747,6 +761,7 @@ def main(argv: list[str] | None = None) -> int:
                 controller.update_config({"ssh_user": args.user})
             if args.key:
                 controller.update_config({"ssh_key_path": args.key})
+            controller.update_config({"ssh_port": args.ssh_port})
             controller.start_scan()
             while controller.get_state()["scanning"]:
                 time.sleep(0.2)

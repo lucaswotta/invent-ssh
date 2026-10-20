@@ -343,6 +343,7 @@ class InventoryEngine:
             password=self.config.get("ssh_pass"),
             key_path=self.config.get("ssh_key_path"),
             timeout=timeout,
+            port=int(self.config.get("ssh_port", 22)),
             trust_unknown_hosts=bool(self.config.get("trust_unknown_hosts", False)),
             include_sensitive_identifiers=bool(self.config.get("include_sensitive_identifiers", False)),
         )

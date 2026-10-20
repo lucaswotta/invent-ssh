@@ -428,6 +428,10 @@
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
   }
 
+  .field-row.field-row-port {
+    grid-template-columns: minmax(0, 1fr) 84px;
+  }
+
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1810,9 +1814,15 @@
 
     <div id="popover-ssh" class="popover">
       <div class="popover-title" data-i18n="sp.title">Credenciais e conexão SSH</div>
-      <div class="field-group">
-        <label class="field-label" for="input-ssh-user" data-i18n="sp.user">Usuário SSH</label>
-        <input id="input-ssh-user" class="field-input" type="text" data-i18n-placeholder="sp.user_ph" oninput="syncSshSettings()">
+      <div class="field-row field-row-port">
+        <div class="field-group">
+          <label class="field-label" for="input-ssh-user" data-i18n="sp.user">Usuário SSH</label>
+          <input id="input-ssh-user" class="field-input" type="text" data-i18n-placeholder="sp.user_ph" oninput="syncSshSettings()">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="input-ssh-port" data-i18n="sp.port">Porta</label>
+          <input id="input-ssh-port" class="field-input" type="number" min="1" max="65535" value="22" onchange="syncSshSettings()">
+        </div>
       </div>
       <div class="field-group">
         <label class="field-label" for="input-ssh-key" data-i18n="sp.key">Chave privada (ou em branco para senha)</label>
@@ -2205,6 +2215,8 @@
   "sp.title": "Credenciais e conexão SSH",
   "sp.user": "Usuário SSH",
   "sp.user_ph": "ex.: root, admin",
+  "sp.port": "Porta",
+  "tb.ssh_port": "porta {port}",
   "sp.key": "Chave privada (ou em branco para senha)",
   "sp.pass": "Senha SSH (opcional)",
   "sp.pass_ph": "Não armazenada em disco",
@@ -2388,12 +2400,12 @@
   "hp.row_location": "Unidade ou local; agrupa a visão Parque. Também vale <code>LOCAL</code>, <code>UNIDADE</code>, <code>FILIAL</code> ou <code>SETOR</code>.",
   "hp.row_other_name": "Qualquer outra",
   "hp.row_other": "Copiada como está para a tabela e os relatórios, por exemplo <code>ASSET_TAG</code>, <code>OWNER</code> ou <code>NOTES</code>.",
-  "hp.sheet_p2": "Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A conexão usa a porta 22.",
+  "hp.sheet_p2": "Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A porta SSH é 22 por padrão e pode ser trocada no painel SSH.",
   "hp.collected": "O que é coletado",
   "hp.collected_p": "Uma conexão SSH por máquina executa um único script de leitura: sistema e kernel, processador, memória e módulos, discos e partições, placa-mãe e BIOS, vídeo, rede e tempo ligado. Nada é instalado, alterado ou gravado na máquina. Campos que exigem root ou ferramentas ausentes aparecem como \"—\".",
   "hp.status": "Status",
   "hp.st_online": "<strong>Online</strong>: hardware coletado.",
-  "hp.st_offline": "<strong>Offline</strong>: a máquina não respondeu; o motivo aparece na linha (desligada, porta 22 fechada, tempo esgotado ou nome inexistente).",
+  "hp.st_offline": "<strong>Offline</strong>: a máquina não respondeu; o motivo aparece na linha (desligada, porta SSH fechada, tempo esgotado ou nome inexistente).",
   "hp.st_error": "<strong>Falha SSH</strong>: respondeu, mas recusou a senha ou a chave, ou a chave do host mudou desde o último acesso."
  },
  "en": {
@@ -2440,6 +2452,8 @@
   "sp.title": "SSH credentials and connection",
   "sp.user": "SSH user",
   "sp.user_ph": "e.g. root, admin",
+  "sp.port": "Port",
+  "tb.ssh_port": "port {port}",
   "sp.key": "Private key (blank to use a password)",
   "sp.pass": "SSH password (optional)",
   "sp.pass_ph": "Never saved to disk",
@@ -2623,12 +2637,12 @@
   "hp.row_location": "Site or room; groups the Fleet view. <code>SITE</code> and <code>DEPARTMENT</code> also work.",
   "hp.row_other_name": "Any other",
   "hp.row_other": "Copied as is to the table and the reports, for example <code>ASSET_TAG</code>, <code>OWNER</code> or <code>NOTES</code>.",
-  "hp.sheet_p2": "Rows without an address and repeated addresses are skipped and listed after loading. Connections use port 22.",
+  "hp.sheet_p2": "Rows without an address and repeated addresses are skipped and listed after loading. The SSH port is 22 by default and can be changed in the SSH panel.",
   "hp.collected": "What is collected",
   "hp.collected_p": "One SSH connection per machine runs a single read-only script: system and kernel, processor, memory and modules, disks and partitions, motherboard and BIOS, graphics, network and uptime. Nothing is installed, changed or written on the machine. Fields that need root or missing tools show as \"—\".",
   "hp.status": "Statuses",
   "hp.st_online": "<strong>Online</strong>: hardware collected.",
-  "hp.st_offline": "<strong>Offline</strong>: the machine did not answer; the row says why (powered off, port 22 closed, time limit or unknown name).",
+  "hp.st_offline": "<strong>Offline</strong>: the machine did not answer; the row says why (powered off, SSH port closed, time limit or unknown name).",
   "hp.st_error": "<strong>SSH failure</strong>: it answered but rejected the password or key, or its host key changed since the last connection."
  },
  "es": {
@@ -2675,6 +2689,8 @@
   "sp.title": "Credenciales y conexión SSH",
   "sp.user": "Usuario SSH",
   "sp.user_ph": "p. ej., root, admin",
+  "sp.port": "Puerto",
+  "tb.ssh_port": "puerto {port}",
   "sp.key": "Clave privada (en blanco para usar contraseña)",
   "sp.pass": "Contraseña SSH (opcional)",
   "sp.pass_ph": "Nunca se guarda en disco",
@@ -2858,12 +2874,12 @@
   "hp.row_location": "Sede o sala; agrupa la vista Parque. También valen <code>UBICACION</code>, <code>SEDE</code> o <code>SUCURSAL</code>.",
   "hp.row_other_name": "Cualquier otra",
   "hp.row_other": "Se copia tal cual a la tabla y los informes, por ejemplo <code>ASSET_TAG</code>, <code>OWNER</code> o <code>NOTES</code>.",
-  "hp.sheet_p2": "Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar. La conexión usa el puerto 22.",
+  "hp.sheet_p2": "Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar. El puerto SSH es 22 por defecto y se puede cambiar en el panel SSH.",
   "hp.collected": "Qué se recopila",
   "hp.collected_p": "Una conexión SSH por equipo ejecuta un único script de lectura: sistema y kernel, procesador, memoria y módulos, discos y particiones, placa base y BIOS, vídeo, red y tiempo encendido. No se instala, cambia ni escribe nada en el equipo. Los campos que requieren root o herramientas ausentes aparecen como \"—\".",
   "hp.status": "Estados",
   "hp.st_online": "<strong>En línea</strong>: hardware recopilado.",
-  "hp.st_offline": "<strong>Sin conexión</strong>: el equipo no respondió; la fila indica el motivo (apagado, puerto 22 cerrado, tiempo agotado o nombre inexistente).",
+  "hp.st_offline": "<strong>Sin conexión</strong>: el equipo no respondió; la fila indica el motivo (apagado, puerto SSH cerrado, tiempo agotado o nombre inexistente).",
   "hp.st_error": "<strong>Fallo SSH</strong>: respondió, pero rechazó la contraseña o la clave, o su clave de host cambió desde el último acceso."
  }
 }
@@ -3131,7 +3147,9 @@
     } else if (hasPass) {
       authLabel = tr("tb.ssh_password");
     }
-    document.getElementById("ssh-pill-value").textContent = user ? `${user} · ${authLabel}` : tr("tb.ssh_empty");
+    const port = parseInt(document.getElementById("input-ssh-port").value || cfg.ssh_port || 22, 10);
+    const portLabel = port !== 22 ? ` · ${tr("tb.ssh_port", { port })}` : "";
+    document.getElementById("ssh-pill-value").textContent = user ? `${user} · ${authLabel}${portLabel}` : tr("tb.ssh_empty");
 
     const workers = parseInt(document.getElementById("input-workers").value || cfg.max_workers || 32, 10);
     const timeout = parseInt(document.getElementById("input-timeout").value || cfg.ssh_timeout || 15, 10);
@@ -3149,6 +3167,7 @@
       ssh_pass: document.getElementById("input-ssh-pass").value,
       max_workers: parseInt(document.getElementById("input-workers").value || "32", 10),
       ssh_timeout: parseInt(document.getElementById("input-timeout").value || "15", 10),
+      ssh_port: parseInt(document.getElementById("input-ssh-port").value || "22", 10),
       trust_unknown_hosts: document.getElementById("input-tofu").checked
     };
     updateToolbarAndFooter();
@@ -3703,6 +3722,9 @@
       }
       if (data.config.max_workers) {
         document.getElementById("input-workers").value = data.config.max_workers;
+      }
+      if (data.config.ssh_port) {
+        document.getElementById("input-ssh-port").value = data.config.ssh_port;
       }
       if (data.config.ssh_timeout) {
         document.getElementById("input-timeout").value = data.config.ssh_timeout;
