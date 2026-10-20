@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 ENTRY_POINT = ROOT / "app.py"
 BRAND_DIR = ROOT / "brand"
+UI_DIR = ROOT / "ui"
 ICON_ICO = ROOT / "app.ico"
 APP_SLUG = "invent-ssh"
 REQUIREMENTS_BUILD = ROOT / "requirements-build.txt"
@@ -58,10 +59,10 @@ def build_command(console: bool = False) -> list[str]:
         str(build_root),
         "--specpath",
         str(build_root),
-        "--collect-all",
-        "customtkinter",
         "--add-data",
         f"{BRAND_DIR}{os.pathsep}brand",
+        "--add-data",
+        f"{UI_DIR}{os.pathsep}ui",
         "--hidden-import",
         "paramiko.transport",
         "--hidden-import",
@@ -70,8 +71,6 @@ def build_command(console: bool = False) -> list[str]:
         "paramiko.ecdsakey",
         "--hidden-import",
         "paramiko.rsakey",
-        "--hidden-import",
-        "PIL._tkinter_finder",
         "--hidden-import",
         "cryptography.hazmat.bindings._rust",
     ]
@@ -90,11 +89,6 @@ def build_command(console: bool = False) -> list[str]:
         if icon_png.is_file():
             command.extend(["--icon", str(icon_png), "--osx-bundle-identifier", "io.lucasmotta.inventssh"])
 
-    if system != "Darwin":
-        command.extend(["--exclude-module", "darkdetect._mac_detect"])
-    if system != "Windows":
-        command.extend(["--exclude-module", "darkdetect._windows_detect"])
-
     command.append(str(ENTRY_POINT))
     return command
 
@@ -110,8 +104,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not ENTRY_POINT.is_file() or not BRAND_DIR.is_dir():
-        print("Build failed: app.py or the brand/ resources directory are missing.", file=sys.stderr)
+    if not ENTRY_POINT.is_file() or not BRAND_DIR.is_dir() or not UI_DIR.is_dir():
+        print("Build failed: app.py, brand/, or ui/ directory is missing.", file=sys.stderr)
         return 2
 
     if importlib.util.find_spec("PyInstaller") is None:

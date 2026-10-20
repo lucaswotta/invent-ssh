@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invent-SSH</title>
+<style>
+  :root {
+    --bg-window: #1C1C1E;
+    --bg-sidebar: #232326;
+    --bg-toolbar: #252528;
+    --bg-card: #262629;
+    --bg-card-inner: #1F1F22;
+    --bg-control: #36363A;
+    --bg-control-hover: #404045;
+    --bg-selected-row: #0A84FF;
+
+    --sep-strong: rgba(255, 255, 255, 0.09);
+    --sep-subtle: rgba(255, 255, 255, 0.055);
+    --specular: rgba(255, 255, 255, 0.12);
+
+    --text-primary: #F5F5F7;
+    --text-secondary: #98989D;
+    --text-tertiary: #6E6E73;
+
+    --sys-blue: #0A84FF;
+    --sys-blue-hover: #007AFF;
+    --sys-green: #30D158;
+    --sys-orange: #FF9F0A;
+    --sys-red: #FF453A;
+    --sys-teal: #64D2FF;
+    --sys-purple: #BF5AF2;
+
+    --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.20) transparent;
+  }
+
+  /* macOS Overlay Scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.20);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.38);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-color: rgba(255, 255, 255, 0.52);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-window);
+    color: var(--text-primary);
+    font-family: var(--font-system);
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .app-shell {
+    display: grid;
+    grid-template-columns: 204px 1fr;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--sep-strong);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 10px 12px;
+    height: 100vh;
+  }
+
+  .app-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px 16px;
+  }
+
+  .app-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: linear-gradient(180deg, #323236 0%, #222225 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .app-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-primary);
+  }
+
+  .app-title-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .app-version {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    padding: 8px 10px 5px;
+    letter-spacing: -0.005em;
+  }
+
+  .nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-btn.active {
+    background: rgba(255, 255, 255, 0.11);
+    font-weight: 500;
+  }
+
+  .nav-btn-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .nav-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--sys-blue);
+    flex-shrink: 0;
+  }
+
+  .nav-count {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  .nav-btn.active .nav-count {
+    color: var(--text-secondary);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 10px 10px 2px;
+    border-top: 1px solid var(--sep-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-footer-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+
+  .sidebar-footer-row span:first-child {
+    color: var(--text-tertiary);
+  }
+
+  /* Main Area */
+  .main-area {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Unified macOS Toolbar */
+  .toolbar {
+    height: 52px;
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--sep-strong);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    flex-shrink: 0;
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .popover-trigger {
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 7px;
+    background: var(--bg-control);
+    box-shadow: inset 0 1px 0 var(--specular), 0 1px 1px rgba(0, 0, 0, 0.2);
+    border: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+  }
+
+  .popover-trigger:hover {
+    background: var(--bg-control-hover);
+  }
+
+  .popover-trigger.open {
+    background: var(--bg-control-hover);
+    outline: 2px solid rgba(10, 132, 255, 0.45);
+  }
+
+  .popover-trigger .trigger-label {
+    color: var(--text-secondary);
+  }
+
+  .popover-trigger .trigger-value {
+    font-weight: 500;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .popover-trigger svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .popover-trigger .chevron {
+    width: 11px;
+    height: 11px;
+    margin-left: 2px;
+    opacity: 0.65;
+  }
+
+  /* macOS Push Buttons */
+  .btn {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 7px;
+    background: var(--bg-control);
+    box-shadow: inset 0 1px 0 var(--specular), 0 1px 1px rgba(0, 0, 0, 0.2);
+    border: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background: var(--bg-control-hover);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #1E8FFF 0%, #007AFF 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #3399FF 0%, #0A84FF 100%);
+  }
+
+  .btn-danger {
+    background: linear-gradient(180deg, #FF5B52 0%, #FF453A 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    font-weight: 500;
+  }
+
+  /* Popovers */
+  .popover {
+    position: absolute;
+    top: 48px;
+    width: 340px;
+    background: #2C2C2E;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 11px;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    padding: 14px;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .popover.open {
+    display: flex;
+  }
+
+  #popover-targets { left: 18px; width: 360px; }
+  #popover-ssh { left: 220px; width: 340px; }
+  #popover-export { right: 130px; width: 230px; gap: 6px; padding: 8px; }
+
+  .popover-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .field-label {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+
+  .field-input-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .field-input {
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #1C1C1E;
+    color: var(--text-primary);
+    padding: 0 9px;
+    font-family: inherit;
+    font-size: 12.5px;
+    outline: none;
+    user-select: text;
+  }
+
+  .field-input:focus {
+    border-color: var(--sys-blue);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding-top: 2px;
+  }
+
+  .checkbox-row input {
+    accent-color: var(--sys-blue);
+  }
+
+  .menu-item {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .menu-item:hover {
+    background: var(--sys-blue);
+    color: #FFFFFF;
+  }
+
+  .menu-item span:last-child {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .menu-item:hover span:last-child {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Views */
+  .view {
+    display: none;
+    flex: 1;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+  }
+
+  .view.active {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Subbar with Segmented Control & Search */
+  .subbar {
+    height: 44px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--sep-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--bg-window);
+  }
+
+  .segmented-control {
+    display: inline-flex;
+    background: rgba(118, 118, 128, 0.24);
+    padding: 2px;
+    border-radius: 7px;
+    gap: 2px;
+  }
+
+  .seg-btn {
+    height: 24px;
+    padding: 0 11px;
+    border-radius: 5.5px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .seg-btn.active {
+    background: #636366;
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .seg-btn span {
+    color: var(--text-tertiary);
+    font-weight: 400;
+  }
+
+  .seg-btn.active span {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .subbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .summary-inline {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-input-wrap svg {
+    position: absolute;
+    left: 8px;
+    width: 13px;
+    height: 13px;
+    stroke: var(--text-tertiary);
+  }
+
+  .search-input {
+    height: 28px;
+    width: 240px;
+    border-radius: 7px;
+    border: 1px solid var(--sep-strong);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    padding: 0 10px 0 27px;
+    outline: none;
+    user-select: text;
+  }
+
+  .search-input:focus {
+    border-color: var(--sys-blue);
+  }
+
+  /* Split Content: Table + Inspector */
+  .workspace-split {
+    display: grid;
+    grid-template-columns: 1fr 330px;
+    flex: 1;
+    height: calc(100vh - 96px);
+    overflow: hidden;
+  }
+
+  .table-pane {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    height: 30px;
+    background: var(--bg-window);
+    border-bottom: 1px solid var(--sep-strong);
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    font-weight: 500;
+    text-align: left;
+    padding: 0 10px;
+    z-index: 2;
+  }
+
+  thead th:first-child,
+  tbody td:first-child {
+    padding-left: 18px;
+  }
+
+  tbody tr {
+    height: 34px;
+    border-bottom: 1px solid var(--sep-subtle);
+    cursor: pointer;
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  tbody tr.selected {
+    background: rgba(10, 132, 255, 0.22);
+  }
+
+  tbody td {
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12.5px;
+    color: var(--text-primary);
+  }
+
+  .cell-secondary {
+    color: var(--text-secondary);
+  }
+
+  .status-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot.online { background-color: var(--sys-green); }
+  .dot.warn { background-color: var(--sys-orange); }
+  .dot.offline { background-color: var(--sys-red); }
+  .dot.pending { background-color: var(--text-tertiary); }
+
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  /* Inspector Pane */
+  .inspector-pane {
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--sep-strong);
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .inspector-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--sep-subtle);
+  }
+
+  .inspector-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .inspector-hostname {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .inspector-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .inspector-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .inspector-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .inspector-card {
+    background: var(--bg-card);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 8px;
+    padding: 8px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .kv-key {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .kv-val {
+    color: var(--text-primary);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: text;
+  }
+
+  .kv-multiline {
+    color: var(--text-primary);
+    font-size: 11.5px;
+    line-height: 1.45;
+    white-space: pre-line;
+    user-select: text;
+  }
+
+  /* VIEW 2: PARQUE */
+  .parque-content {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-card-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .stat-card-value {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .stat-card-note {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .chart-card-sub {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  .dist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dist-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .dist-item-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .dist-item-count {
+    color: var(--text-secondary);
+  }
+
+  .dist-bar-bg {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+  }
+
+  .dist-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--sys-blue);
+  }
+
+  .dist-bar-fill.teal { background: var(--sys-teal); }
+  .dist-bar-fill.green { background: var(--sys-green); }
+  .dist-bar-fill.purple { background: var(--sys-purple); }
+
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .table-card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sep-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .table-card-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* VIEW 3: SNAPSHOTS */
+  .snapshots-layout {
+    display: grid;
+    grid-template-columns: 290px 1fr;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+  }
+
+  .snapshots-sidebar {
+    border-right: 1px solid var(--sep-strong);
+    background: var(--bg-sidebar);
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .snap-card {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .snap-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .snap-card.active {
+    background: rgba(255, 255, 255, 0.10);
+  }
+
+  .snap-card-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .snap-card-sub {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+
+  .snapshots-content {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="app-brand">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+          <line x1="7" y1="9" x2="10" y2="12"></line>
+          <line x1="7" y1="15" x2="10" y2="12"></line>
+          <line x1="13" y1="15" x2="17" y2="15"></line>
+        </svg>
+      </div>
+      <div class="app-title-group">
+        <span class="app-title">Invent-SSH</span>
+        <span class="app-version">Inventário Linux</span>
+      </div>
+    </div>
+
+    <div class="sidebar-label">Visões</div>
+    <div id="main-nav" class="nav-list">
+      <button class="nav-btn active" onclick="switchView('scan', this)">
+        <span class="nav-btn-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/></svg>
+          Coleta
+        </span>
+        <span id="nav-count-scan" class="nav-count">0</span>
+      </button>
+      <button class="nav-btn" onclick="switchView('dashboard', this)">
+        <span class="nav-btn-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round"/></svg>
+          Parque
+        </span>
+      </button>
+      <button class="nav-btn" onclick="switchView('history', this)">
+        <span class="nav-btn-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+          Snapshots
+        </span>
+        <span id="nav-count-snapshots" class="nav-count">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-row">
+        <span>Concorrência</span>
+        <span id="footer-workers">32 conexões</span>
+      </div>
+      <div class="sidebar-footer-row">
+        <span>Timeout SSH</span>
+        <span id="footer-timeout">15 segundos</span>
+      </div>
+      <div class="sidebar-footer-row">
+        <span>Verificação</span>
+        <span id="footer-tofu">TOFU ativo</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-area">
+    <!-- Top Unified Toolbar -->
+    <header class="toolbar">
+      <div class="toolbar-group">
+        <button id="targets-trigger" class="popover-trigger" onclick="togglePopover('targets')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="trigger-label">Alvos:</span>
+          <span id="targets-pill-value" class="trigger-value">Selecionar lista...</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <button id="ssh-trigger" class="popover-trigger" onclick="togglePopover('ssh')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="trigger-label">SSH:</span>
+          <span id="ssh-pill-value" class="trigger-value">Configurar acesso</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <button class="btn" onclick="createTemplate()">Modelo .xlsx</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button id="export-trigger" class="btn" onclick="togglePopover('export')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
+        <button id="scan-btn" class="btn btn-primary" onclick="handleScanAction()">
+          Iniciar Coleta
+        </button>
+      </div>
+    </header>
+
+    <!-- Targets Popover -->
+    <div id="popover-targets" class="popover">
+      <div class="popover-title">Lista de Máquinas (.xlsx, .xlsm, .csv)</div>
+      <div class="field-group">
+        <label class="field-label">Caminho do arquivo local</label>
+        <div class="field-input-row">
+          <input id="input-filepath" class="field-input" type="text" placeholder="/caminho/para/ativos.xlsx" onchange="loadTargetPath(this.value)">
+          <button class="btn" onclick="browseTargetFile()">Escolher...</button>
+        </div>
+      </div>
+      <input id="file-upload-input" type="file" accept=".xlsx,.xlsm,.csv,.txt" style="display:none" onchange="uploadTargetFile(this)">
+      <div style="font-size:11.5px; color:var(--text-tertiary);">
+        Use uma coluna IP, HOST, HOSTNAME ou ADDRESS. Colunas extras (Local, Patrimônio, Responsável) são preservadas.
+      </div>
+    </div>
+
+    <!-- SSH Popover -->
+    <div id="popover-ssh" class="popover">
+      <div class="popover-title">Credenciais e Conexão SSH</div>
+      <div class="field-group">
+        <label class="field-label">Usuário SSH</label>
+        <input id="input-ssh-user" class="field-input" type="text" placeholder="ex: root, admin" oninput="syncSshSettings()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Chave Privada (ou em branco para senha)</label>
+        <div class="field-input-row">
+          <input id="input-ssh-key" class="field-input" type="text" placeholder="~/.ssh/id_ed25519" oninput="syncSshSettings()">
+          <button class="btn" onclick="browseKeyFile()">...</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Senha SSH (opcional)</label>
+        <input id="input-ssh-pass" class="field-input" type="password" placeholder="Não armazenada em disco" oninput="syncSshSettings()">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Conexões simultâneas</label>
+          <input id="input-workers" class="field-input" type="number" min="1" max="128" value="32" onchange="syncSshSettings()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Timeout (s)</label>
+          <input id="input-timeout" class="field-input" type="number" min="2" max="120" value="15" onchange="syncSshSettings()">
+        </div>
+      </div>
+      <label class="checkbox-row">
+        <input id="input-tofu" type="checkbox" checked onchange="syncSshSettings()">
+        <span>Aceitar novas chaves no primeiro acesso (TOFU)</span>
+      </label>
+    </div>
+
+    <!-- Export Popover -->
+    <div id="popover-export" class="popover">
+      <button class="menu-item" onclick="exportReport('XLSX')">
+        <span>Planilha Excel</span>
+        <span>.xlsx</span>
+      </button>
+      <button class="menu-item" onclick="exportReport('HTML')">
+        <span>Relatório Interativo</span>
+        <span>.html</span>
+      </button>
+      <button class="menu-item" onclick="exportReport('CSV')">
+        <span>Dados Tabulares</span>
+        <span>.csv</span>
+      </button>
+    </div>
+
+    <!-- VIEW 1: COLETA -->
+    <section id="view-scan" class="view active">
+      <div class="subbar">
+        <div class="segmented-control">
+          <button class="seg-btn active" onclick="setStatusFilter('ALL', this)">Todas <span id="count-all">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('ONLINE', this)">Online <span id="count-online">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('OFFLINE', this)">Offline <span id="count-offline">0</span></button>
+          <button class="seg-btn" onclick="setStatusFilter('ERROR', this)">Falha SSH <span id="count-error">0</span></button>
+        </div>
+
+        <div class="subbar-right">
+          <div id="status-banner" class="summary-inline">
+            <span>Pronto para coleta</span>
+          </div>
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="search-input" class="search-input" type="text" placeholder="Buscar máquina, IP, local, hardware..." oninput="renderScanTable()">
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-split">
+        <div class="table-pane">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 112px;">Status</th>
+                <th style="width: 120px;">Endereço IP</th>
+                <th style="width: 145px;">Hostname</th>
+                <th style="width: 145px;">Local</th>
+                <th style="width: 220px;">Processador</th>
+                <th style="width: 115px;">Memória</th>
+                <th style="width: 135px;">Armazenamento</th>
+                <th style="width: 130px;">Sistema Operacional</th>
+              </tr>
+            </thead>
+            <tbody id="hosts-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Inspector -->
+        <aside id="inspector-pane" class="inspector-pane"></aside>
+      </div>
+    </section>
+
+    <!-- VIEW 2: PARQUE -->
+    <section id="view-dashboard" class="view">
+      <div class="parque-content">
+        <div class="summary-cards">
+          <div class="stat-card">
+            <span class="stat-card-label">Total do Parque</span>
+            <span id="stat-total" class="stat-card-value">0</span>
+            <span id="stat-locations" class="stat-card-note">0 unidades cadastradas</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Máquinas Online</span>
+            <span id="stat-online" class="stat-card-value">0</span>
+            <span id="stat-avail" class="stat-card-note">0,0% de disponibilidade</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Armazenamento em Flash</span>
+            <span id="stat-flash" class="stat-card-value">0,0%</span>
+            <span id="stat-flash-note" class="stat-card-note">0 NVMe · 0 SSD · 0 HDD</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Memória Média por Host</span>
+            <span id="stat-ram" class="stat-card-value">0 GB</span>
+            <span id="stat-ram-note" class="stat-card-note">hosts online coletados</span>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <span class="chart-card-title">Armazenamento por Tipo</span>
+              <span class="chart-card-sub">hosts online</span>
+            </div>
+            <div id="dist-storage" class="dist-list"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <span class="chart-card-title">Capacidade de Memória RAM</span>
+              <span class="chart-card-sub">hosts online</span>
+            </div>
+            <div id="dist-ram" class="dist-list"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <span class="chart-card-title">Distribuições Linux</span>
+              <span class="chart-card-sub">hosts online</span>
+            </div>
+            <div id="dist-distro" class="dist-list"></div>
+          </div>
+        </div>
+
+        <div class="table-card" style="flex: 1;">
+          <div class="table-card-header">
+            <h3>Distribuição por Unidade / Local</h3>
+          </div>
+          <div style="overflow-y: auto; flex: 1;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 24%;">Unidade / Local</th>
+                  <th style="width: 12%;">Total</th>
+                  <th style="width: 12%;">Online</th>
+                  <th style="width: 13%;">NVMe / SSD</th>
+                  <th style="width: 13%;">HDD</th>
+                  <th style="width: 13%;">RAM ≤ 4 GB</th>
+                  <th style="width: 13%;">RAM 8 GB+</th>
+                </tr>
+              </thead>
+              <tbody id="locations-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: SNAPSHOTS -->
+    <section id="view-history" class="view">
+      <div class="snapshots-layout">
+        <aside class="snapshots-sidebar">
+          <div class="sidebar-label">Histórico Local</div>
+          <div id="snapshots-list"></div>
+        </aside>
+
+        <div class="snapshots-content">
+          <div class="table-card" style="flex: 1;">
+            <div class="table-card-header">
+              <h3 id="snapshot-diff-title">Alterações entre snapshots</h3>
+              <div style="display:flex; gap:8px;">
+                <button class="btn" onclick="loadSnapshotIntoWorkspace()">Carregar na Coleta</button>
+                <button class="btn" onclick="exportSnapshotDiff()">Exportar Comparação</button>
+              </div>
+            </div>
+            <div style="overflow-y: auto; flex: 1;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 15%;">Endereço IP</th>
+                    <th style="width: 18%;">Hostname</th>
+                    <th style="width: 17%;">Campo</th>
+                    <th style="width: 25%;">Valor Anterior</th>
+                    <th style="width: 25%;">Valor Atual</th>
+                  </tr>
+                </thead>
+                <tbody id="snapshot-diff-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const SESSION_TOKEN = window.__INVENT_TOKEN__ || "";
+  let appState = {
+    config: {},
+    records: [],
+    analytics: null,
+    snapshots: [],
+    selectedSnapshotId: null,
+    selectedSnapshotDiff: null,
+    selectedHostIp: null,
+    statusFilter: "ALL",
+    scanning: false
+  };
+  let pollTimer = null;
+
+  async function api(path, method = "GET", body = null) {
+    const headers = { "X-Invent-Token": SESSION_TOKEN };
+    const opts = { method, headers };
+    if (body !== null) {
+      headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
+    }
+    const res = await fetch(path, opts);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Erro na comunicação com o motor local.");
+    }
+    return data;
+  }
+
+  function escapeHtml(value) {
+    const s = value == null ? "" : String(value);
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function cleanValue(val) {
+    if (val == null) return "";
+    const s = String(val).trim();
+    if (!s || ["n/a", "na", "none", "nan"].includes(s.toLowerCase())) return "";
+    return s;
+  }
+
+  function hostHostname(rec) {
+    const det = rec.hardware_details || {};
+    if (cleanValue(det.hostname)) return cleanValue(det.hostname);
+    const meta = rec.metadata || {};
+    for (const k of ["HOSTNAME", "HOST", "NAME", "NOME"]) {
+      if (cleanValue(meta[k])) return cleanValue(meta[k]);
+    }
+    return "—";
+  }
+
+  function hostLocation(rec) {
+    const meta = rec.metadata || {};
+    for (const k of ["LOCATION", "SITE", "LOCAL", "LOCALIZACAO", "LOCALIZAÇÃO", "UNIDADE", "FILIAL", "DEPARTMENT", "SETOR"]) {
+      if (cleanValue(meta[k])) return cleanValue(meta[k]);
+    }
+    return "—";
+  }
+
+  function switchView(viewName, btn) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + viewName).classList.add("active");
+    if (btn) {
+      document.querySelectorAll("#main-nav .nav-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+    closePopovers();
+  }
+
+  function closePopovers() {
+    document.querySelectorAll(".popover").forEach(p => p.classList.remove("open"));
+    document.querySelectorAll(".popover-trigger").forEach(t => t.classList.remove("open"));
+  }
+
+  function togglePopover(name) {
+    const pop = document.getElementById("popover-" + name);
+    const trig = document.getElementById(name + "-trigger");
+    const wasOpen = pop && pop.classList.contains("open");
+    closePopovers();
+    if (pop && !wasOpen) {
+      pop.classList.add("open");
+      if (trig) trig.classList.add("open");
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".popover") && !e.target.closest(".popover-trigger") && !e.target.closest("#export-trigger")) {
+      closePopovers();
+    }
+  });
+
+  function updateToolbarAndFooter() {
+    const cfg = appState.config || {};
+    const filepath = cfg.filepath || "";
+    const filename = filepath ? filepath.split(/[\\/]/).pop() : "";
+    const count = appState.records.length;
+    document.getElementById("targets-pill-value").textContent =
+      filename ? `${filename} (${count})` : (count ? `${count} máquinas` : "Selecionar lista...");
+    document.getElementById("input-filepath").value = filepath;
+
+    const user = (document.getElementById("input-ssh-user").value || cfg.ssh_user || "").trim();
+    const keyPath = (document.getElementById("input-ssh-key").value || cfg.ssh_key_path || "").trim();
+    const hasPass = Boolean(document.getElementById("input-ssh-pass").value);
+    let authLabel = "configurar";
+    if (keyPath) {
+      authLabel = "chave " + keyPath.split(/[\\/]/).pop();
+    } else if (hasPass) {
+      authLabel = "senha";
+    }
+    document.getElementById("ssh-pill-value").textContent = user ? `${user} · ${authLabel}` : "Configurar acesso";
+
+    const workers = parseInt(document.getElementById("input-workers").value || cfg.max_workers || 32, 10);
+    const timeout = parseInt(document.getElementById("input-timeout").value || cfg.ssh_timeout || 15, 10);
+    const tofu = document.getElementById("input-tofu").checked;
+    document.getElementById("footer-workers").textContent = `${workers} conexões`;
+    document.getElementById("footer-timeout").textContent = `${timeout} segundos`;
+    document.getElementById("footer-tofu").textContent = tofu ? "TOFU ativo" : "Estrito";
+  }
+
+  async function syncSshSettings() {
+    const payload = {
+      ssh_user: document.getElementById("input-ssh-user").value.trim(),
+      ssh_key_path: document.getElementById("input-ssh-key").value.trim(),
+      ssh_pass: document.getElementById("input-ssh-pass").value,
+      max_workers: parseInt(document.getElementById("input-workers").value || "32", 10),
+      ssh_timeout: parseInt(document.getElementById("input-timeout").value || "15", 10),
+      trust_unknown_hosts: document.getElementById("input-tofu").checked
+    };
+    updateToolbarAndFooter();
+    try {
+      await api("/api/config", "POST", payload);
+    } catch (_) {}
+  }
+
+  function setStatusFilter(filter, btn) {
+    appState.statusFilter = filter;
+    document.querySelectorAll(".segmented-control .seg-btn").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    renderScanTable();
+  }
+
+  function classifyStatus(statusRaw) {
+    const st = String(statusRaw || "PENDING").toUpperCase();
+    if (st === "ONLINE") return { group: "ONLINE", dot: "online", label: "Online" };
+    if (st === "OFFLINE") return { group: "OFFLINE", dot: "offline", label: "Offline" };
+    if (st === "PENDING") return { group: "PENDING", dot: "pending", label: "Pendente" };
+    if (st === "FALHA_AUTH") return { group: "ERROR", dot: "warn", label: "Autenticação" };
+    if (st === "ERRO_CHAVE_HOST") return { group: "ERROR", dot: "warn", label: "Chave Host" };
+    return { group: "ERROR", dot: "warn", label: "Falha SSH" };
+  }
+
+  function renderScanTable() {
+    const records = appState.records || [];
+    const total = records.length;
+    let onlineCount = 0;
+    let offlineCount = 0;
+    let errorCount = 0;
+    for (const r of records) {
+      const cls = classifyStatus(r.status);
+      if (cls.group === "ONLINE") onlineCount++;
+      else if (cls.group === "OFFLINE") offlineCount++;
+      else if (cls.group === "ERROR") errorCount++;
+    }
+
+    document.getElementById("nav-count-scan").textContent = total;
+    document.getElementById("count-all").textContent = total;
+    document.getElementById("count-online").textContent = onlineCount;
+    document.getElementById("count-offline").textContent = offlineCount;
+    document.getElementById("count-error").textContent = errorCount;
+
+    const query = (document.getElementById("search-input").value || "").trim().toLowerCase();
+    const filtered = records.filter(r => {
+      const cls = classifyStatus(r.status);
+      if (appState.statusFilter !== "ALL" && cls.group !== appState.statusFilter) return false;
+      if (!query) return true;
+      const haystack = [
+        r.ip, hostHostname(r), hostLocation(r),
+        r.processador, r.ram, r.disk_type, r.disk_size, r.distro, r.placa_mae, r.erro
+      ].join(" ").toLowerCase();
+      return haystack.includes(query);
+    });
+
+    const tbody = document.getElementById("hosts-tbody");
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">${
+        total ? "Nenhuma máquina corresponde ao filtro atual." : "Selecione uma planilha de alvos (.xlsx ou .csv) na barra superior para iniciar."
+      }</td></tr>`;
+      renderInspector(null);
+      return;
+    }
+
+    if (!appState.selectedHostIp || !filtered.some(r => r.ip === appState.selectedHostIp)) {
+      appState.selectedHostIp = filtered[0].ip;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+      const cls = classifyStatus(r.status);
+      const selected = r.ip === appState.selectedHostIp ? "selected" : "";
+      const hostname = hostHostname(r);
+      const location = hostLocation(r);
+      const cpu = cleanValue(r.processador)
+        ? `${cleanValue(r.processador)}${cleanValue(r.cores_threads) ? ` (${cleanValue(r.cores_threads)})` : ""}`
+        : (cleanValue(r.erro) || "—");
+      const ram = cleanValue(r.ram) || "—";
+      const storage = cleanValue(r.disk_type)
+        ? `${cleanValue(r.disk_type)}${cleanValue(r.disk_size) ? " · " + cleanValue(r.disk_size).split(" total")[0] : ""}`
+        : "—";
+      const osText = cleanValue(r.distro)
+        ? `${cleanValue(r.distro)}${cleanValue(r.kernel) ? ` (${cleanValue(r.kernel).split("-")[0]})` : ""}`
+        : "—";
+
+      return `<tr class="${selected}" onclick="selectHost('${escapeHtml(r.ip)}')">
+        <td><span class="status-cell"><span class="dot ${cls.dot}"></span>${escapeHtml(cls.label)}</span></td>
+        <td>${escapeHtml(r.ip)}</td>
+        <td>${escapeHtml(hostname)}</td>
+        <td class="cell-secondary">${escapeHtml(location)}</td>
+        <td class="${cleanValue(r.processador) ? "" : "cell-secondary"}">${escapeHtml(cpu)}</td>
+        <td>${escapeHtml(ram)}</td>
+        <td>${escapeHtml(storage)}</td>
+        <td class="cell-secondary">${escapeHtml(osText)}</td>
+      </tr>`;
+    }).join("");
+
+    const selectedRecord = records.find(r => r.ip === appState.selectedHostIp) || filtered[0];
+    renderInspector(selectedRecord);
+  }
+
+  function selectHost(ip) {
+    appState.selectedHostIp = ip;
+    renderScanTable();
+  }
+
+  function renderInspector(rec) {
+    const pane = document.getElementById("inspector-pane");
+    if (!rec) {
+      pane.innerHTML = `<div class="empty-state">Selecione uma máquina na tabela para inspecionar os detalhes de hardware.</div>`;
+      return;
+    }
+    const cls = classifyStatus(rec.status);
+    const det = rec.hardware_details || {};
+    const hostname = hostHostname(rec);
+    const location = hostLocation(rec);
+
+    const storageLines = cleanValue(det.storage_devices) || (cleanValue(rec.disk_type) ? `${rec.disk_type} · ${rec.disk_size || ""}` : "—");
+    const netLines = cleanValue(det.network_adapters) || "—";
+
+    pane.innerHTML = `
+      <div class="inspector-header">
+        <div class="inspector-title-row">
+          <span class="inspector-hostname">${escapeHtml(hostname !== "—" ? hostname : rec.ip)}</span>
+          <span class="status-cell"><span class="dot ${cls.dot}"></span>${escapeHtml(cls.label)}</span>
+        </div>
+        <span class="inspector-sub">${escapeHtml(rec.ip)}${location !== "—" ? " · " + escapeHtml(location) : ""}</span>
+      </div>
+
+      <div class="inspector-section">
+        <span class="inspector-section-title">Equipamento</span>
+        <div class="inspector-card">
+          <div class="kv-row"><span class="kv-key">Fabricante</span><span class="kv-val">${escapeHtml(cleanValue(det.manufacturer) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Modelo</span><span class="kv-val">${escapeHtml(cleanValue(det.model) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Placa-mãe</span><span class="kv-val">${escapeHtml(cleanValue(rec.placa_mae) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Firmware BIOS</span><span class="kv-val">${escapeHtml(cleanValue(det.bios) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Tempo ativo</span><span class="kv-val">${escapeHtml(cleanValue(det.uptime) || "—")}</span></div>
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <span class="inspector-section-title">Processador e Memória</span>
+        <div class="inspector-card">
+          <div class="kv-row"><span class="kv-key">Modelo</span><span class="kv-val">${escapeHtml(cleanValue(rec.processador) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Núcleos / Threads</span><span class="kv-val">${escapeHtml(cleanValue(rec.cores_threads) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Frequência</span><span class="kv-val">${escapeHtml(cleanValue(det.cpu_max_frequency) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Memória Total</span><span class="kv-val">${escapeHtml(cleanValue(rec.ram) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Módulos</span><span class="kv-val">${escapeHtml(cleanValue(det.ram_slots) || "—")}</span></div>
+          <div class="kv-row"><span class="kv-key">Disponível</span><span class="kv-val">${escapeHtml(cleanValue(det.ram_available) || "—")}</span></div>
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <span class="inspector-section-title">Armazenamento</span>
+        <div class="inspector-card">
+          <div class="kv-multiline">${escapeHtml(storageLines)}</div>
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <span class="inspector-section-title">Rede</span>
+        <div class="inspector-card">
+          <div class="kv-multiline">${escapeHtml(netLines)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDistList(containerId, items) {
+    const el = document.getElementById(containerId);
+    if (!items || !items.length) {
+      el.innerHTML = `<div style="color:var(--text-tertiary); font-size:12px;">Sem dados coletados</div>`;
+      return;
+    }
+    const tones = ["blue", "teal", "green", "purple"];
+    el.innerHTML = items.map((item, idx) => {
+      const tone = item.tone || tones[idx % tones.length];
+      const pct = Number(item.percent || 0).toFixed(1).replace(".", ",");
+      return `<div class="dist-item">
+        <div class="dist-item-top">
+          <span>${escapeHtml(item.label)}</span>
+          <span class="dist-item-count">${item.count} (${pct}%)</span>
+        </div>
+        <div class="dist-bar-bg"><div class="dist-bar-fill ${tone === "blue" ? "" : tone}" style="width: ${Math.min(100, item.percent || 0)}%;"></div></div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderDashboard() {
+    const a = appState.analytics;
+    if (!a) return;
+    document.getElementById("stat-total").textContent = a.total;
+    document.getElementById("stat-locations").textContent = `${a.locations_count} unidade(s) cadastrada(s)`;
+    document.getElementById("stat-online").textContent = a.online;
+    document.getElementById("stat-avail").textContent = `${String(a.availability_pct).replace(".", ",")}% de disponibilidade`;
+    document.getElementById("stat-flash").textContent = `${String(a.flash_pct).replace(".", ",")}%`;
+    document.getElementById("stat-flash-note").textContent = `${a.nvme_count} NVMe · ${a.ssd_count} SSD · ${a.hdd_count} HDD`;
+    document.getElementById("stat-ram").textContent = `${String(a.avg_ram_gb).replace(".", ",")} GB`;
+
+    renderDistList("dist-storage", a.storage_distribution);
+    renderDistList("dist-ram", a.ram_distribution);
+    renderDistList("dist-distro", a.distro_distribution);
+
+    const tbody = document.getElementById("locations-tbody");
+    if (!a.locations || !a.locations.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhuma unidade para exibir.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = a.locations.map(loc => `
+      <tr>
+        <td>${escapeHtml(loc.location)}</td>
+        <td>${loc.total}</td>
+        <td>${loc.online}</td>
+        <td>${loc.flash}</td>
+        <td>${loc.hdd}</td>
+        <td>${loc.ram_le_4}</td>
+        <td>${loc.ram_8_plus}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderSnapshots() {
+    const list = appState.snapshots || [];
+    document.getElementById("nav-count-snapshots").textContent = list.length;
+    const container = document.getElementById("snapshots-list");
+    if (!list.length) {
+      container.innerHTML = `<div style="padding:12px; color:var(--text-tertiary); font-size:12px;">Nenhum snapshot salvo ainda.</div>`;
+      document.getElementById("snapshot-diff-tbody").innerHTML =
+        `<tr><td colspan="5" class="empty-state">Conclua uma coleta para registrar o primeiro snapshot local.</td></tr>`;
+      return;
+    }
+
+    if (!appState.selectedSnapshotId) {
+      appState.selectedSnapshotId = list[0].id;
+    }
+
+    container.innerHTML = list.map(snap => {
+      const active = snap.id === appState.selectedSnapshotId ? "active" : "";
+      return `<div class="snap-card ${active}" onclick="selectSnapshot(${snap.id})">
+        <div class="snap-card-top">
+          <span>${escapeHtml(snap.created_at)}</span>
+          <span>${snap.total_hosts} hosts</span>
+        </div>
+        <div class="snap-card-sub">${snap.online_hosts} online · ${snap.changes_count} alterações</div>
+      </div>`;
+    }).join("");
+  }
+
+  async function selectSnapshot(snapshotId) {
+    appState.selectedSnapshotId = snapshotId;
+    renderSnapshots();
+    try {
+      const diff = await api(`/api/snapshots/${snapshotId}/diff`);
+      appState.selectedSnapshotDiff = diff;
+      const titleEl = document.getElementById("snapshot-diff-title");
+      if (diff.base_snapshot) {
+        titleEl.textContent = `Alterações registradas desde ${diff.base_snapshot.created_at}`;
+      } else {
+        titleEl.textContent = `Snapshot inicial (${diff.snapshot.created_at}) — sem base anterior para comparação`;
+      }
+      const tbody = document.getElementById("snapshot-diff-tbody");
+      if (!diff.changes || !diff.changes.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma alteração de hardware detectada em relação ao snapshot anterior.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = diff.changes.map(c => `
+        <tr>
+          <td>${escapeHtml(c.ip)}</td>
+          <td>${escapeHtml(c.hostname)}</td>
+          <td class="cell-secondary">${escapeHtml(c.field)}</td>
+          <td class="cell-secondary">${escapeHtml(c.previous_value)}</td>
+          <td>${escapeHtml(c.current_value)}</td>
+        </tr>
+      `).join("");
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function loadSnapshotIntoWorkspace() {
+    if (!appState.selectedSnapshotId) return;
+    try {
+      const data = await api(`/api/snapshots/${appState.selectedSnapshotId}/load`, "POST");
+      applyServerState(data);
+      switchView("scan", document.querySelector("#main-nav .nav-btn"));
+      setBanner(`Snapshot #${appState.selectedSnapshotId} carregado na visão Coleta.`);
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  function exportSnapshotDiff() {
+    const diff = appState.selectedSnapshotDiff;
+    if (!diff || !diff.changes || !diff.changes.length) {
+      setBanner("Não há alterações neste snapshot para exportar.");
+      return;
+    }
+    const lines = ["IP;Hostname;Campo;Valor Anterior;Valor Atual"];
+    for (const c of diff.changes) {
+      lines.push([c.ip, c.hostname, c.field, c.previous_value, c.current_value]
+        .map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(";"));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `snapshot_diff_${appState.selectedSnapshotId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function setBanner(text) {
+    document.getElementById("status-banner").innerHTML = `<span>${escapeHtml(text)}</span>`;
+  }
+
+  async function browseTargetFile() {
+    try {
+      const res = await api("/api/dialog/targets", "POST");
+      if (res.filepath) {
+        await loadTargetPath(res.filepath);
+        closePopovers();
+        return;
+      }
+      if (res.fallback_upload) {
+        document.getElementById("file-upload-input").click();
+      }
+    } catch (_) {
+      document.getElementById("file-upload-input").click();
+    }
+  }
+
+  async function uploadTargetFile(input) {
+    if (!input.files || !input.files.length) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result.split(",")[1];
+        const data = await api("/api/targets/upload", "POST", {
+          filename: file.name,
+          content_base64: base64
+        });
+        applyServerState(data);
+        closePopovers();
+        setBanner(`${data.records.length} máquinas carregadas de ${file.name}`);
+      } catch (err) {
+        setBanner(err.message);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function loadTargetPath(filepath) {
+    if (!filepath || !filepath.trim()) return;
+    try {
+      const data = await api("/api/targets/load", "POST", { filepath: filepath.trim() });
+      applyServerState(data);
+      setBanner(`${data.records.length} máquinas carregadas`);
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function browseKeyFile() {
+    try {
+      const res = await api("/api/dialog/key", "POST");
+      if (res.filepath) {
+        document.getElementById("input-ssh-key").value = res.filepath;
+        await syncSshSettings();
+      }
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function createTemplate() {
+    try {
+      const res = await api("/api/targets/template", "POST");
+      setBanner(`Planilha modelo salva em ${res.path}`);
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function exportReport(format) {
+    closePopovers();
+    try {
+      const res = await api("/api/export", "POST", { format });
+      setBanner(`Relatório ${format} salvo em ${res.path}`);
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function handleScanAction() {
+    if (appState.scanning) {
+      try {
+        await api("/api/scan/cancel", "POST");
+        setBanner("Cancelando coleta...");
+      } catch (err) {
+        setBanner(err.message);
+      }
+      return;
+    }
+
+    await syncSshSettings();
+    try {
+      const data = await api("/api/scan/start", "POST");
+      applyServerState(data);
+      startPolling();
+    } catch (err) {
+      setBanner(err.message);
+      if (err.message.toLowerCase().includes("ssh")) {
+        togglePopover("ssh");
+      } else if (err.message.toLowerCase().includes("alvo") || err.message.toLowerCase().includes("planilha")) {
+        togglePopover("targets");
+      }
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      try {
+        const data = await api("/api/state");
+        applyServerState(data);
+        if (!data.scanning) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+          if (data.snapshots && data.snapshots.length) {
+            selectSnapshot(data.snapshots[0].id);
+          }
+        }
+      } catch (_) {}
+    }, 350);
+  }
+
+  function applyServerState(data) {
+    if (data.config) {
+      appState.config = data.config;
+      if (!document.getElementById("input-ssh-user").value && data.config.ssh_user) {
+        document.getElementById("input-ssh-user").value = data.config.ssh_user;
+      }
+      if (!document.getElementById("input-ssh-key").value && data.config.ssh_key_path) {
+        document.getElementById("input-ssh-key").value = data.config.ssh_key_path;
+      }
+      if (data.config.max_workers) {
+        document.getElementById("input-workers").value = data.config.max_workers;
+      }
+      if (data.config.ssh_timeout) {
+        document.getElementById("input-timeout").value = data.config.ssh_timeout;
+      }
+      if (typeof data.config.trust_unknown_hosts === "boolean") {
+        document.getElementById("input-tofu").checked = data.config.trust_unknown_hosts;
+      }
+    }
+    if (Array.isArray(data.records)) {
+      appState.records = data.records;
+    }
+    if (data.analytics) {
+      appState.analytics = data.analytics;
+    }
+    if (Array.isArray(data.snapshots)) {
+      appState.snapshots = data.snapshots;
+    }
+    appState.scanning = Boolean(data.scanning);
+
+    const scanBtn = document.getElementById("scan-btn");
+    if (appState.scanning) {
+      scanBtn.textContent = "Cancelar Coleta";
+      scanBtn.className = "btn btn-danger";
+    } else {
+      scanBtn.textContent = "Iniciar Coleta";
+      scanBtn.className = "btn btn-primary";
+    }
+
+    if (data.status_text) {
+      setBanner(data.status_text);
+    }
+
+    updateToolbarAndFooter();
+    renderScanTable();
+    renderDashboard();
+    renderSnapshots();
+  }
+
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const data = await api("/api/state");
+      applyServerState(data);
+      if (data.snapshots && data.snapshots.length) {
+        selectSnapshot(data.snapshots[0].id);
+      }
+      if (data.scanning) {
+        startPolling();
+      }
+    } catch (err) {
+      setBanner("Modo de visualização offline");
+    }
+  });
+</script>
+</body>
+</html>

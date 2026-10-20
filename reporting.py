@@ -17,13 +17,18 @@ from typing import Any, Iterable, Mapping, Sequence
 
 BRAND = "Invent-SSH"
 PRODUCT_LINE = "Hardware inventory"
-BRAND_NAVY = "061327"
-BRAND_BLUE = "12385F"
-BRAND_TEAL = "FFC629"
-PALE_BLUE = "102746"
-PALE_GREEN = "0D4039"
-PALE_RED = "3A202C"
-PALE_AMBER = "3B321A"
+BRAND_DARK = "1C1C1E"
+BRAND_SURFACE = "262629"
+BRAND_HEADER = "2C2C2E"
+BRAND_ACCENT = "0A84FF"
+ROW_EVEN = "FFFFFF"
+ROW_ODD = "F5F5F7"
+STATUS_ONLINE_BG = "E8F8EE"
+STATUS_ONLINE_FG = "157333"
+STATUS_OFFLINE_BG = "FCEBEC"
+STATUS_OFFLINE_FG = "B42318"
+STATUS_OTHER_BG = "FEF4E6"
+STATUS_OTHER_FG = "B54708"
 
 HARDWARE_COLUMNS = [
     ("status", "Status"),
@@ -413,6 +418,7 @@ def _write_html(
             if column == status_label:
                 cells.append(
                     f'<td class="status-cell"><span class="status-badge {css_status}">'
+                    f'<span class="status-dot {css_status}"></span>'
                     f'{html.escape(visible_status)}</span></td>'
                 )
             else:
@@ -438,52 +444,46 @@ def _write_html(
 <meta name="color-scheme" content="dark">
 <title>{escaped_brand} — {html.escape(copy["title"])}</title>
 <style>
-:root{{--ink:#edf4ff;--muted:#9db2d0;--line:#183b63;--surface:#0a1c35;--canvas:#061327;--pine:#07172d;--forest:#12385f;--sage:#6ba7e8;--clay:#ffc629;--green:#10b981;--red:#f87171;--amber:#ffc629}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.55 "Avenir Next","Segoe UI",sans-serif}}
-header{{background:var(--pine);color:#f4f7ff;padding:30px clamp(20px,5vw,68px) 30px}}
-.brand-lockup{{display:flex;align-items:center;gap:12px;margin-bottom:18px}}
-.brand-lockup img{{width:42px;height:42px;border-radius:11px;flex:none}}
-.brand-name{{font-size:18px;font-weight:700;letter-spacing:-.035em}}
-.brand-tag{{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:#9db2d0;margin-left:8px}}
-.kicker{{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#ffc629;font-weight:700}}
-h1{{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,4vw,40px);line-height:1.12;margin:10px 0 8px;letter-spacing:-.025em;font-weight:400}}
-.sub{{color:#dce8fb;margin:0}}.meta{{margin-top:18px;color:#9db2d0;font-size:12px}}
-main{{width:100%;margin:0;padding:26px clamp(16px,3vw,44px) 56px}}
-.metrics{{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:22px}}
-.metric{{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}}
-.metric span{{color:var(--muted);font-size:12px;font-weight:650;display:block}}.metric strong{{font-size:30px;letter-spacing:-.04em;display:block;margin-top:4px}}
-.toolbar{{display:flex;gap:12px;align-items:center;margin:0 0 12px;flex-wrap:wrap}}
-input,select{{font:inherit;border:1px solid #24466f;background:#081a33;border-radius:9px;padding:11px 13px;color:var(--ink)}}
-input{{flex:1;min-width:220px}}select{{min-width:150px}}.result-count{{color:var(--muted);font-size:12px;margin-left:auto}}
-.table-wrap{{background:#081a33;border:1px solid var(--line);border-radius:12px;overflow:auto;box-shadow:none}}
-table{{width:100%;border-collapse:separate;border-spacing:0;white-space:nowrap;font-size:12px}}
-td.detail-cell{{white-space:pre-line;min-width:220px;max-width:420px;line-height:1.6}}
-th{{position:sticky;top:0;z-index:1;background:#102746;color:#c4d5ed;text-transform:uppercase;font-size:10px;letter-spacing:.055em;text-align:left;padding:13px 15px;border-bottom:1px solid var(--line)}}
-td{{padding:12px 15px;border-bottom:1px solid #183b63;max-width:340px;overflow:hidden;text-overflow:ellipsis}}
-tbody tr:nth-child(even){{background:#091b33}}tbody tr:hover{{background:#122e51}}tbody tr:last-child td{{border-bottom:0}}
-.status-badge{{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:800;letter-spacing:.02em}}
-.status-badge.online{{background:#0d4039;color:#69e0b7}}.status-badge.offline{{background:#3a202c;color:#ff9393}}.status-badge.other{{background:#3b321a;color:#ffda73}}
-footer{{padding:18px 0;color:var(--muted);font-size:11px;text-align:center}}
+:root{{--ink:#f5f5f7;--muted:#98989d;--line:#38383a;--surface:#262629;--canvas:#1c1c1e;--header:#232326;--accent:#0a84ff;--green:#30d158;--red:#ff453a;--amber:#ff9f0a}}
+*{{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.2) transparent}}::-webkit-scrollbar{{width:8px;height:8px;background:transparent}}::-webkit-scrollbar-thumb{{background:rgba(255,255,255,0.2);border-radius:999px;border:2px solid transparent;background-clip:padding-box}}::-webkit-scrollbar-thumb:hover{{background:rgba(255,255,255,0.38);border:2px solid transparent;background-clip:padding-box}}body{{margin:0;background:var(--canvas);color:var(--ink);font:13px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}}
+header{{background:var(--header);color:var(--ink);padding:24px clamp(20px,4vw,48px);border-bottom:1px solid var(--line)}}
+.brand-lockup{{display:flex;align-items:center;gap:10px;margin-bottom:10px}}
+.brand-lockup img{{width:32px;height:32px;border-radius:8px;flex:none}}
+.brand-name{{font-size:15px;font-weight:600;letter-spacing:-.015em}}
+.brand-tag{{font-size:11px;color:var(--muted);margin-left:6px}}
+h1{{font-size:clamp(20px,2.5vw,26px);line-height:1.2;margin:6px 0 4px;letter-spacing:-.02em;font-weight:600}}
+.sub{{color:var(--muted);margin:0;font-size:13px}}.meta{{margin-top:10px;color:var(--muted);font-size:12px}}
+main{{width:100%;margin:0;padding:22px clamp(16px,3vw,48px) 48px}}
+.metrics{{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}}
+.metric{{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}}
+.metric span{{color:var(--muted);font-size:12px;font-weight:500;display:block}}.metric strong{{font-size:24px;font-weight:600;letter-spacing:-.02em;display:block;margin-top:4px}}
+.toolbar{{display:flex;gap:10px;align-items:center;margin:0 0 12px;flex-wrap:wrap}}
+input,select{{font:inherit;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:7px 11px;color:var(--ink);outline:none}}
+input:focus,select:focus{{border-color:var(--accent)}}
+input{{flex:1;min-width:220px}}select{{min-width:160px}}.result-count{{color:var(--muted);font-size:12px;margin-left:auto}}
+.table-wrap{{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:auto}}
+table{{width:100%;border-collapse:separate;border-spacing:0;white-space:nowrap;font-size:12.5px}}
+td.detail-cell{{white-space:pre-line;min-width:220px;max-width:420px;line-height:1.5}}
+th{{position:sticky;top:0;z-index:1;background:#2c2c2e;color:var(--muted);font-size:11.5px;font-weight:500;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}}
+td{{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.06);max-width:340px;overflow:hidden;text-overflow:ellipsis}}
+tbody tr:hover{{background:rgba(255,255,255,0.03)}}tbody tr:last-child td{{border-bottom:0}}
+.status-badge{{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:400}}
+.status-dot{{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}}
+.status-dot.online{{background:var(--green)}}.status-dot.offline{{background:var(--red)}}.status-dot.other{{background:var(--amber)}}
+footer{{padding:18px 0;color:var(--muted);font-size:11.5px;text-align:center}}
 @media(max-width:900px){{.metrics{{grid-template-columns:repeat(3,minmax(0,1fr))}}}}
-@media(max-width:720px){{.metrics{{grid-template-columns:repeat(2,minmax(0,1fr))}}header{{padding-top:26px}}.metric strong{{font-size:25px}}}}
+@media(max-width:720px){{.metrics{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
 @media print{{
-:root{{--ink:#07172d;--muted:#42546d;--line:#cbd7e6;--surface:#ffffff;--canvas:#ffffff}}
-body{{background:#ffffff;color:#07172d}}
-header{{padding:20px;background:#061327!important;color:#f4f7ff!important;print-color-adjust:exact}}
-main{{width:100%;padding:16px 0}}
+:root{{--ink:#1c1c1e;--muted:#6e6e73;--line:#d1d1d6;--surface:#ffffff;--canvas:#ffffff}}
+body{{background:#ffffff;color:#1c1c1e}}
+header{{padding:16px;background:#f5f5f7!important;color:#1c1c1e!important;print-color-adjust:exact}}
+main{{width:100%;padding:14px 0}}
 .toolbar{{display:none}}
-.metric{{background:#ffffff;border-color:#cbd7e6;box-shadow:none}}
-.metric span{{color:#42546d}}
-.table-wrap{{background:#ffffff;overflow:visible;border:1px solid #cbd7e6;box-shadow:none}}
+.metric{{background:#ffffff;border-color:#d1d1d6}}
+.table-wrap{{background:#ffffff;overflow:visible;border:1px solid #d1d1d6}}
 table{{white-space:normal;font-size:9px}}
-th{{position:static;background:#e9eff7;color:#1c3657;print-color-adjust:exact}}
-td{{color:#07172d;border-bottom:1px solid #d7e0ec;overflow:visible;max-width:none}}
-tbody tr:nth-child(even){{background:#f5f8fc}}
-.status-badge.online{{background:#e2f7ef;color:#0c6b51}}
-.status-badge.offline{{background:#fce9ec;color:#8b2637}}
-.status-badge.other{{background:#fff3d5;color:#6d4d00}}
-footer{{color:#42546d}}
-.metrics{{gap:5px}}
+th{{position:static;background:#f5f5f7;color:#1c1c1e;print-color-adjust:exact}}
+td{{color:#1c1c1e;border-bottom:1px solid #e5e5ea;overflow:visible;max-width:none}}
 }}
 </style>
 </head>
@@ -543,32 +543,36 @@ def _write_xlsx(
     overview = wb.active
     overview.title = copy["overview_sheet"]
     overview.sheet_view.showGridLines = False
-    overview.column_dimensions["A"].width = 10
+    overview.column_dimensions["A"].width = 8
     overview.column_dimensions["B"].width = 32
     overview.column_dimensions["C"].width = 18
     overview.merge_cells("B1:F1")
-    overview["B1"] = f"{BRAND}  /  {copy['title'].upper()}"
-    overview["B1"].font = Font(name="Georgia", size=20, bold=False, color="FFFEF9")
-    overview["B1"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
+    overview["B1"] = f"{BRAND} — {copy['title']}"
+    overview["B1"].font = Font(name="Calibri", size=16, bold=True, color="F5F5F7")
+    overview["B1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     overview["B1"].alignment = Alignment(vertical="center")
-    overview.row_dimensions[1].height = 42
+    overview.row_dimensions[1].height = 36
     overview.merge_cells("B2:F2")
     overview["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['snapshot']}"
-    overview["B2"].font = Font(size=10, color="9DB2D0", italic=True)
-    overview.row_dimensions[2].height = 25
+    overview["B2"].font = Font(name="Calibri", size=10, color="98989D")
+    overview.row_dimensions[2].height = 22
     if XLImage is not None:
         logo_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"
         try:
             logo = XLImage(str(logo_path))
-            logo.width = 36
-            logo.height = 36
+            logo.width = 32
+            logo.height = 32
             overview.add_image(logo, "A1")
         except (OSError, ValueError):
             pass
+    for row_cells in overview.iter_rows(min_row=1, max_row=2, min_col=1, max_col=6):
+        for cell in row_cells:
+            cell.fill = PatternFill("solid", fgColor=BRAND_DARK)
+
     overview["B4"], overview["C4"] = copy["metric"], copy["devices"]
     for cell in (overview["B4"], overview["C4"]):
-        cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
-        cell.font = Font(bold=True, color="FFC629")
+        cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
+        cell.font = Font(name="Calibri", bold=True, color="F5F5F7")
     summary = [
         (copy["total"], len(rows)),
         (copy["online"], online),
@@ -577,68 +581,54 @@ def _write_xlsx(
         (copy["coverage"], f"{average_coverage}% {copy['coverage_suffix']}"),
     ]
     for row_index, (label, count) in enumerate(summary, start=5):
-        overview.cell(row_index, 2, label)
-        overview.cell(row_index, 3, count)
-        overview.cell(row_index, 2).font = Font(bold=True, color=BRAND_NAVY)
-        overview.cell(row_index, 3).font = Font(bold=True, size=14, color=BRAND_TEAL if label == copy["online"] else BRAND_NAVY)
-        overview.cell(row_index, 2).fill = PatternFill("solid", fgColor="0A1C35")
-        overview.cell(row_index, 3).fill = PatternFill("solid", fgColor="0A1C35")
+        row_fill = ROW_EVEN if row_index % 2 else ROW_ODD
+        label_cell = overview.cell(row_index, 2, label)
+        value_cell = overview.cell(row_index, 3, count)
+        label_cell.fill = PatternFill("solid", fgColor=row_fill)
+        value_cell.fill = PatternFill("solid", fgColor=row_fill)
+        label_cell.font = Font(name="Calibri", bold=True, color="1C1C1E")
+        value_cell.font = Font(name="Calibri", bold=True, size=12, color=BRAND_ACCENT if label == copy["online"] else "1C1C1E")
     overview.column_dimensions["D"].width = 18
     overview.merge_cells("B12:F12")
     overview["B12"] = copy["inventory_hint"]
-    overview["B12"].font = Font(size=10, color="9DB2D0", italic=True)
-    for row_cells in overview.iter_rows(min_row=1, max_row=12, min_col=1, max_col=6):
-        for cell in row_cells:
-            cell.fill = PatternFill("solid", fgColor=BRAND_NAVY)
-    overview["A1"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
-    overview["A2"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
-    for row_index in range(5, 10):
-        row_fill = "0A1C35" if row_index % 2 else "0E2440"
-        label_cell = overview.cell(row_index, 2)
-        value_cell = overview.cell(row_index, 3)
-        label_cell.fill = PatternFill("solid", fgColor=row_fill)
-        value_cell.fill = PatternFill("solid", fgColor=row_fill)
-        label_cell.font = Font(bold=True, color="EDF4FF")
-        value_cell.font = Font(bold=True, size=14, color="FFC629")
-    for cell in (overview["B4"], overview["C4"]):
-        cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
-        cell.font = Font(bold=True, color="FFC629")
+    overview["B12"].font = Font(name="Calibri", size=10, color="6E6E73")
     overview.freeze_panes = "A4"
 
     sheet = wb.create_sheet(copy["inventory_sheet"])
-    sheet.sheet_view.showGridLines = False
+    sheet.sheet_view.showGridLines = True
     last_column = get_column_letter(len(columns))
     sheet.merge_cells(f"B1:{last_column}1")
-    sheet["A1"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
-    sheet["B1"] = f"{BRAND}  /  {copy['title'].upper()}"
-    sheet["B1"].font = Font(name="Georgia", size=18, bold=False, color="FFFEF9")
-    sheet["B1"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
+    sheet["A1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
+    sheet["B1"] = f"{BRAND} — {copy['title']}"
+    sheet["B1"].font = Font(name="Calibri", size=15, bold=True, color="F5F5F7")
+    sheet["B1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     sheet["B1"].alignment = Alignment(vertical="center")
-    sheet.row_dimensions[1].height = 42
+    sheet.row_dimensions[1].height = 36
     if XLImage is not None:
         logo_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"
         try:
             logo = XLImage(str(logo_path))
-            logo.width = 36
-            logo.height = 36
+            logo.width = 32
+            logo.height = 32
             sheet.add_image(logo, "A1")
         except (OSError, ValueError):
             pass
     sheet.merge_cells(f"B2:{last_column}2")
-    sheet["A2"].fill = PatternFill("solid", fgColor=BRAND_NAVY)
+    sheet["A2"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     sheet["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['devices_inventoried']}"
-    sheet["A2"].font = Font(size=10, color="9DB2D0", italic=True)
+    sheet["B2"].font = Font(name="Calibri", size=10, color="98989D")
+    sheet["B2"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     for column_index, label in enumerate(columns, start=1):
         cell = sheet.cell(4, column_index, label)
-        cell.font = Font(bold=True, color="FFC629", size=10)
-        cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
+        cell.font = Font(name="Calibri", bold=True, color="F5F5F7", size=10)
+        cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
         cell.alignment = Alignment(vertical="center", wrap_text=True)
-    sheet.row_dimensions[4].height = 30
+    sheet.row_dimensions[4].height = 28
     for row_index, row in enumerate(rows, start=5):
         for column_index, label in enumerate(columns, start=1):
             cell = sheet.cell(row_index, column_index, _spreadsheet_safe(row.get(label, "")))
-            cell.font = Font(color="EDF4FF")
-            cell.fill = PatternFill("solid", fgColor="0A1C35" if row_index % 2 else "0E2440")
+            cell.font = Font(name="Calibri", color="1C1C1E")
+            cell.fill = PatternFill("solid", fgColor=ROW_EVEN if row_index % 2 else ROW_ODD)
             cell.alignment = Alignment(
                 vertical="top",
                 wrap_text=label in {
@@ -652,19 +642,18 @@ def _write_xlsx(
             )
             if label == COLUMN_LABELS[language]["Status"]:
                 status = str(row.get(label, "")).upper()
-                color = PALE_GREEN if status == "ONLINE" else PALE_RED if status == "OFFLINE" else PALE_AMBER
-                cell.fill = PatternFill("solid", fgColor=color)
-                cell.font = Font(bold=True, color="69E0B7" if status == "ONLINE" else "FF9393" if status == "OFFLINE" else "FFDA73")
+                bg = STATUS_ONLINE_BG if status == "ONLINE" else STATUS_OFFLINE_BG if status == "OFFLINE" else STATUS_OTHER_BG
+                fg = STATUS_ONLINE_FG if status == "ONLINE" else STATUS_OFFLINE_FG if status == "OFFLINE" else STATUS_OTHER_FG
+                cell.fill = PatternFill("solid", fgColor=bg)
+                cell.font = Font(name="Calibri", bold=True, color=fg)
             if label == COLUMN_LABELS[language]["Details / error"] and row.get(label):
-                cell.font = Font(color="F87171")
+                cell.font = Font(name="Calibri", color=STATUS_OFFLINE_FG)
     for column_index, label in enumerate(columns, start=1):
         values = [label] + [row.get(label, "") for row in rows[:250]]
         maximum = max((len(str(value)) for value in values), default=10)
         sheet.column_dimensions[get_column_letter(column_index)].width = max(12, min(maximum + 2, 46))
     sheet.freeze_panes = "A5"
     sheet.auto_filter.ref = f"A4:{last_column}{max(4, 4 + len(rows))}"
-    # Keep the custom navy/yellow design; built-in Excel table themes override it.
-    # Auto-filter remains fully functional and avoids an unrelated default table theme.
     sheet.sheet_properties.pageSetUpPr.fitToPage = True
     sheet.page_setup.fitToWidth = 1
     sheet.page_setup.fitToHeight = 0
@@ -674,3 +663,41 @@ def _write_xlsx(
     wb.properties.subject = copy["subtitle"]
     wb.properties.creator = BRAND
     wb.save(path)
+
+
+def create_template_workbook(destination: str | Path, language: str = "pt-br") -> Path:
+    """Create a starter target spreadsheet (.xlsx) with standard inventory columns."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+
+    path = Path(destination)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb = Workbook()
+    ws = wb.active
+    is_pt = str(language).lower().startswith("pt")
+    ws.title = "Alvos" if is_pt else "Targets"
+    headers = ["IP", "HOSTNAME", "LOCATION", "ASSET_TAG", "OWNER", "NOTES"]
+    ws.append(headers)
+    samples = (
+        [
+            ["10.24.8.104", "srv-app-sp04", "Matriz · Rack B2", "PAT-00104", "Infraestrutura", "Servidor principal"],
+            ["10.24.12.19", "pdv-fl04-cx01", "Filial 04 · Frente", "PAT-00419", "Operações", "Terminal Linux"],
+        ]
+        if is_pt
+        else [
+            ["10.24.8.104", "srv-app-sp04", "HQ · Rack B2", "ASSET-00104", "Infrastructure", "Primary server"],
+            ["10.24.12.19", "pos-br04-01", "Branch 04 · Front", "ASSET-00419", "Operations", "Linux endpoint"],
+        ]
+    )
+    for row in samples:
+        ws.append(row)
+    for col_idx, width in enumerate((16, 20, 24, 16, 18, 28), start=1):
+        cell = ws.cell(1, col_idx)
+        cell.font = Font(name="Calibri", bold=True, color="F5F5F7")
+        cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
+        cell.alignment = Alignment(vertical="center")
+        ws.column_dimensions[cell.column_letter].width = width
+    ws.row_dimensions[1].height = 24
+    wb.save(path)
+    wb.close()
+    return path
