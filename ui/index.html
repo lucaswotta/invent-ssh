@@ -1358,14 +1358,14 @@
     <!-- Top Unified Toolbar -->
     <header class="toolbar">
       <div class="toolbar-group">
-        <button id="targets-trigger" class="popover-trigger" onclick="togglePopover('targets')">
+        <button id="targets-trigger" class="popover-trigger" onclick="togglePanel('targets')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span class="trigger-label">Alvos:</span>
           <span id="targets-pill-value" class="trigger-value">Selecionar lista...</span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
-        <button id="ssh-trigger" class="popover-trigger" onclick="togglePopover('ssh')">
+        <button id="ssh-trigger" class="popover-trigger" onclick="togglePanel('ssh')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span class="trigger-label">SSH:</span>
           <span id="ssh-pill-value" class="trigger-value">Configurar acesso</span>
@@ -1379,7 +1379,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.6-2.4 2-2.4 3.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
           Como usar
         </button>
-        <button id="export-trigger" class="btn" onclick="togglePopover('export')">
+        <button id="export-trigger" class="btn" onclick="togglePanel('export')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar
         </button>
@@ -1520,7 +1520,7 @@
                   Usuário e senha, ou chave privada. A senha fica só na memória enquanto o app está aberto.
                 </div>
                 <div class="step-actions">
-                  <button class="btn" onclick="event.stopPropagation(); togglePopover('ssh')">Configurar acesso</button>
+                  <button class="btn" onclick="event.stopPropagation(); togglePanel('ssh')">Configurar acesso</button>
                 </div>
               </div>
             </div>
@@ -1814,7 +1814,8 @@
     document.querySelectorAll(".popover-trigger").forEach(t => t.classList.remove("open"));
   }
 
-  function togglePopover(name) {
+  // Not togglePopover: inline handlers would resolve it to the element's native Popover API method.
+  function togglePanel(name) {
     const pop = document.getElementById("popover-" + name);
     const trig = document.getElementById(name + "-trigger");
     const wasOpen = pop && pop.classList.contains("open");
@@ -2333,7 +2334,7 @@
     closePopovers();
     switchView("scan", document.querySelector("#main-nav .nav-btn"));
     if (!sshConfigured()) {
-      togglePopover("ssh");
+      togglePanel("ssh");
     }
   }
 
@@ -2422,9 +2423,9 @@
     } catch (err) {
       setBanner(err.message);
       if (err.message.toLowerCase().includes("ssh")) {
-        togglePopover("ssh");
+        togglePanel("ssh");
       } else if (err.message.toLowerCase().includes("alvo") || err.message.toLowerCase().includes("planilha")) {
-        togglePopover("targets");
+        togglePanel("targets");
       }
     }
   }
