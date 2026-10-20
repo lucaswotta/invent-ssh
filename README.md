@@ -37,7 +37,9 @@ Run only the local HTTP server without opening a window:
 python3 app.py --no-window --port 8765
 ```
 
-The interface provides three views occupying `100vw` by `100vh`:
+The first screen walks through three steps: choose the target spreadsheet (or drag it onto the window, or create the template), enter SSH access, start the collection. `Como usar` in the toolbar explains the spreadsheet format, what is collected, the status meanings, and opens the report, history, and log folders.
+
+The interface provides three views:
 
 - `Coleta`: target file selection, SSH credentials popover, segmented status filter (`Todas`, `Online`, `Offline`, `Falha SSH`), live inventory table, and hardware inspector panel.
 - `Parque`: neutral hardware distribution charts (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) and location breakdown (`Unidade / Local`).
@@ -51,13 +53,13 @@ python3 app.py --input targets.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --
 
 ## Configuration
 
-Target files accept `.xlsx`, `.xlsm`, or `.csv` containing one address column (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT`, or `TARGET`). Additional columns (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) are preserved in the workspace and in exported reports.
+Target files accept `.xlsx`, `.xlsm`, or `.csv` containing one address column (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT`, or `TARGET`). Additional columns (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) are preserved in the workspace and in exported reports. Rows without an address and repeated addresses are skipped and listed after loading.
 
 User paths follow platform conventions via `paths.py`:
 
 - Configuration: `~/.config/invent-ssh/config.json` on Linux (`%APPDATA%\Invent-SSH` on Windows, `~/Library/Application Support/Invent-SSH` on macOS).
 - Snapshots and TOFU host keys: `~/.local/share/invent-ssh/snapshots.db` and `~/.local/share/invent-ssh/known_hosts`.
-- Exported reports: `~/Documents/Invent-SSH Reports/`.
+- Exported reports and the target template: `Invent-SSH` inside the user's Documents folder (`~/Documentos/Invent-SSH` on a Portuguese Linux desktop, read from `user-dirs.dirs`; `~/Documents/Invent-SSH` elsewhere).
 
 Reports are written only when you choose `Exportar` or run the command line. SSH host keys use trust on first use by default; see [SECURITY.md](SECURITY.md).
 
