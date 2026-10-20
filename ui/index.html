@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invent-SSH</title>
+<title>Invenux</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 role=%22img%22 aria-label=%22Invenux%22%3E %3Crect x=%221%22 y=%221%22 width=%2230%22 height=%2230%22 rx=%227%22 fill=%22#1E1E22%22/%3E %3Crect x=%221.5%22 y=%221.5%22 width=%2229%22 height=%2229%22 rx=%226.5%22 fill=%22none%22 stroke=%22#FFFFFF%22 stroke-opacity=%220.16%22/%3E %3Crect x=%225%22 y=%225%22 width=%2222%22 height=%228%22 rx=%222.5%22 fill=%22#0A84FF%22/%3E %3Cpath d=%22M8 7.2 L10.8 9 L8 10.8%22 fill=%22none%22 stroke=%22#FFFFFF%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E %3Crect x=%225%22 y=%2215%22 width=%2222%22 height=%225%22 rx=%222%22 fill=%22#38383E%22/%3E %3Ccircle cx=%228%22 cy=%2217.5%22 r=%221.4%22 fill=%22#30D158%22/%3E %3Crect x=%225%22 y=%2222%22 width=%2222%22 height=%225%22 rx=%222%22 fill=%22#38383E%22/%3E %3Ccircle cx=%228%22 cy=%2224.5%22 r=%221.4%22 fill=%22#30D158%22/%3E %3C/svg%3E">
 <style>
   :root {
     --bg-window: #1C1C1E;
@@ -116,21 +117,14 @@
   }
 
   .app-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    background: linear-gradient(180deg, #323236 0%, #222225 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
   }
 
   .app-icon svg {
-    width: 16px;
-    height: 16px;
-    stroke: var(--text-primary);
+    width: 30px;
+    height: 30px;
   }
 
   .app-title-group {
@@ -1699,15 +1693,19 @@
   <aside class="sidebar">
     <div class="app-brand">
       <div class="app-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="16" rx="3"></rect>
-          <line x1="7" y1="9" x2="10" y2="12"></line>
-          <line x1="7" y1="15" x2="10" y2="12"></line>
-          <line x1="13" y1="15" x2="17" y2="15"></line>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1" y="1" width="30" height="30" rx="7" fill="#1E1E22"/>
+          <rect x="1.5" y="1.5" width="29" height="29" rx="6.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.16"/>
+          <rect x="5" y="5" width="22" height="8" rx="2.5" fill="#0A84FF"/>
+          <path d="M8 7.2 L10.8 9 L8 10.8" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="5" y="15" width="22" height="5" rx="2" fill="#38383E"/>
+          <circle cx="8" cy="17.5" r="1.4" fill="#30D158"/>
+          <rect x="5" y="22" width="22" height="5" rx="2" fill="#38383E"/>
+          <circle cx="8" cy="24.5" r="1.4" fill="#30D158"/>
         </svg>
       </div>
       <div class="app-title-group">
-        <span class="app-title">Invent-SSH</span>
+        <span class="app-title">Invenux</span>
         <span class="app-version" data-i18n="brand.sub">Inventário Linux</span>
       </div>
     </div>
@@ -1890,7 +1888,7 @@
                 </div>
                 <div class="tut-flow"><i></i><i></i><i></i></div>
                 <div class="tut-window">
-                  <div class="tut-bar"><i></i><i></i><i></i><span>Invent-SSH</span></div>
+                  <div class="tut-bar"><i></i><i></i><i></i><span>Invenux</span></div>
                   <div class="tut-hosts">
                     <div class="tut-host"><b></b><span>192.0.2.10</span><em>Core i3-8100 · 8 GB · SSD</em></div>
                     <div class="tut-host h2"><b></b><span>192.0.2.11</span><em>Celeron J1800 · 4 GB · SSD</em></div>
@@ -2072,7 +2070,7 @@
 <div id="help-sheet" class="sheet-backdrop" onclick="if (event.target === this) closeHelp()">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="help-title">
     <div class="sheet-header">
-      <span id="help-title" class="sheet-title" data-i18n="hp.title">Como usar o Invent-SSH</span>
+      <span id="help-title" class="sheet-title" data-i18n="hp.title">Como usar o Invenux</span>
       <div class="sheet-header-actions">
         <select class="lang-select" aria-label="Idioma" data-i18n-title="footer.language" onchange="changeLanguage(this.value)">
           <option value="auto" class="lang-auto">Automático</option>
@@ -2098,7 +2096,7 @@
                 </div>
                 <div class="tut-flow"><i></i><i></i><i></i></div>
                 <div class="tut-window">
-                  <div class="tut-bar"><i></i><i></i><i></i><span>Invent-SSH</span></div>
+                  <div class="tut-bar"><i></i><i></i><i></i><span>Invenux</span></div>
                   <div class="tut-hosts">
                     <div class="tut-host"><b></b><span>192.0.2.10</span><em>Core i3-8100 · 8 GB · SSD</em></div>
                     <div class="tut-host h2"><b></b><span>192.0.2.11</span><em>Celeron J1800 · 4 GB · SSD</em></div>
@@ -2241,7 +2239,7 @@
   "st.hostkey": "Chave do host",
   "st.ssh": "Falha SSH",
   "ob.title": "Inventário de hardware em 3 passos",
-  "ob.sub": "O Invent-SSH entra em cada máquina Linux por SSH, lê o hardware sem alterar nada e monta a tabela, o painel do parque e os relatórios.",
+  "ob.sub": "O Invenux entra em cada máquina Linux por SSH, lê o hardware sem alterar nada e monta a tabela, o painel do parque e os relatórios.",
   "ob.s1.title": "Escolha a planilha de máquinas",
   "ob.s1.desc": "Arquivo <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>, uma máquina por linha. Colunas como <code>LOCATION</code> são opcionais. Sem planilha pronta? Baixe o modelo e preencha. Também dá para arrastar o arquivo para esta janela.",
   "ob.s2.title": "Informe o acesso SSH",
@@ -2252,7 +2250,7 @@
   "ob.foot": "Formato da planilha, status e pastas dos arquivos:",
   "tut.title": "Como a planilha vira inventário",
   "tut.c1": "Uma máquina por linha, com o endereço na coluna IP",
-  "tut.c2": "O Invent-SSH lê a coluna IP; as outras vão para os relatórios",
+  "tut.c2": "O Invenux lê a coluna IP; as outras vão para os relatórios",
   "tut.c3": "Cada máquina é coletada por SSH e aparece na tabela",
   "tut.loc_a": "Matriz",
   "tut.loc_b": "Filial 2",
@@ -2367,7 +2365,7 @@
   "bn.open": "Abrir",
   "bn.open_folder": "Abrir pasta",
   "drop.hint": "Solte a planilha para carregar",
-  "hp.title": "Como usar o Invent-SSH",
+  "hp.title": "Como usar o Invenux",
   "hp.close": "Fechar",
   "hp.steps": "Passo a passo",
   "hp.step1": "<strong>Alvos</strong>: escolha a planilha de máquinas ou arraste o arquivo para a janela.",
@@ -2476,7 +2474,7 @@
   "st.hostkey": "Host key",
   "st.ssh": "SSH failure",
   "ob.title": "Hardware inventory in 3 steps",
-  "ob.sub": "Invent-SSH connects to each Linux machine over SSH, reads the hardware without changing anything, and builds the table, the fleet view and the reports.",
+  "ob.sub": "Invenux connects to each Linux machine over SSH, reads the hardware without changing anything, and builds the table, the fleet view and the reports.",
   "ob.s1.title": "Choose the machine spreadsheet",
   "ob.s1.desc": "A <code>.xlsx</code> or <code>.csv</code> file with an <code>IP</code> column, one machine per row. Columns such as <code>LOCATION</code> are optional. No spreadsheet yet? Get the template and fill it in. You can also drag the file onto this window.",
   "ob.s2.title": "Enter the SSH access",
@@ -2487,7 +2485,7 @@
   "ob.foot": "Spreadsheet format, statuses and file folders:",
   "tut.title": "How the spreadsheet becomes an inventory",
   "tut.c1": "One machine per row, with its address in the IP column",
-  "tut.c2": "Invent-SSH reads the IP column; the others go to the reports",
+  "tut.c2": "Invenux reads the IP column; the others go to the reports",
   "tut.c3": "Each machine is collected over SSH and shows up in the table",
   "tut.loc_a": "HQ",
   "tut.loc_b": "Branch 2",
@@ -2602,7 +2600,7 @@
   "bn.open": "Open",
   "bn.open_folder": "Open folder",
   "drop.hint": "Drop the spreadsheet to load it",
-  "hp.title": "How to use Invent-SSH",
+  "hp.title": "How to use Invenux",
   "hp.close": "Close",
   "hp.steps": "Step by step",
   "hp.step1": "<strong>Targets</strong>: choose the machine spreadsheet or drag the file onto the window.",
@@ -2711,7 +2709,7 @@
   "st.hostkey": "Clave del host",
   "st.ssh": "Fallo SSH",
   "ob.title": "Inventario de hardware en 3 pasos",
-  "ob.sub": "Invent-SSH se conecta a cada equipo Linux por SSH, lee el hardware sin cambiar nada y arma la tabla, la vista del parque y los informes.",
+  "ob.sub": "Invenux se conecta a cada equipo Linux por SSH, lee el hardware sin cambiar nada y arma la tabla, la vista del parque y los informes.",
   "ob.s1.title": "Elija la hoja de equipos",
   "ob.s1.desc": "Archivo <code>.xlsx</code> o <code>.csv</code> con una columna <code>IP</code>, un equipo por fila. Columnas como <code>LOCATION</code> son opcionales. ¿No tiene una hoja? Obtenga la plantilla y rellénela. También puede arrastrar el archivo a esta ventana.",
   "ob.s2.title": "Indique el acceso SSH",
@@ -2722,7 +2720,7 @@
   "ob.foot": "Formato de la hoja, estados y carpetas de archivos:",
   "tut.title": "Cómo la hoja se convierte en inventario",
   "tut.c1": "Un equipo por fila, con la dirección en la columna IP",
-  "tut.c2": "Invent-SSH lee la columna IP; las demás pasan a los informes",
+  "tut.c2": "Invenux lee la columna IP; las demás pasan a los informes",
   "tut.c3": "Cada equipo se recopila por SSH y aparece en la tabla",
   "tut.loc_a": "Sede",
   "tut.loc_b": "Sucursal 2",
@@ -2837,7 +2835,7 @@
   "bn.open": "Abrir",
   "bn.open_folder": "Abrir carpeta",
   "drop.hint": "Suelte la hoja para cargarla",
-  "hp.title": "Cómo usar Invent-SSH",
+  "hp.title": "Cómo usar Invenux",
   "hp.close": "Cerrar",
   "hp.steps": "Paso a paso",
   "hp.step1": "<strong>Destinos</strong>: elija la hoja de equipos o arrastre el archivo a la ventana.",
@@ -2914,7 +2912,7 @@
     }
   }
 
-  const SESSION_TOKEN = window.__INVENT_TOKEN__ || "";
+  const SESSION_TOKEN = window.__INVENUX_TOKEN__ || "";
   let appState = {
     config: {},
     records: [],
@@ -2931,7 +2929,7 @@
   let pollTimer = null;
 
   async function api(path, method = "GET", body = null) {
-    const headers = { "X-Invent-Token": SESSION_TOKEN };
+    const headers = { "X-Invenux-Token": SESSION_TOKEN };
     const opts = { method, headers };
     if (body !== null) {
       headers["Content-Type"] = "application/json";
@@ -3752,7 +3750,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
-    currentLang = window.__INVENT_LANG__ || "en";
+    currentLang = window.__INVENUX_LANG__ || "en";
     applyTranslations();
     setInterval(() => api("/api/ping").catch(() => {}), 20000);
     try {

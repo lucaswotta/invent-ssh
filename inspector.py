@@ -364,7 +364,7 @@ def _format_gib(size_bytes: int) -> str:
 _PROBE_SCRIPT = r"""
 LC_ALL=C
 export LC_ALL
-printf '%s\n' '__INVENT_SSH_BEGIN_os_release__'
+printf '%s\n' '__INVENUX_BEGIN_os_release__'
 if [ -r /etc/os-release ]; then
   cat /etc/os-release
 elif [ -r /etc/lsb-release ]; then
@@ -375,25 +375,25 @@ elif [ -r /etc/debian_version ]; then
   printf 'Debian GNU/Linux '
   cat /etc/debian_version
 fi
-printf '%s\n' '__INVENT_SSH_END_os_release__'
+printf '%s\n' '__INVENUX_END_os_release__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_hostname__'
+printf '%s\n' '__INVENUX_BEGIN_hostname__'
 hostname 2>/dev/null || uname -n 2>/dev/null || true
-printf '%s\n' '__INVENT_SSH_END_hostname__'
+printf '%s\n' '__INVENUX_END_hostname__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_kernel__'
+printf '%s\n' '__INVENUX_BEGIN_kernel__'
 uname -r 2>/dev/null || true
-printf '%s\n' '__INVENT_SSH_END_kernel__'
+printf '%s\n' '__INVENUX_END_kernel__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_architecture__'
+printf '%s\n' '__INVENUX_BEGIN_architecture__'
 uname -m 2>/dev/null || true
-printf '%s\n' '__INVENT_SSH_END_architecture__'
+printf '%s\n' '__INVENUX_END_architecture__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_lscpu__'
+printf '%s\n' '__INVENUX_BEGIN_lscpu__'
 if command -v lscpu >/dev/null 2>&1; then lscpu 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_lscpu__'
+printf '%s\n' '__INVENUX_END_lscpu__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_cpuinfo__'
+printf '%s\n' '__INVENUX_BEGIN_cpuinfo__'
 awk -F: '
 /^[[:space:]]*(model name|Hardware|Processor)[[:space:]]*:/ {
   key=$1
@@ -417,26 +417,26 @@ END {
   if (vmx) print "Virtualization: VT-x"
   else if (svm) print "Virtualization: AMD-V"
 }' /proc/cpuinfo 2>/dev/null
-printf '%s\n' '__INVENT_SSH_END_cpuinfo__'
+printf '%s\n' '__INVENUX_END_cpuinfo__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_meminfo__'
+printf '%s\n' '__INVENUX_BEGIN_meminfo__'
 cat /proc/meminfo 2>/dev/null || true
-printf '%s\n' '__INVENT_SSH_END_meminfo__'
+printf '%s\n' '__INVENUX_END_meminfo__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_memory_devices__'
+printf '%s\n' '__INVENUX_BEGIN_memory_devices__'
 if command -v dmidecode >/dev/null 2>&1; then dmidecode -t memory 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_memory_devices__'
+printf '%s\n' '__INVENUX_END_memory_devices__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_lsblk__'
+printf '%s\n' '__INVENUX_BEGIN_lsblk__'
 if command -v lsblk >/dev/null 2>&1; then
   lsblk -J -b -o NAME,TYPE,SIZE,ROTA,MODEL,TRAN,RM,FSTYPE,MOUNTPOINTS 2>/dev/null ||
     lsblk -J -b -o NAME,TYPE,SIZE,ROTA,MODEL,TRAN,RM,FSTYPE,MOUNTPOINT 2>/dev/null ||
     lsblk -dn -b -P -o NAME,TYPE,SIZE,ROTA,MODEL,TRAN,RM 2>/dev/null ||
     true
 fi
-printf '%s\n' '__INVENT_SSH_END_lsblk__'
+printf '%s\n' '__INVENUX_END_lsblk__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_dmi__'
+printf '%s\n' '__INVENUX_BEGIN_dmi__'
 for n in __DMI_FIELDS__; do
   printf '__DMI__%s=' "$n"
   if [ -r "/sys/class/dmi/id/$n" ]; then
@@ -447,56 +447,56 @@ for n in __DMI_FIELDS__; do
     printf '\n'
   fi
 done
-printf '%s\n' '__INVENT_SSH_END_dmi__'
+printf '%s\n' '__INVENUX_END_dmi__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_lspci__'
+printf '%s\n' '__INVENUX_BEGIN_lspci__'
 if command -v lspci >/dev/null 2>&1; then lspci -nn 2>/dev/null || lspci 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_lspci__'
+printf '%s\n' '__INVENUX_END_lspci__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_drm__'
+printf '%s\n' '__INVENUX_BEGIN_drm__'
 for f in /sys/class/drm/card[0-9]*/device/uevent; do
   if [ -r "$f" ]; then cat "$f" 2>/dev/null || true; fi
 done
-printf '%s\n' '__INVENT_SSH_END_drm__'
+printf '%s\n' '__INVENUX_END_drm__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_netlink__'
+printf '%s\n' '__INVENUX_BEGIN_netlink__'
 if command -v ip >/dev/null 2>&1; then ip -o link show 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_netlink__'
+printf '%s\n' '__INVENUX_END_netlink__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_packages__'
+printf '%s\n' '__INVENUX_BEGIN_packages__'
 if command -v dpkg-query >/dev/null 2>&1; then printf 'dpkg %s\n' "$(dpkg-query -f '.\n' -W 2>/dev/null | wc -l)"; fi
 if command -v rpm >/dev/null 2>&1; then printf 'rpm %s\n' "$(rpm -qa 2>/dev/null | wc -l)"; fi
 if command -v pacman >/dev/null 2>&1; then printf 'pacman %s\n' "$(pacman -Qq 2>/dev/null | wc -l)"; fi
 if command -v apk >/dev/null 2>&1; then printf 'apk %s\n' "$(apk info 2>/dev/null | wc -l)"; fi
-printf '%s\n' '__INVENT_SSH_END_packages__'
+printf '%s\n' '__INVENUX_END_packages__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_session__'
+printf '%s\n' '__INVENUX_BEGIN_session__'
 printf 'init=%s\n' "$(cat /proc/1/comm 2>/dev/null)"
 ps -eo comm= 2>/dev/null | sort -u
-printf '%s\n' '__INVENT_SSH_END_session__'
+printf '%s\n' '__INVENUX_END_session__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_displays__'
+printf '%s\n' '__INVENUX_BEGIN_displays__'
 for s in /sys/class/drm/card*-*/status; do
   [ -r "$s" ] || continue
   [ "$(cat "$s" 2>/dev/null)" = connected ] || continue
   d=${s%/status}
   printf '%s %s\n' "${d##*/}" "$(head -n 1 "$d/modes" 2>/dev/null)"
 done
-printf '%s\n' '__INVENT_SSH_END_displays__'
+printf '%s\n' '__INVENUX_END_displays__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_timezone__'
+printf '%s\n' '__INVENUX_BEGIN_timezone__'
 if [ -r /etc/timezone ]; then cat /etc/timezone; else readlink /etc/localtime 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_timezone__'
+printf '%s\n' '__INVENUX_END_timezone__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_rootfs__'
+printf '%s\n' '__INVENUX_BEGIN_rootfs__'
 df -P -k / 2>/dev/null | tail -n 1
-printf '%s\n' '__INVENT_SSH_END_rootfs__'
+printf '%s\n' '__INVENUX_END_rootfs__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_ipv4__'
+printf '%s\n' '__INVENUX_BEGIN_ipv4__'
 if command -v ip >/dev/null 2>&1; then ip -o -4 addr show 2>/dev/null || true; fi
-printf '%s\n' '__INVENT_SSH_END_ipv4__'
+printf '%s\n' '__INVENUX_END_ipv4__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_netdetails__'
+printf '%s\n' '__INVENUX_BEGIN_netdetails__'
 for p in /sys/class/net/*; do
   [ -e "$p" ] || continue
   name=$(basename "$p" 2>/dev/null)
@@ -512,19 +512,19 @@ for p in /sys/class/net/*; do
   mac=$(cat "$p/address" 2>/dev/null || true)
   printf '%s|%s|%s|%s|%s\n' "$name" "$state" "$speed" "$driver" "$mac"
 done
-printf '%s\n' '__INVENT_SSH_END_netdetails__'
+printf '%s\n' '__INVENUX_END_netdetails__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_uptime__'
+printf '%s\n' '__INVENUX_BEGIN_uptime__'
 cat /proc/uptime 2>/dev/null || true
-printf '%s\n' '__INVENT_SSH_END_uptime__'
+printf '%s\n' '__INVENUX_END_uptime__'
 
-printf '%s\n' '__INVENT_SSH_BEGIN_virtualization__'
+printf '%s\n' '__INVENUX_BEGIN_virtualization__'
 if command -v systemd-detect-virt >/dev/null 2>&1; then
   systemd-detect-virt 2>/dev/null || true
 elif command -v virt-what >/dev/null 2>&1; then
   virt-what 2>/dev/null || true
 fi
-printf '%s\n' '__INVENT_SSH_END_virtualization__'
+printf '%s\n' '__INVENUX_END_virtualization__'
 """
 
 
@@ -545,8 +545,8 @@ def _parse_probe_sections(output: str) -> dict[str, str]:
     current: Optional[str] = None
     chunks: list[str] = []
     for line in output.splitlines():
-        begin = re.fullmatch(r"__INVENT_SSH_BEGIN_([a-z0-9_]+)__", line.strip())
-        end = re.fullmatch(r"__INVENT_SSH_END_([a-z0-9_]+)__", line.strip())
+        begin = re.fullmatch(r"__INVENUX_BEGIN_([a-z0-9_]+)__", line.strip())
+        end = re.fullmatch(r"__INVENUX_END_([a-z0-9_]+)__", line.strip())
         if begin:
             current = begin.group(1)
             chunks = []

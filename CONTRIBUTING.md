@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Invent-SSH. Contributions should keep it portable, safe by default, and useful without a database service.
+Thanks for helping improve Invenux. Contributions should keep it portable, safe by default, and useful without a database service.
 
 ## Local setup
 

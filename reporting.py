@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-BRAND = "Invent-SSH"
+BRAND = "Invenux"
 PRODUCT_LINE = "Hardware inventory"
 BRAND_DARK = "1C1C1E"
 BRAND_SURFACE = "262629"
@@ -379,7 +379,7 @@ def _localize_detail_value(key: str, value: Any, language: str) -> str:
 def _brand_mark_data_uri() -> str:
     """Embed the mark so HTML exports remain self-contained and work offline."""
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
-    mark_path = base / "brand" / "logo-mark.svg"
+    mark_path = base / "brand" / "icon.svg"
     try:
         mark = mark_path.read_bytes()
     except OSError:
@@ -674,7 +674,7 @@ def _logo_image(size: int):
     try:
         from openpyxl.drawing.image import Image as XLImage
 
-        logo = XLImage(str(Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"))
+        logo = XLImage(str(Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "icons" / "invenux-128.png"))
     except (ImportError, OSError, ValueError):
         return None
     logo.width = logo.height = size
@@ -946,7 +946,7 @@ def _write_xlsx(
 
 TEMPLATE_TEXT = {
     "en": {
-        "file": "invent_ssh_targets_template.xlsx", "sheet": "Targets", "guide": "How to fill",
+        "file": "invenux_targets_template.xlsx", "sheet": "Targets", "guide": "How to fill",
         "title": "Target spreadsheet", "intro": "One machine per row. Keep the header in row 1 and fill from row 2.",
         "required": "Required", "optional": "Optional", "column": "Column", "use": "What it is for",
         "rows": [
@@ -964,7 +964,7 @@ TEMPLATE_TEXT = {
         ],
     },
     "pt-br": {
-        "file": "modelo_alvos_invent_ssh.xlsx", "sheet": "Alvos", "guide": "Como preencher",
+        "file": "modelo_alvos_invenux.xlsx", "sheet": "Alvos", "guide": "Como preencher",
         "title": "Planilha de alvos", "intro": "Uma máquina por linha. Mantenha o cabeçalho na linha 1 e preencha a partir da linha 2.",
         "required": "Obrigatória", "optional": "Opcional", "column": "Coluna", "use": "Para que serve",
         "rows": [
@@ -982,7 +982,7 @@ TEMPLATE_TEXT = {
         ],
     },
     "es": {
-        "file": "plantilla_destinos_invent_ssh.xlsx", "sheet": "Destinos", "guide": "Cómo rellenar",
+        "file": "plantilla_destinos_invenux.xlsx", "sheet": "Destinos", "guide": "Cómo rellenar",
         "title": "Hoja de destinos", "intro": "Un equipo por fila. Mantenga el encabezado en la fila 1 y rellene desde la fila 2.",
         "required": "Obligatoria", "optional": "Opcional", "column": "Columna", "use": "Para qué sirve",
         "rows": [

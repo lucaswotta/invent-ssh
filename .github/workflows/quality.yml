@@ -66,7 +66,7 @@ jobs:
       - name: Publish package as a CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: invent-ssh-${{ runner.os }}-${{ runner.arch }}
+          name: invenux-${{ runner.os }}-${{ runner.arch }}
           path: dist/
           if-no-files-found: error
           retention-days: 14

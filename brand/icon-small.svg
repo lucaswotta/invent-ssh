@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Invenux">
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#1E1E22"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.16"/>
+  <rect x="5" y="5" width="22" height="8" rx="2.5" fill="#0A84FF"/>
+  <path d="M8 7.2 L10.8 9 L8 10.8" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="5" y="15" width="22" height="5" rx="2" fill="#38383E"/>
+  <circle cx="8" cy="17.5" r="1.4" fill="#30D158"/>
+  <rect x="5" y="22" width="22" height="5" rx="2" fill="#38383E"/>
+  <circle cx="8" cy="24.5" r="1.4" fill="#30D158"/>
+</svg>

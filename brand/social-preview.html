@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    background: radial-gradient(900px 520px at 88% 120%, rgba(10, 132, 255, 0.30), transparent 60%),
+                radial-gradient(600px 400px at 0% 0%, rgba(48, 209, 88, 0.10), transparent 60%), #141416;
+    font-family: "Inter", sans-serif; color: #F5F5F7;
+  }
+  .copy { position: absolute; left: 80px; top: 92px; width: 520px; }
+  .brand { display: flex; align-items: center; gap: 22px; }
+  .brand img { width: 104px; height: 104px; }
+  .brand span { font: 600 84px/1 "Inter Display", "Inter", sans-serif; letter-spacing: -0.035em; }
+  h1 { margin: 48px 0 0; font: 600 40px/1.18 "Inter Display", "Inter", sans-serif; letter-spacing: -0.02em; }
+  p { margin: 22px 0 0; font-size: 22px; line-height: 1.45; color: #A1A1A8; }
+  .chips { display: flex; gap: 10px; margin-top: 34px; }
+  .chips span { font-size: 17px; padding: 8px 14px; border-radius: 999px; background: #232327; border: 1px solid #36363C; color: #D1D1D6; }
+  .shot { position: absolute; left: 650px; top: 86px; width: 860px; border-radius: 16px; overflow: hidden;
+          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.10); }
+  .shot img { display: block; width: 100%; }
+</style></head>
+<body>
+  <div class="copy">
+    <div class="brand"><img src="icon.svg" alt=""><span>Invenux</span></div>
+    <h1>Linux hardware inventory over SSH</h1>
+    <p>Point it at a spreadsheet of machines. Get CPU, memory slots, disks, boards and OS for each one, read-only.</p>
+    <div class="chips"><span>Agentless</span><span>Excel · HTML · CSV</span><span>EN · PT-BR · ES</span></div>
+  </div>
+  <div class="shot"><img src="../docs/media/hero-en.png" alt=""></div>
+</body></html>

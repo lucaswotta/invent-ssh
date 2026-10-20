@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Invent-SSH application entry point, local API controller, and native window shell."""
+"""Invenux application entry point, local API controller, and native window shell."""
 from __future__ import annotations
 
 import argparse
@@ -38,7 +38,7 @@ from paths import (
 from reporting import create_template_workbook, save_report, save_snapshot_diff, template_filename
 from snapshots import SnapshotStore, compute_fleet_analytics
 
-APP_BRAND = "Invent-SSH"
+APP_BRAND = "Invenux"
 APP_VERSION = "0.5.0"
 # Browsers throttle timers in hidden tabs to about one per minute.
 BROWSER_IDLE_TIMEOUT_SECONDS = 180
@@ -66,7 +66,7 @@ def resource_path(relative_path: str) -> Path:
 
 def setup_logging() -> None:
     log_dir = get_logs_dir()
-    log_file = log_dir / "invent-ssh.log"
+    log_file = log_dir / "invenux.log"
     handler = RotatingFileHandler(log_file, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
     root_logger = logging.getLogger()
@@ -364,7 +364,7 @@ class InventoryController:
             target=self._run_scan_worker,
             args=(engine, q, Path(filepath).name),
             daemon=True,
-            name="invent-ssh-scan-coordinator",
+            name="invenux-scan-coordinator",
         )
         worker.start()
         return self.get_state()
@@ -499,7 +499,7 @@ def create_http_server(
             return False
 
         def _check_token(self) -> bool:
-            provided = self.headers.get("X-Invent-Token", "")
+            provided = self.headers.get("X-Invenux-Token", "")
             if not secrets.compare_digest(provided, session_token):
                 self._send_json({"error": t("api_session_forbidden")}, status=HTTPStatus.FORBIDDEN)
                 return False
@@ -523,8 +523,8 @@ def create_http_server(
                 html_text = ui_html_path.read_text(encoding="utf-8")
                 injected = html_text.replace(
                     "<head>",
-                    f'<head>\n<script>window.__INVENT_TOKEN__ = {json.dumps(session_token)};'
-                    f'window.__INVENT_LANG__ = {json.dumps(get_language())};</script>',
+                    f'<head>\n<script>window.__INVENUX_TOKEN__ = {json.dumps(session_token)};'
+                    f'window.__INVENUX_LANG__ = {json.dumps(get_language())};</script>',
                     1,
                 )
                 body = injected.encode("utf-8")
@@ -655,7 +655,7 @@ def create_http_server(
 def launch_desktop_window(
     url: str, on_close: Callable[[], None], seconds_since_request: Callable[[], float]
 ) -> None:
-    """Open the Invent-SSH desktop window via pywebview, GTK WebKit2, or default browser."""
+    """Open the Invenux desktop window via pywebview, GTK WebKit2, or default browser."""
     try:
         import webview  # type: ignore
 
@@ -691,7 +691,7 @@ def launch_desktop_window(
             workarea = display.get_monitor(0).get_workarea()
             if workarea.width < 1440 or workarea.height < 880:
                 win.maximize()
-        icon_path = resource_path("brand/invent-ssh-mark-128.png")
+        icon_path = resource_path("brand/icons/invenux-128.png")
         if icon_path.is_file():
             try:
                 win.set_icon_from_file(str(icon_path))

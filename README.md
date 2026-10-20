@@ -1,4 +1,4 @@
-# Invent-SSH
+# Invenux
 
 Agentless Linux hardware inventory over SSH with a local desktop/web workspace, SQLite snapshot history, and `.xlsx`, `.csv`, and `.html` exports.
 
@@ -17,8 +17,8 @@ Idioma: [Português (Brasil)](README.pt-BR.md)
 ## Installation
 
 ```bash
-git clone https://github.com/lucaswotta/invent-ssh.git
-cd invent-ssh
+git clone https://github.com/lucaswotta/invenux.git
+cd invenux
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
@@ -58,9 +58,9 @@ Target files accept `.xlsx`, `.xlsm`, or `.csv` containing one address column (`
 
 User paths follow platform conventions via `paths.py`:
 
-- Configuration: `~/.config/invent-ssh/config.json` on Linux (`%APPDATA%\Invent-SSH` on Windows, `~/Library/Application Support/Invent-SSH` on macOS).
-- Snapshots and TOFU host keys: `~/.local/share/invent-ssh/snapshots.db` and `~/.local/share/invent-ssh/known_hosts`.
-- Exported reports and the target template: `Invent-SSH` inside the user's Documents folder (`~/Documentos/Invent-SSH` on a Portuguese Linux desktop, read from `user-dirs.dirs`; `~/Documents/Invent-SSH` elsewhere).
+- Configuration: `~/.config/invenux/config.json` on Linux (`%APPDATA%\Invenux` on Windows, `~/Library/Application Support/Invenux` on macOS).
+- Snapshots and TOFU host keys: `~/.local/share/invenux/snapshots.db` and `~/.local/share/invenux/known_hosts`.
+- Exported reports and the target template: `Invenux` inside the user's Documents folder (`~/Documentos/Invenux` on a Portuguese Linux desktop, read from `user-dirs.dirs`; `~/Documents/Invenux` elsewhere).
 
 Reports are written only when you choose `Exportar` or run the command line. SSH host keys use trust on first use by default; see [SECURITY.md](SECURITY.md).
 

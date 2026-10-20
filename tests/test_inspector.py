@@ -206,8 +206,8 @@ class HardwareParserTests(unittest.TestCase):
                 if name == "dmi":
                     value = dmi_with_serial if include_serial else dmi_lines
                 output.append(
-                    f"__INVENT_SSH_BEGIN_{name}__\n{value.strip()}\n"
-                    f"__INVENT_SSH_END_{name}__"
+                    f"__INVENUX_BEGIN_{name}__\n{value.strip()}\n"
+                    f"__INVENUX_END_{name}__"
                 )
             return "\n".join(output)
 
