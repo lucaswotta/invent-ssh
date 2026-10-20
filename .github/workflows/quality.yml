@@ -62,8 +62,9 @@ jobs:
 
       - name: Install the Qt system libraries (Linux)
         if: runner.os == 'Linux'
-        # PyInstaller copies these into the bundle, so X11 sessions work on machines without them.
-        run: sudo apt-get update && sudo apt-get install -y libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-randr0 libxcb-xkb1 libnss3 xvfb
+        # PyInstaller copies the xcb libraries into the bundle, so X11 sessions work on machines
+        # without them; libEGL/libGL stay with the system driver, as on any desktop.
+        run: sudo apt-get update && sudo apt-get install -y libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-randr0 libxcb-xkb1 libnss3 libegl1 libgl1 libopengl0 xvfb
 
       - name: Build native desktop package
         run: python build.py
@@ -77,6 +78,16 @@ jobs:
             Windows) python scripts/smoke_window.py "dist/invenux-v${version}.exe" ;;
             macOS) python scripts/smoke_window.py "dist/invenux-v${version}.app/Contents/MacOS/invenux-v${version}" ;;
           esac
+
+      - name: Show the app log and crash events
+        if: failure()
+        shell: bash
+        run: |
+          log="$(python -c 'import paths; print(paths.get_logs_dir())')/invenux.log"
+          if [ -f "$log" ]; then cat "$log"; else echo "No log at $log"; fi
+          if [ "$RUNNER_OS" = Windows ]; then
+            powershell -Command "Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='.NET Runtime','Application Error'} -MaxEvents 4 | Format-List TimeCreated,Message"
+          fi
 
       - name: Publish package as a CI artifact
         uses: actions/upload-artifact@v4
