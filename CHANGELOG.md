@@ -2,6 +2,24 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
+## [0.8.0] — 2026-10-20
+
+### Added
+
+- Release packages open their own window instead of a browser tab: WebView2 on Windows, WebKit on macOS and a bundled Qt WebEngine on Linux. Closing the window stops the program.
+- `install.sh` in the Linux package installs the program, menu entry and icon for the current user; `--uninstall` removes them.
+- CI opens each packaged window and checks that the interface loads.
+
+### Changed
+
+- The Linux package is a folder compressed as `.tar.xz` (about 135 MB, because of Qt WebEngine) and the macOS app is no longer a single self-extracting executable, so both start without unpacking to a temporary folder.
+- README screenshots and GIFs show the page clock at the same fixed time as the demo data.
+
+### Fixed
+
+- The first-run screen, tutorial and help sheet still said "Invent-SSH".
+- The Linux menu entry matched the window class with the wrong case (`Invenux` instead of `invenux`) and declared two main categories.
+
 ## [0.7.0] — 2026-10-20
 
 ### Added
