@@ -99,9 +99,9 @@ Descargue el archivo de su sistema en la [última versión](https://github.com/l
 | --- | --- | --- |
 | Windows 10/11 (x86_64) | `invenux-<versión>-windows-x86_64.exe` | Ejecútelo. SmartScreen avisa que el programa no está firmado: **Más información** y luego **Ejecutar de todos modos**. |
 | macOS (Apple Silicon o Intel) | `invenux-<versión>-macos-arm64.zip` o `-macos-x86_64.zip` | Descomprima y abra `Invenux.app`. La primera vez, haga clic derecho y elija **Abrir**, porque la app no está notarizada. |
-| Linux (x86_64, glibc 2.35 o posterior) | `invenux-<versión>-linux-x86_64.tar.gz` | Extraiga y ejecute `./invenux`, o instale el acceso en el menú como se indica abajo. |
+| Linux (x86_64, glibc 2.35 o posterior) | `invenux-<versión>-linux-x86_64.tar.xz` | Extraiga y ejecute `./install.sh` para agregarlo al menú de aplicaciones, o ejecute `./invenux` en la carpeta. |
 
-Los paquetes no tienen firma de código; `SHA256SUMS` en la versión lista las sumas de verificación. Abren la interfaz en el navegador predeterminado; para una ventana nativa, ejecute desde el código con pywebview o GTK.
+Los paquetes no tienen firma de código; `SHA256SUMS` en la versión lista las sumas de verificación. Cada uno abre su propia ventana: WebView2 en Windows (incluido en Windows 10 y 11), WebKit en macOS y un Qt WebEngine incluido en Linux, por eso la descarga de Linux pesa unos 135 MB.
 
 ### Desde el código
 
@@ -118,20 +118,14 @@ python3 app.py
 
 La ventana usa [pywebview](https://pywebview.flowrl.com/) si está instalado, luego GTK WebKit2 en Linux (`python3-gi` y `gir1.2-webkit2-4.1` en Debian y Ubuntu, visibles en un venv creado con `--system-site-packages`) y, si no hay ninguno, abre la interfaz en el navegador predeterminado. En el navegador, el programa se cierra unos 3 minutos después de cerrar la pestaña.
 
-**Paquete nativo.** `python build.py` genera un ejecutable único para el sistema donde se ejecuta (PyInstaller no compila para otros sistemas). Una etiqueta `v*` hace que el CI genere los paquetes de Linux, Windows y macOS y los publique como release en GitHub.
+**Paquete nativo.** `python build.py` genera el paquete del sistema donde se ejecuta (PyInstaller no compila para otros sistemas): un `.exe` en Windows, una carpeta en Linux y una app en macOS. Una etiqueta `v*` hace que el CI genere los paquetes de Linux, Windows y macOS y los publique como release en GitHub.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.7.0
+python3 build.py                   # dist/invenux-v0.8.0
 ```
 
-En Linux, para que aparezca en el menú de aplicaciones (dentro de la carpeta extraída de la release):
-
-```sh
-install -Dm755 invenux ~/.local/bin/invenux
-install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
-```
+En Linux, `./install.sh` en la carpeta extraída de la release copia el programa a `~/.local/lib/invenux`, crea el enlace `~/.local/bin/invenux` y agrega el acceso y el icono al menú, sin sudo. `./install.sh --uninstall` lo quita y conserva el historial y los informes.
 
 ## Cómo usar
 
@@ -209,7 +203,7 @@ Mire la línea **Ranuras** en los detalles del equipo: muestra cuántas ranuras 
 La fila indica el motivo. "No respondió en la red" significa ninguna respuesta en unos 3 segundos (normalmente apagado o dirección incorrecta); "Conexión rechazada en el puerto N" significa que está encendido, pero el SSH está detenido, bloqueado o en otro puerto (ajústelo en el panel SSH); "Sin respuesta en N s" indica un cortafuegos o una red lenta, así que aumente el tiempo límite en el panel SSH.
 
 **¿Hay instalador?**
-Todavía no: cada versión trae un ejecutable único por sistema (una app en macOS). Vea [Descargar](#descargar).
+Todavía no: Windows recibe un `.exe`, macOS una app y Linux una carpeta con `install.sh`. Vea [Descargar](#descargar).
 
 **¿Puede inventariar equipos Windows o macOS?**
 No. Los destinos deben ser Linux con SSH. El programa en sí funciona en Linux, Windows y macOS.
@@ -229,7 +223,7 @@ Sí, vea la línea de comandos arriba. Requiere clave privada.
 
 ## Próximos pasos
 
-El trabajo previsto y los problemas conocidos están en las [issues](https://github.com/lucaswotta/invenux/issues): ventana nativa en los paquetes, instaladores firmados, agente SSH y jump host, puerto y usuario por equipo, recopilaciones programadas con informe de cambios, comparación entre dos instantáneas cualesquiera, tema claro y accesibilidad. Los comentarios y pull requests en cualquiera de ellas son bienvenidos.
+El trabajo previsto y los problemas conocidos están en las [issues](https://github.com/lucaswotta/invenux/issues): instaladores firmados, agente SSH y jump host, puerto y usuario por equipo, recopilaciones programadas con informe de cambios, comparación entre dos instantáneas cualesquiera, tema claro y accesibilidad. Los comentarios y pull requests en cualquiera de ellas son bienvenidos.
 
 ## Contribuir
 

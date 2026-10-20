@@ -99,9 +99,9 @@ Baixe o arquivo do seu sistema na [última versão](https://github.com/lucaswott
 | --- | --- | --- |
 | Windows 10/11 (x86_64) | `invenux-<versão>-windows-x86_64.exe` | Execute. O SmartScreen avisa que o programa não é assinado: **Mais informações** e depois **Executar assim mesmo**. |
 | macOS (Apple Silicon ou Intel) | `invenux-<versão>-macos-arm64.zip` ou `-macos-x86_64.zip` | Descompacte e abra o `Invenux.app`. Na primeira vez, clique com o botão direito e escolha **Abrir**, porque o app não é notarizado. |
-| Linux (x86_64, glibc 2.35 ou mais recente) | `invenux-<versão>-linux-x86_64.tar.gz` | Extraia e rode `./invenux`, ou instale o atalho no menu como abaixo. |
+| Linux (x86_64, glibc 2.35 ou mais recente) | `invenux-<versão>-linux-x86_64.tar.xz` | Extraia e rode `./install.sh` para colocar no menu de aplicativos, ou rode `./invenux` na pasta. |
 
-Os pacotes não têm assinatura de código; o `SHA256SUMS` da versão lista os checksums. Eles abrem a interface no navegador padrão; para janela nativa, rode a partir do código com pywebview ou GTK.
+Os pacotes não têm assinatura de código; o `SHA256SUMS` da versão lista os checksums. Cada um abre a própria janela: WebView2 no Windows (parte do Windows 10 e 11), WebKit no macOS e um Qt WebEngine embutido no Linux, por isso o download do Linux tem cerca de 135 MB.
 
 ### A partir do código
 
@@ -118,20 +118,14 @@ python3 app.py
 
 A janela usa o [pywebview](https://pywebview.flowrl.com/) quando ele está instalado, depois o GTK WebKit2 no Linux (`python3-gi` e `gir1.2-webkit2-4.1` no Debian e Ubuntu, visíveis num venv criado com `--system-site-packages`) e, sem nenhum dos dois, abre a interface no navegador padrão. No navegador, o programa encerra cerca de 3 minutos depois que a aba é fechada.
 
-**Pacote nativo.** `python build.py` gera um executável único para o sistema em que roda (o PyInstaller não faz compilação cruzada). Uma tag `v*` faz o CI gerar os pacotes de Linux, Windows e macOS e publicá-los como release no GitHub.
+**Pacote nativo.** `python build.py` gera o pacote do sistema em que roda (o PyInstaller não faz compilação cruzada): um `.exe` no Windows, uma pasta no Linux e um app no macOS. Uma tag `v*` faz o CI gerar os pacotes de Linux, Windows e macOS e publicá-los como release no GitHub.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.7.0
+python3 build.py                   # dist/invenux-v0.8.0
 ```
 
-No Linux, para aparecer no menu de aplicativos (dentro da pasta extraída da release):
-
-```sh
-install -Dm755 invenux ~/.local/bin/invenux
-install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
-```
+No Linux, `./install.sh` na pasta extraída da release copia o programa para `~/.local/lib/invenux`, cria o link `~/.local/bin/invenux` e adiciona o atalho e o ícone no menu, sem sudo. `./install.sh --uninstall` remove tudo e mantém histórico e relatórios.
 
 ## Como usar
 
@@ -209,7 +203,7 @@ Veja a linha **Slots** nos detalhes da máquina: ela mostra quantos slots estão
 A linha diz o motivo. "Não respondeu na rede" significa nenhuma resposta em cerca de 3 segundos (em geral desligada ou endereço errado); "Conexão recusada na porta N" significa que está ligada, mas o SSH está parado, bloqueado ou em outra porta (ajuste no painel SSH); "Sem resposta em N s" indica firewall ou rede lenta, então aumente o timeout no painel SSH.
 
 **Tem instalador?**
-Ainda não: cada versão traz um executável único por sistema (um app no macOS). Veja [Baixar](#baixar).
+Ainda não: o Windows recebe um `.exe`, o macOS um app e o Linux uma pasta com `install.sh`. Veja [Baixar](#baixar).
 
 **Dá para inventariar máquinas Windows ou macOS?**
 Não. Os alvos precisam ser Linux com SSH. O programa em si roda em Linux, Windows e macOS.
@@ -229,7 +223,7 @@ Sim, veja a linha de comando acima. Ela exige chave privada.
 
 ## Próximos passos
 
-O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): janela nativa nos pacotes, instaladores assinados, agente SSH e jump host, porta e usuário por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
+O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): instaladores assinados, agente SSH e jump host, porta e usuário por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
 
 ## Contribuir
 
