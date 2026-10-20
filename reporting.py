@@ -153,7 +153,7 @@ REPORT_TEXT = {
         "devices": "DEVICES", "snapshot": "devices in this snapshot",
         "coverage": "Average data coverage", "coverage_suffix": "avg",
         "inventory_hint": "Use the Inventory sheet to filter, sort, and inspect individual devices.",
-        "status_options": [("ONLINE", "Online"), ("OFFLINE", "Offline"), ("FALHA_AUTH", "Authentication failed"), ("ERRO_SSH", "SSH error"), ("ERRO_DESCONHECIDO", "Unknown error"), ("ERRO_CHAVE_HOST", "Host key rejected"), ("ERRO", "Error")],
+        "status_options": [("ONLINE", "Online"), ("OFFLINE", "Offline"), ("FALHA_AUTH", "Authentication failed"), ("ERRO_SSH", "SSH error"), ("ERRO_DESCONHECIDO", "Unknown error"), ("ERRO_CHAVE_HOST", "Host key rejected"), ("ERROR", "Error")],
     },
     "pt-br": {
         "title": "Inventário de hardware", "kicker": "RELATÓRIO DE INVENTÁRIO",
@@ -167,7 +167,7 @@ REPORT_TEXT = {
         "devices": "MÁQUINAS", "snapshot": "máquinas nesta coleta",
         "coverage": "Cobertura média dos dados", "coverage_suffix": "média",
         "inventory_hint": "Use a aba Inventário para filtrar, ordenar e inspecionar as máquinas.",
-        "status_options": [("ONLINE", "Acessível"), ("OFFLINE", "Inacessível"), ("FALHA_AUTH", "Falha de autenticação"), ("ERRO_SSH", "Erro SSH"), ("ERRO_DESCONHECIDO", "Erro desconhecido"), ("ERRO_CHAVE_HOST", "Chave SSH rejeitada"), ("ERRO", "Erro")],
+        "status_options": [("ONLINE", "Acessível"), ("OFFLINE", "Inacessível"), ("FALHA_AUTH", "Falha de autenticação"), ("ERRO_SSH", "Erro SSH"), ("ERRO_DESCONHECIDO", "Erro desconhecido"), ("ERRO_CHAVE_HOST", "Chave SSH rejeitada"), ("ERROR", "Erro")],
     },
 }
 
@@ -527,10 +527,6 @@ def _write_xlsx(
         from openpyxl import Workbook
         from openpyxl.styles import Alignment, Font, PatternFill
         from openpyxl.utils import get_column_letter
-        try:
-            from openpyxl.drawing.image import Image as XLImage
-        except ImportError:
-            XLImage = None
     except ImportError as exc:
         raise RuntimeError("Excel export needs openpyxl. Install the project requirements first.") from exc
 
@@ -556,15 +552,6 @@ def _write_xlsx(
     overview["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['snapshot']}"
     overview["B2"].font = Font(name="Calibri", size=10, color="98989D")
     overview.row_dimensions[2].height = 22
-    if XLImage is not None:
-        logo_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"
-        try:
-            logo = XLImage(str(logo_path))
-            logo.width = 32
-            logo.height = 32
-            overview.add_image(logo, "A1")
-        except (OSError, ValueError):
-            pass
     for row_cells in overview.iter_rows(min_row=1, max_row=2, min_col=1, max_col=6):
         for cell in row_cells:
             cell.fill = PatternFill("solid", fgColor=BRAND_DARK)
@@ -604,15 +591,6 @@ def _write_xlsx(
     sheet["B1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     sheet["B1"].alignment = Alignment(vertical="center")
     sheet.row_dimensions[1].height = 36
-    if XLImage is not None:
-        logo_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"
-        try:
-            logo = XLImage(str(logo_path))
-            logo.width = 32
-            logo.height = 32
-            sheet.add_image(logo, "A1")
-        except (OSError, ValueError):
-            pass
     sheet.merge_cells(f"B2:{last_column}2")
     sheet["A2"].fill = PatternFill("solid", fgColor=BRAND_DARK)
     sheet["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['devices_inventoried']}"
