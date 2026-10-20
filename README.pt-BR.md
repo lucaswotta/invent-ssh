@@ -15,6 +15,7 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 <br>
 
 <a href="https://github.com/lucaswotta/invenux/stargazers"><img src="https://img.shields.io/github/stars/lucaswotta/invenux?style=flat-square&logo=github&labelColor=1C1C1E&color=0A84FF" alt="Estrelas no GitHub"></a>
+<a href="https://github.com/lucaswotta/invenux/releases/latest"><img src="https://img.shields.io/github/v/release/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Última versão"></a>
 <a href="https://github.com/lucaswotta/invenux/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/lucaswotta/invenux/quality.yml?branch=main&style=flat-square&label=CI&labelColor=1C1C1E&color=0A84FF" alt="CI"></a>
 <a href="https://github.com/lucaswotta/invenux/commits/main"><img src="https://img.shields.io/github/last-commit/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Último commit"></a>
 <a href="LICENSE"><img src="https://img.shields.io/github/license/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Licença MIT"></a>
@@ -26,6 +27,7 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 
 <br>
 
+[Baixar](https://github.com/lucaswotta/invenux/releases/latest) ·
 [Recursos](#recursos) ·
 [Instalação](#instalação) ·
 [Como usar](#como-usar) ·
@@ -45,7 +47,7 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 
 - **Entra uma planilha, sai um inventário.** Liste as máquinas com o IP, informe o acesso SSH e inicie. Cada máquina aparece com processador, slots de memória, discos, placa-mãe, BIOS, vídeo, rede e sistema operacional.
 - **Nada para instalar nas máquinas.** Uma conexão SSH executa um único script de leitura por máquina. Sem agente, sem serviço e sem arquivo gravado no destino.
-- **Diz por que uma máquina falhou.** Desligada, porta 22 fechada, tempo esgotado, nome inexistente, senha errada ou chave do host trocada, cada caso com sua mensagem.
+- **Diz por que uma máquina falhou.** Desligada, porta SSH fechada, tempo esgotado, nome inexistente, senha errada ou chave do host trocada, cada caso com sua mensagem.
 - **Relatórios que as pessoas abrem.** Excel com aba de resumo e colunas agrupadas, página HTML pesquisável que funciona offline, e CSV.
 - **Histórico sem servidor de banco.** Cada coleta fica salva no computador e é comparada campo a campo com a anterior, então um disco trocado ou uma memória a mais aparece na hora.
 
@@ -53,7 +55,7 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 
 | Área | O que você tem |
 | --- | --- |
-| **Coleta** | Até 128 conexões SSH em paralelo, senha ou chave privada, confiança no primeiro acesso para chaves de host, cancelamento a qualquer momento. |
+| **Coleta** | Até 128 conexões SSH em paralelo em qualquer porta SSH (22 por padrão), senha ou chave privada, confiança no primeiro acesso para chaves de host, cancelamento a qualquer momento. |
 | **Sistema** | Distribuição, versão e codinome, kernel, arquitetura, hostname, ambiente gráfico e servidor de vídeo, telas, quantidade de pacotes, init, fuso horário, tempo ligado, uso do disco `/`. |
 | **Hardware** | Fabricante e modelo, placa-mãe, BIOS, processador com núcleos, threads e frequência, cada slot de memória (tamanho, tipo, velocidade, modelo do pente) e o máximo da placa, cada disco e partição, vídeo, adaptadores de rede com IPv4 e MAC. |
 | **Parque** | Tipos de armazenamento, capacidade de memória e distribuições Linux das máquinas acessíveis, e a divisão por local. |
@@ -89,7 +91,21 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 
 ## Instalação
 
-**Requisitos:** Python 3.11 ou mais recente e máquinas Linux acessíveis por SSH na porta 22.
+### Baixar
+
+Baixe o arquivo do seu sistema na [última versão](https://github.com/lucaswotta/invenux/releases/latest):
+
+| Sistema | Arquivo | Como abrir |
+| --- | --- | --- |
+| Windows 10/11 (x86_64) | `invenux-<versão>-windows-x86_64.exe` | Execute. O SmartScreen avisa que o programa não é assinado: **Mais informações** e depois **Executar assim mesmo**. |
+| macOS (Apple Silicon ou Intel) | `invenux-<versão>-macos-arm64.zip` ou `-macos-x86_64.zip` | Descompacte e abra o `Invenux.app`. Na primeira vez, clique com o botão direito e escolha **Abrir**, porque o app não é notarizado. |
+| Linux (x86_64, glibc 2.35 ou mais recente) | `invenux-<versão>-linux-x86_64.tar.gz` | Extraia e rode `./invenux`, ou instale o atalho no menu como abaixo. |
+
+Os pacotes não têm assinatura de código; o `SHA256SUMS` da versão lista os checksums. Eles abrem a interface no navegador padrão; para janela nativa, rode a partir do código com pywebview ou GTK.
+
+### A partir do código
+
+**Requisitos:** Python 3.11 ou mais recente e máquinas Linux acessíveis por SSH (porta 22 por padrão, configurável).
 
 ```sh
 git clone https://github.com/lucaswotta/invenux.git
@@ -102,25 +118,25 @@ python3 app.py
 
 A janela usa o [pywebview](https://pywebview.flowrl.com/) quando ele está instalado, depois o GTK WebKit2 no Linux (`python3-gi` e `gir1.2-webkit2-4.1` no Debian e Ubuntu, visíveis num venv criado com `--system-site-packages`) e, sem nenhum dos dois, abre a interface no navegador padrão. No navegador, o programa encerra cerca de 3 minutos depois que a aba é fechada.
 
-**Pacote nativo.** `python build.py` gera um executável único para o sistema em que roda (o PyInstaller não faz compilação cruzada). O CI gera pacotes para Linux, Windows e macOS a cada push; baixe nos artefatos da execução.
+**Pacote nativo.** `python build.py` gera um executável único para o sistema em que roda (o PyInstaller não faz compilação cruzada). Uma tag `v*` faz o CI gerar os pacotes de Linux, Windows e macOS e publicá-los como release no GitHub.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.6.0
+python3 build.py                   # dist/invenux-v0.7.0
 ```
 
-No Linux, para aparecer no menu de aplicativos:
+No Linux, para aparecer no menu de aplicativos (dentro da pasta extraída da release):
 
 ```sh
-install -Dm755 dist/invenux-v0.6.0 ~/.local/bin/invenux
-install -Dm644 brand/icons/invenux-256.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/invenux.desktop
+install -Dm755 invenux ~/.local/bin/invenux
+install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
+install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
 ```
 
 ## Como usar
 
 1. **Alvos:** escolha a planilha de máquinas, arraste o arquivo para a janela ou cole o caminho. Ainda não tem planilha? Use **Baixar planilha modelo**.
-2. **SSH:** informe o usuário e uma senha ou chave privada. A senha fica só na memória.
+2. **SSH:** informe o usuário, a porta (22, a menos que suas máquinas usem outra) e uma senha ou chave privada. A senha fica só na memória.
 3. **Iniciar coleta:** acompanhe cada máquina na tabela e clique numa linha para ver os detalhes.
 4. **Exportar:** Excel, HTML ou CSV, salvos na pasta `Invenux` dentro de Documentos, com **Abrir** e **Abrir pasta** logo em seguida.
 
@@ -129,7 +145,7 @@ O botão `Como usar` tem o tutorial animado, o formato da planilha, o significad
 **Linha de comando.** Coleta e exporta sem interface (só com chave privada):
 
 ```sh
-python3 app.py --input maquinas.xlsx --user inventario --key ~/.ssh/id_ed25519 --output-format XLSX
+python3 app.py --input maquinas.xlsx --user inventario --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
 ```
 
 ## A planilha
@@ -190,20 +206,23 @@ Não. O script só lê arquivos e executa comandos de leitura. Nada é gravado, 
 Veja a linha **Slots** nos detalhes da máquina: ela mostra quantos slots estão ocupados do total da placa, com cada pente listado. Se aparecer indisponível, o usuário SSH não é root e o `dmidecode` não rodou.
 
 **Uma máquina aparece Offline, mas está ligada.**
-A linha diz o motivo. "Não respondeu na rede" significa nenhuma resposta em cerca de 3 segundos (em geral desligada ou endereço errado); "Conexão recusada na porta 22" significa que está ligada, mas o SSH está parado ou bloqueado; "Sem resposta em N s" indica firewall ou rede lenta, então aumente o timeout no painel SSH.
+A linha diz o motivo. "Não respondeu na rede" significa nenhuma resposta em cerca de 3 segundos (em geral desligada ou endereço errado); "Conexão recusada na porta N" significa que está ligada, mas o SSH está parado, bloqueado ou em outra porta (ajuste no painel SSH); "Sem resposta em N s" indica firewall ou rede lenta, então aumente o timeout no painel SSH.
+
+**Tem instalador?**
+Ainda não: cada versão traz um executável único por sistema (um app no macOS). Veja [Baixar](#baixar).
 
 **Dá para inventariar máquinas Windows ou macOS?**
 Não. Os alvos precisam ser Linux com SSH. O programa em si roda em Linux, Windows e macOS.
 
 **Qual porta ele usa?**
-A porta 22. Outras portas ainda não são suportadas.
+A 22 por padrão. Troque no painel SSH ou com `--ssh-port` na linha de comando; todas as máquinas de uma coleta usam a mesma porta.
 
 **Dá para rodar sem a interface?**
 Sim, veja a linha de comando acima. Ela exige chave privada.
 
 ## Limitações
 
-- Os alvos precisam ser Linux com SSH na porta 22.
+- Os alvos precisam ser Linux com SSH, e todas as máquinas de uma coleta usam a mesma porta SSH.
 - Os detalhes dos slots de memória exigem root no alvo.
 - O tipo de armazenamento usa o nome do barramento e a flag de rotação do kernel, então discos virtuais podem aparecer como SSD.
 - A linha de comando aceita só chave privada, não senha.

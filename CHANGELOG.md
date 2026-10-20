@@ -2,6 +2,17 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
+## [0.7.0] — 2026-10-20
+
+### Added
+
+- SSH port setting in the SSH panel (22 by default) and `--ssh-port` on the command line. Host keys for other ports are stored as `[host]:port`, the OpenSSH convention.
+- Release packages built by CI for every version tag: Linux x86_64 (`.tar.gz` with the menu entry and icon), Windows x86_64 (`.exe`) and macOS (`.zip` with the app, Apple Silicon and Intel), with `SHA256SUMS`.
+
+### Changed
+
+- "Connection refused" names the port that was tried and suggests SSH may be on another port.
+
 ## [0.6.0] — 2026-10-20
 
 ### Added

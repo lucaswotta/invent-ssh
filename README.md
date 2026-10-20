@@ -15,6 +15,7 @@ Agentless and read-only: nothing is installed or written on the machines.
 <br>
 
 <a href="https://github.com/lucaswotta/invenux/stargazers"><img src="https://img.shields.io/github/stars/lucaswotta/invenux?style=flat-square&logo=github&labelColor=1C1C1E&color=0A84FF" alt="GitHub stars"></a>
+<a href="https://github.com/lucaswotta/invenux/releases/latest"><img src="https://img.shields.io/github/v/release/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Latest release"></a>
 <a href="https://github.com/lucaswotta/invenux/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/lucaswotta/invenux/quality.yml?branch=main&style=flat-square&label=CI&labelColor=1C1C1E&color=0A84FF" alt="CI"></a>
 <a href="https://github.com/lucaswotta/invenux/commits/main"><img src="https://img.shields.io/github/last-commit/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Last commit"></a>
 <a href="LICENSE"><img src="https://img.shields.io/github/license/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="MIT license"></a>
@@ -26,6 +27,7 @@ Agentless and read-only: nothing is installed or written on the machines.
 
 <br>
 
+[Download](https://github.com/lucaswotta/invenux/releases/latest) ·
 [Features](#features) ·
 [Install](#install) ·
 [How to use](#how-to-use) ·
@@ -45,7 +47,7 @@ Agentless and read-only: nothing is installed or written on the machines.
 
 - **One spreadsheet in, one inventory out.** List the machines with their IP addresses, enter SSH access, press start. Each machine shows up with processor, memory slots, disks, motherboard, BIOS, graphics, network and operating system.
 - **Nothing to install on the machines.** One SSH connection runs one read-only script per machine. No agent, no daemon, no file written on the target.
-- **It tells you why a machine failed.** Powered off, port 22 closed, time limit, unknown name, wrong password or a changed host key, each with its own message.
+- **It tells you why a machine failed.** Powered off, SSH port closed, time limit, unknown name, wrong password or a changed host key, each with its own message.
 - **Reports people actually open.** Excel with a summary sheet and grouped columns, a searchable offline HTML page, and CSV.
 - **History without a database server.** Every collection is saved locally and compared field by field with the previous one, so a swapped disk or a memory upgrade stands out.
 
@@ -53,7 +55,7 @@ Agentless and read-only: nothing is installed or written on the machines.
 
 | Area | What you get |
 | --- | --- |
-| **Collection** | Up to 128 parallel SSH connections, password or private key, trust on first use for host keys, cancel at any time. |
+| **Collection** | Up to 128 parallel SSH connections on any SSH port (22 by default), password or private key, trust on first use for host keys, cancel at any time. |
 | **System** | Distribution, version and codename, kernel, architecture, hostname, desktop and display server, displays, package count, init, time zone, uptime, root disk usage. |
 | **Hardware** | Manufacturer and model, motherboard, BIOS, processor with cores, threads and frequency, every memory slot (size, type, speed, part number) and the board's maximum, every disk and partition, graphics, network adapters with IPv4 and MAC. |
 | **Fleet view** | Storage types, memory capacity and Linux distributions across the online machines, and a breakdown by location. |
@@ -89,7 +91,21 @@ Agentless and read-only: nothing is installed or written on the machines.
 
 ## Install
 
-**Requirements:** Python 3.11 or newer, and Linux machines reachable over SSH on port 22.
+### Download
+
+Get the file for your system from the [latest release](https://github.com/lucaswotta/invenux/releases/latest):
+
+| System | File | How to start |
+| --- | --- | --- |
+| Windows 10/11 (x86_64) | `invenux-<version>-windows-x86_64.exe` | Run it. SmartScreen warns about an unsigned program: **More info**, then **Run anyway**. |
+| macOS (Apple Silicon or Intel) | `invenux-<version>-macos-arm64.zip` or `-macos-x86_64.zip` | Unzip and open `Invenux.app`. The first time, right-click it and choose **Open**, because the app is not notarized. |
+| Linux (x86_64, glibc 2.35 or newer) | `invenux-<version>-linux-x86_64.tar.gz` | Extract and run `./invenux`, or install the menu entry as shown below. |
+
+The packages are not code-signed; `SHA256SUMS` in the release lists the checksums. They open the interface in your default browser; for a native window, run from source with pywebview or GTK.
+
+### From source
+
+**Requirements:** Python 3.11 or newer, and Linux machines reachable over SSH (port 22 by default, configurable).
 
 ```sh
 git clone https://github.com/lucaswotta/invenux.git
@@ -102,25 +118,25 @@ python3 app.py
 
 The window uses [pywebview](https://pywebview.flowrl.com/) when it is installed, then GTK WebKit2 on Linux (`python3-gi` and `gir1.2-webkit2-4.1` on Debian and Ubuntu, available to a venv created with `--system-site-packages`), and otherwise opens the interface in your default browser. In the browser the program stops about 3 minutes after the tab is closed.
 
-**Native package.** `python build.py` creates a single executable for the system you run it on (PyInstaller is not a cross-compiler). CI builds Linux, Windows and macOS packages on every push; download them from the run's artifacts.
+**Native package.** `python build.py` creates a single executable for the system you run it on (PyInstaller is not a cross-compiler). Pushing a `v*` tag builds the Linux, Windows and macOS packages in CI and publishes them as a GitHub release.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.6.0
+python3 build.py                   # dist/invenux-v0.7.0
 ```
 
-On Linux, add it to the application menu:
+On Linux, add the program to the application menu (from the extracted release folder):
 
 ```sh
-install -Dm755 dist/invenux-v0.6.0 ~/.local/bin/invenux
-install -Dm644 brand/icons/invenux-256.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/invenux.desktop
+install -Dm755 invenux ~/.local/bin/invenux
+install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
+install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
 ```
 
 ## How to use
 
 1. **Targets:** choose the machine spreadsheet, drag it onto the window, or paste its path. No spreadsheet yet? **Get the template**.
-2. **SSH:** enter the user and a password or a private key. The password stays in memory only.
+2. **SSH:** enter the user, the port (22 unless your machines use another one) and a password or a private key. The password stays in memory only.
 3. **Start collection:** follow each machine in the table and click a row for its details.
 4. **Export:** Excel, HTML or CSV, saved in the `Invenux` folder inside your Documents folder, with **Open** and **Open folder** right after.
 
@@ -129,7 +145,7 @@ install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/inven
 **Command line.** Collect and export without the interface (private key only):
 
 ```sh
-python3 app.py --input machines.xlsx --user inventory --key ~/.ssh/id_ed25519 --output-format XLSX
+python3 app.py --input machines.xlsx --user inventory --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
 ```
 
 ## The spreadsheet
@@ -190,20 +206,23 @@ No. The script only reads files and runs read-only commands. It writes nothing, 
 Check the **Slots** line in the machine details: it shows how many slots are populated out of how many the board has, with each module listed. If it says unavailable, the SSH user is not root and `dmidecode` could not run.
 
 **A machine shows as Offline, but it is on.**
-The row says why. "Did not answer on the network" means no reply at all within about 3 seconds (often powered off or a wrong address); "Connection refused on port 22" means it is on but SSH is stopped or blocked; "No answer within N s" means a firewall or a slow link, so raise the timeout in the SSH panel.
+The row says why. "Did not answer on the network" means no reply at all within about 3 seconds (often powered off or a wrong address); "Connection refused on port N" means it is on but SSH is stopped, blocked or listening on another port (set it in the SSH panel); "No answer within N s" means a firewall or a slow link, so raise the timeout in the SSH panel.
+
+**Is there an installer?**
+Not yet: each release has a single executable per system (an app bundle on macOS). See [Download](#download).
 
 **Can it inventory Windows or macOS machines?**
 No. The targets must be Linux with SSH. The program itself runs on Linux, Windows and macOS.
 
 **Which port does it use?**
-Port 22. Other ports are not supported yet.
+22 by default. Change it in the SSH panel, or with `--ssh-port` on the command line; every machine in a collection uses the same port.
 
 **Can I run it without the interface?**
 Yes, see the command line above. It needs a private key.
 
 ## Limitations
 
-- Targets must be Linux with SSH on port 22.
+- Targets must be Linux with SSH, and all machines in a collection share one SSH port.
 - Memory slot details need root on the target.
 - Storage type uses the transport name and the kernel's rotational flag, so virtual disks can appear as SSD.
 - The command line accepts a private key only, not a password.

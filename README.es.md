@@ -15,6 +15,7 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 <br>
 
 <a href="https://github.com/lucaswotta/invenux/stargazers"><img src="https://img.shields.io/github/stars/lucaswotta/invenux?style=flat-square&logo=github&labelColor=1C1C1E&color=0A84FF" alt="Estrellas en GitHub"></a>
+<a href="https://github.com/lucaswotta/invenux/releases/latest"><img src="https://img.shields.io/github/v/release/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Última versión"></a>
 <a href="https://github.com/lucaswotta/invenux/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/lucaswotta/invenux/quality.yml?branch=main&style=flat-square&label=CI&labelColor=1C1C1E&color=0A84FF" alt="CI"></a>
 <a href="https://github.com/lucaswotta/invenux/commits/main"><img src="https://img.shields.io/github/last-commit/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Último commit"></a>
 <a href="LICENSE"><img src="https://img.shields.io/github/license/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Licencia MIT"></a>
@@ -26,6 +27,7 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 
 <br>
 
+[Descargar](https://github.com/lucaswotta/invenux/releases/latest) ·
 [Funciones](#funciones) ·
 [Instalación](#instalación) ·
 [Cómo usar](#cómo-usar) ·
@@ -45,7 +47,7 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 
 - **Entra una hoja, sale un inventario.** Liste los equipos con su IP, indique el acceso SSH e inicie. Cada equipo aparece con procesador, ranuras de memoria, discos, placa base, BIOS, vídeo, red y sistema operativo.
 - **Nada que instalar en los equipos.** Una conexión SSH ejecuta un único script de lectura por equipo. Sin agente, sin servicio y sin archivos escritos en el destino.
-- **Dice por qué falló un equipo.** Apagado, puerto 22 cerrado, tiempo agotado, nombre inexistente, contraseña incorrecta o clave del host cambiada, cada caso con su mensaje.
+- **Dice por qué falló un equipo.** Apagado, puerto SSH cerrado, tiempo agotado, nombre inexistente, contraseña incorrecta o clave del host cambiada, cada caso con su mensaje.
 - **Informes que la gente abre.** Excel con hoja de resumen y columnas agrupadas, página HTML con búsqueda que funciona sin conexión, y CSV.
 - **Historial sin servidor de base de datos.** Cada recopilación se guarda en el equipo local y se compara campo a campo con la anterior, así un disco cambiado o más memoria salta a la vista.
 
@@ -53,7 +55,7 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 
 | Área | Qué obtiene |
 | --- | --- |
-| **Recopilación** | Hasta 128 conexiones SSH en paralelo, contraseña o clave privada, confianza en el primer acceso para claves de host, cancelación en cualquier momento. |
+| **Recopilación** | Hasta 128 conexiones SSH en paralelo en cualquier puerto SSH (22 por defecto), contraseña o clave privada, confianza en el primer acceso para claves de host, cancelación en cualquier momento. |
 | **Sistema** | Distribución, versión y nombre en clave, kernel, arquitectura, hostname, entorno gráfico y servidor de vídeo, pantallas, cantidad de paquetes, init, zona horaria, tiempo encendido, uso del disco `/`. |
 | **Hardware** | Fabricante y modelo, placa base, BIOS, procesador con núcleos, hilos y frecuencia, cada ranura de memoria (tamaño, tipo, velocidad, modelo del módulo) y el máximo de la placa, cada disco y partición, vídeo, adaptadores de red con IPv4 y MAC. |
 | **Parque** | Tipos de almacenamiento, capacidad de memoria y distribuciones Linux de los equipos accesibles, y el desglose por ubicación. |
@@ -89,7 +91,21 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 
 ## Instalación
 
-**Requisitos:** Python 3.11 o posterior y equipos Linux accesibles por SSH en el puerto 22.
+### Descargar
+
+Descargue el archivo de su sistema en la [última versión](https://github.com/lucaswotta/invenux/releases/latest):
+
+| Sistema | Archivo | Cómo abrirlo |
+| --- | --- | --- |
+| Windows 10/11 (x86_64) | `invenux-<versión>-windows-x86_64.exe` | Ejecútelo. SmartScreen avisa que el programa no está firmado: **Más información** y luego **Ejecutar de todos modos**. |
+| macOS (Apple Silicon o Intel) | `invenux-<versión>-macos-arm64.zip` o `-macos-x86_64.zip` | Descomprima y abra `Invenux.app`. La primera vez, haga clic derecho y elija **Abrir**, porque la app no está notarizada. |
+| Linux (x86_64, glibc 2.35 o posterior) | `invenux-<versión>-linux-x86_64.tar.gz` | Extraiga y ejecute `./invenux`, o instale el acceso en el menú como se indica abajo. |
+
+Los paquetes no tienen firma de código; `SHA256SUMS` en la versión lista las sumas de verificación. Abren la interfaz en el navegador predeterminado; para una ventana nativa, ejecute desde el código con pywebview o GTK.
+
+### Desde el código
+
+**Requisitos:** Python 3.11 o posterior y equipos Linux accesibles por SSH (puerto 22 por defecto, configurable).
 
 ```sh
 git clone https://github.com/lucaswotta/invenux.git
@@ -102,25 +118,25 @@ python3 app.py
 
 La ventana usa [pywebview](https://pywebview.flowrl.com/) si está instalado, luego GTK WebKit2 en Linux (`python3-gi` y `gir1.2-webkit2-4.1` en Debian y Ubuntu, visibles en un venv creado con `--system-site-packages`) y, si no hay ninguno, abre la interfaz en el navegador predeterminado. En el navegador, el programa se cierra unos 3 minutos después de cerrar la pestaña.
 
-**Paquete nativo.** `python build.py` genera un ejecutable único para el sistema donde se ejecuta (PyInstaller no compila para otros sistemas). El CI genera paquetes para Linux, Windows y macOS en cada push; descárguelos de los artefactos de la ejecución.
+**Paquete nativo.** `python build.py` genera un ejecutable único para el sistema donde se ejecuta (PyInstaller no compila para otros sistemas). Una etiqueta `v*` hace que el CI genere los paquetes de Linux, Windows y macOS y los publique como release en GitHub.
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.6.0
+python3 build.py                   # dist/invenux-v0.7.0
 ```
 
-En Linux, para que aparezca en el menú de aplicaciones:
+En Linux, para que aparezca en el menú de aplicaciones (dentro de la carpeta extraída de la release):
 
 ```sh
-install -Dm755 dist/invenux-v0.6.0 ~/.local/bin/invenux
-install -Dm644 brand/icons/invenux-256.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
-install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/invenux.desktop
+install -Dm755 invenux ~/.local/bin/invenux
+install -Dm644 invenux.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
+install -Dm644 invenux.desktop ~/.local/share/applications/invenux.desktop
 ```
 
 ## Cómo usar
 
 1. **Destinos:** elija la hoja de equipos, arrastre el archivo a la ventana o pegue su ruta. ¿Aún no tiene una hoja? Use **Obtener la plantilla**.
-2. **SSH:** indique el usuario y una contraseña o clave privada. La contraseña solo queda en memoria.
+2. **SSH:** indique el usuario, el puerto (22, salvo que sus equipos usen otro) y una contraseña o clave privada. La contraseña solo queda en memoria.
 3. **Iniciar recopilación:** siga cada equipo en la tabla y haga clic en una fila para ver los detalles.
 4. **Exportar:** Excel, HTML o CSV, guardados en la carpeta `Invenux` dentro de Documentos, con **Abrir** y **Abrir carpeta** a continuación.
 
@@ -129,7 +145,7 @@ El botón `Cómo usar` tiene el tutorial animado, el formato de la hoja, el sign
 **Línea de comandos.** Recopila y exporta sin interfaz (solo con clave privada):
 
 ```sh
-python3 app.py --input equipos.xlsx --user inventario --key ~/.ssh/id_ed25519 --output-format XLSX
+python3 app.py --input equipos.xlsx --user inventario --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
 ```
 
 ## La hoja
@@ -190,20 +206,23 @@ No. El script solo lee archivos y ejecuta comandos de lectura. No escribe nada, 
 Mire la línea **Ranuras** en los detalles del equipo: muestra cuántas ranuras están ocupadas del total de la placa, con cada módulo listado. Si aparece no disponible, el usuario SSH no es root y `dmidecode` no pudo ejecutarse.
 
 **Un equipo aparece Sin conexión, pero está encendido.**
-La fila indica el motivo. "No respondió en la red" significa ninguna respuesta en unos 3 segundos (normalmente apagado o dirección incorrecta); "Conexión rechazada en el puerto 22" significa que está encendido, pero el SSH está detenido o bloqueado; "Sin respuesta en N s" indica un cortafuegos o una red lenta, así que aumente el tiempo límite en el panel SSH.
+La fila indica el motivo. "No respondió en la red" significa ninguna respuesta en unos 3 segundos (normalmente apagado o dirección incorrecta); "Conexión rechazada en el puerto N" significa que está encendido, pero el SSH está detenido, bloqueado o en otro puerto (ajústelo en el panel SSH); "Sin respuesta en N s" indica un cortafuegos o una red lenta, así que aumente el tiempo límite en el panel SSH.
+
+**¿Hay instalador?**
+Todavía no: cada versión trae un ejecutable único por sistema (una app en macOS). Vea [Descargar](#descargar).
 
 **¿Puede inventariar equipos Windows o macOS?**
 No. Los destinos deben ser Linux con SSH. El programa en sí funciona en Linux, Windows y macOS.
 
 **¿Qué puerto usa?**
-El puerto 22. Otros puertos aún no se admiten.
+El 22 por defecto. Cámbielo en el panel SSH o con `--ssh-port` en la línea de comandos; todos los equipos de una recopilación usan el mismo puerto.
 
 **¿Se puede usar sin la interfaz?**
 Sí, vea la línea de comandos arriba. Requiere clave privada.
 
 ## Limitaciones
 
-- Los destinos deben ser Linux con SSH en el puerto 22.
+- Los destinos deben ser Linux con SSH, y todos los equipos de una recopilación comparten un puerto SSH.
 - Los detalles de las ranuras de memoria requieren root en el destino.
 - El tipo de almacenamiento usa el nombre del bus y el indicador de rotación del kernel, así que los discos virtuales pueden aparecer como SSD.
 - La línea de comandos solo acepta clave privada, no contraseña.
