@@ -1,4 +1,4 @@
-# Diretrizes Visuais — Invenux
+# Diretrizes visuais do Invenux
 
 ## Conceito
 
@@ -23,3 +23,10 @@ Interface utilitária inspirada em sistemas operacionais desktop modernos (macOS
 
 - Pilha principal: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif`
 - Alinhamento numérico: `font-variant-numeric: tabular-nums` em endereços IP, contadores, capacidades e durações.
+
+## Ícone
+
+- Fonte: `icon.svg` (1024 px) e `icon-small.svg` (32 px, traço simplificado para 16 a 32 px).
+- Desenho: quadrado arredondado escuro com três linhas; a primeira, azul (`#0A84FF`), traz o prompt `›_` (SSH); as duas seguintes são máquinas do inventário com status verde (`#30D158`).
+- Arquivos gerados por `scripts/render_brand.py`: `icons/invenux-{16..1024}.png`, `invenux.ico`, `invenux.icns`, `social-preview.png` e os wordmarks do README em `docs/media/`.
+- Wordmark: ícone + "Invenux" em Inter Display SemiBold, espaçamento -0,035em; texto `#F5F5F7` no tema escuro e `#1C1C1E` no claro.

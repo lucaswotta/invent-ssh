@@ -1,10 +1,15 @@
 # Changelog
 
-Notable changes to Invent-SSH are recorded here.
+Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
-## [Unreleased]
+## [0.6.0] — 2026-10-20
 
 ### Added
+
+- Interface, reports, template and messages in Portuguese (Brazil), English and Spanish, following the system language until one is chosen.
+- Animated tutorial showing how the spreadsheet is read, in the first-run screen and the help sheet; the template gains a how-to sheet.
+- New icon set (PNG 16 to 1024, Windows `.ico`, macOS `.icns`, page favicon), a Linux `.desktop` entry, README wordmarks and the GitHub social preview, rendered from `brand/` by `scripts/render_brand.py`.
+- `scripts/demo_server.py` and `scripts/capture_media.mjs` regenerate the README screenshots and GIFs from a fictional fleet.
 
 - First-run guide in three steps, a `Como usar` sheet with the spreadsheet format, collected data, status meanings and folders, and `Abrir pasta`/`Abrir` buttons after exports.
 - Drag and drop of the target spreadsheet onto the window.
@@ -17,7 +22,9 @@ Notable changes to Invent-SSH are recorded here.
 
 ### Changed
 
-- Reports and the template go to `Invent-SSH` in the localized Documents folder (`~/Documentos/Invent-SSH` on pt-BR Linux).
+- Renamed from Invent-SSH to Invenux. The old `invent-ssh` data and settings folders are copied to the new ones on first run.
+- Reports and the template go to `Invenux` in the localized Documents folder (`~/Documentos/Invenux` on pt-BR Linux).
+- Unsupported system languages fall back to English instead of Portuguese.
 - Offline hosts state the cause: connection refused, no answer on the network, time limit, or DNS failure, instead of "Timeout" for all.
 - The inspector shows only the diagnosis for hosts that were not collected.
 
