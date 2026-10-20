@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from i18n import get_language, set_language
 import inspector
 
 
@@ -97,6 +98,23 @@ class HardwareParserTests(unittest.TestCase):
             stored = inspector.paramiko.HostKeys(str(known_hosts))
             self.assertTrue(stored.check("10.0.0.1", first))
             self.assertTrue(stored.check("10.0.0.2", second))
+
+    def test_connection_failures_name_the_network_cause(self):
+        import errno
+        import socket
+
+        def wrapped(code):
+            return inspector.paramiko.ssh_exception.NoValidConnectionsError(
+                {("10.0.0.9", 22): OSError(code, "synthetic")}
+            )
+
+        previous = get_language()
+        set_language("pt-br")
+        self.addCleanup(set_language, previous)
+        self.assertIn("desligada", inspector._connection_failure(wrapped(errno.EHOSTUNREACH), "10.0.0.9", 15))
+        self.assertIn("recusada", inspector._connection_failure(wrapped(errno.ECONNREFUSED), "10.0.0.9", 15))
+        self.assertIn("15 s", inspector._connection_failure(socket.timeout(), "10.0.0.9", 15))
+        self.assertIsNone(inspector._connection_failure(PermissionError(13, "denied"), "10.0.0.9", 15))
 
     def test_uptime_format_and_unknown_value(self):
         self.assertEqual(inspector._format_uptime("90061.32 123.00"), "1d 1h 1m")

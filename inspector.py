@@ -6,6 +6,7 @@ successful connection. Parser functions are pure and covered by local fixtures.
 """
 from __future__ import annotations
 
+import errno
 import json
 import re
 import shlex
@@ -825,6 +826,25 @@ def _collect_linux_hardware(
     }
 
 
+_UNREACHABLE_ERRNOS = {errno.EHOSTUNREACH, errno.ENETUNREACH, getattr(errno, "EHOSTDOWN", errno.EHOSTUNREACH)}
+
+
+def _connection_failure(exc: BaseException, ip: str, timeout: int) -> Optional[str]:
+    """Name the network cause; None when the error is not a connection failure."""
+    if isinstance(exc, socket.gaierror):
+        return t("hw_dns_failed", ip=ip)
+    if isinstance(exc, (socket.timeout, TimeoutError)):
+        return t("hw_connection_timeout", timeout=timeout)
+    # paramiko wraps refused/unreachable per address; the first error decides.
+    if isinstance(exc, paramiko.ssh_exception.NoValidConnectionsError):
+        exc = next(iter(exc.errors.values()), exc)
+    if isinstance(exc, ConnectionRefusedError) or getattr(exc, "errno", None) == errno.ECONNREFUSED:
+        return t("hw_connection_refused")
+    if getattr(exc, "errno", None) in _UNREACHABLE_ERRNOS:
+        return t("hw_host_unreachable")
+    return None
+
+
 def _remember_host_key(known_hosts: Path, hostname: str, key: paramiko.PKey) -> None:
     """Append a TOFU key to the shared file.
 
@@ -917,13 +937,16 @@ def get_hardware_info(
         return {"status": "FALHA_AUTH", "erro": t("hw_auth_failed")}
     except FileNotFoundError:
         return {"status": "FALHA_AUTH", "erro": t("hw_key_not_found", key_path=key_path)}
-    except (socket.timeout, socket.gaierror, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError):
-        return {"status": "FALHA_CONEXAO", "erro": t("hw_connection_timeout", ip=ip)}
+    except (socket.timeout, socket.gaierror, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as exc:
+        return {"status": "FALHA_CONEXAO", "erro": _connection_failure(exc, ip, timeout) or str(exc)}
     except paramiko.ssh_exception.BadHostKeyException:
         return {"status": "ERRO_CHAVE_HOST", "erro": t("hw_host_key_mismatch", ip=ip)}
     except paramiko.SSHException as exc:
         return {"status": "ERRO_SSH", "erro": t("hw_ssh_error", error=exc)}
     except (OSError, ValueError, TypeError) as exc:
+        reason = _connection_failure(exc, ip, timeout)
+        if reason:
+            return {"status": "FALHA_CONEXAO", "erro": reason}
         return {"status": "ERRO_DESCONHECIDO", "erro": t("hw_unknown_error", error=exc)}
     finally:
         client.close()
