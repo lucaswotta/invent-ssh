@@ -11,6 +11,7 @@ Idioma: [Português (Brasil)](README.pt-BR.md)
 - Runtime Python packages (`requirements.txt`):
   - `openpyxl>=3.1.0,<4.0.0`
   - `paramiko>=3.3.0,<5.0.0`
+  - `pillow>=10.0,<14.0` (logo in Excel exports)
 - Optional desktop window backends: `pywebview` or `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); falls back to the system web browser when neither is installed. In browser mode the process exits about 3 minutes after the tab is closed. Packaged builds include neither backend and always use the browser.
 
 ## Installation
