@@ -220,6 +220,7 @@ class InventoryController:
             "status_text": status_text,
             "targets_info": dict(self.targets_info),
             "paths": {
+                "home": str(Path.home()),
                 "reports": str(get_reports_dir()),
                 "documents": str(get_documents_dir()),
                 "data": str(get_user_data_dir()),

@@ -388,7 +388,7 @@
 
   #popover-targets { left: 18px; width: 360px; }
   #popover-ssh { left: 220px; width: 340px; }
-  #popover-export { right: 130px; width: 230px; gap: 6px; padding: 8px; }
+  #popover-export { right: 130px; width: 290px; gap: 6px; padding: 8px; }
 
   .popover-title {
     font-size: 12.5px;
@@ -701,6 +701,309 @@
     text-align: center;
     color: var(--text-secondary);
     font-size: 13px;
+  }
+
+  /* Onboarding */
+  .onboarding {
+    max-width: 640px;
+    margin: 36px auto;
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .onboarding-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .onboarding-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .step-card {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 10px;
+  }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-control);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-card.done .step-num {
+    background: var(--sys-green);
+    color: #0B2912;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .step-desc {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .step-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .onboarding-foot {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .link-btn {
+    border: none;
+    background: none;
+    color: var(--sys-blue);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.07);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .btn-small {
+    height: 24px;
+    padding: 0 9px;
+    font-size: 11.5px;
+  }
+
+  /* Popover content */
+  .popover-text {
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .popover-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .popover-divider {
+    height: 1px;
+    background: var(--sep-subtle);
+  }
+
+  .target-summary {
+    background: var(--bg-card-inner);
+    border: 1px solid var(--sep-subtle);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .target-summary strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .export-dir {
+    padding: 2px 4px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Help sheet */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+
+  .sheet-backdrop.open {
+    display: flex;
+  }
+
+  .sheet {
+    width: min(720px, calc(100vw - 48px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    background: #2C2C2E;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sheet-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .sheet-section h4 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .sheet-section p,
+  .sheet-section li {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .sheet-section p + p,
+  .sheet-section p + table,
+  .sheet-section table + p {
+    margin-top: 8px;
+  }
+
+  .sheet-section ol,
+  .sheet-section ul {
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sheet-section strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .mini-table {
+    table-layout: auto;
+  }
+
+  .mini-table thead th {
+    position: static;
+    background: transparent;
+    padding: 0 8px;
+  }
+
+  .mini-table tbody tr {
+    height: auto;
+    cursor: default;
+  }
+
+  .mini-table tbody tr:hover {
+    background: transparent;
+  }
+
+  .mini-table tbody td {
+    padding: 7px 8px;
+    white-space: normal;
+    font-size: 12px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .mini-table th:first-child,
+  .mini-table td:first-child {
+    padding-left: 8px;
+    width: 20%;
+  }
+
+  .mini-table th:nth-child(2),
+  .mini-table td:nth-child(2) {
+    width: 13%;
+  }
+
+  .path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .path-row {
+    display: grid;
+    grid-template-columns: 130px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .path-row > span:first-child {
+    color: var(--text-tertiary);
+  }
+
+  .path-value {
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .selectable,
+  .step-desc,
+  .sheet-section p,
+  .sheet-section li,
+  .path-value,
+  .target-summary {
+    user-select: text;
+  }
+
+  .drop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 132, 255, 0.12);
+    border: 2px dashed var(--sys-blue);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    pointer-events: none;
+  }
+
+  .drop-overlay.open {
+    display: flex;
   }
 
   /* Inspector Pane */
@@ -1069,10 +1372,13 @@
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
-        <button class="btn" onclick="createTemplate()">Modelo .xlsx</button>
       </div>
 
       <div class="toolbar-group">
+        <button class="btn" onclick="openHelp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.6-2.4 2-2.4 3.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+          Como usar
+        </button>
         <button id="export-trigger" class="btn" onclick="togglePopover('export')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar
@@ -1085,18 +1391,23 @@
 
     <!-- Targets Popover -->
     <div id="popover-targets" class="popover">
-      <div class="popover-title">Lista de Máquinas (.xlsx, .xlsm, .csv)</div>
+      <div class="popover-title">Lista de máquinas</div>
+      <div class="popover-text">
+        Planilha <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>
+        (ou <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>), uma máquina por linha.
+        Outras colunas, como <code>LOCATION</code> e <code>ASSET_TAG</code>, vão para os relatórios.
+      </div>
+      <div class="popover-actions">
+        <button class="btn btn-primary" onclick="browseTargetFile()">Escolher planilha…</button>
+        <button class="btn" onclick="createTemplate()">Criar modelo</button>
+      </div>
+      <div id="target-summary" class="target-summary"></div>
+      <div class="popover-divider"></div>
       <div class="field-group">
-        <label class="field-label">Caminho do arquivo local</label>
-        <div class="field-input-row">
-          <input id="input-filepath" class="field-input" type="text" placeholder="/caminho/para/ativos.xlsx" onchange="loadTargetPath(this.value)">
-          <button class="btn" onclick="browseTargetFile()">Escolher...</button>
-        </div>
+        <label class="field-label">Ou cole o caminho do arquivo</label>
+        <input id="input-filepath" class="field-input" type="text" placeholder="/home/usuario/Documentos/maquinas.xlsx" onchange="loadTargetPath(this.value)">
       </div>
       <input id="file-upload-input" type="file" accept=".xlsx,.xlsm,.csv,.txt" style="display:none" onchange="uploadTargetFile(this)">
-      <div style="font-size:11.5px; color:var(--text-tertiary);">
-        Use uma coluna IP, HOST, HOSTNAME ou ADDRESS. Colunas extras (Local, Patrimônio, Responsável) são preservadas.
-      </div>
     </div>
 
     <!-- SSH Popover -->
@@ -1147,6 +1458,12 @@
         <span>Dados Tabulares</span>
         <span>.csv</span>
       </button>
+      <div class="popover-divider"></div>
+      <div id="export-dir" class="popover-text export-dir"></div>
+      <button class="menu-item" onclick="openLocation('reports')">
+        <span>Abrir pasta de relatórios</span>
+        <span></span>
+      </button>
     </div>
 
     <!-- VIEW 1: COLETA -->
@@ -1172,7 +1489,57 @@
 
       <div class="workspace-split">
         <div class="table-pane">
-          <table>
+          <div id="onboarding" class="onboarding">
+            <div>
+              <div class="onboarding-title">Inventário de hardware em 3 passos</div>
+              <div class="onboarding-sub">
+                O Invent-SSH entra em cada máquina Linux por SSH, lê o hardware sem alterar nada
+                e monta a tabela, o painel do parque e os relatórios.
+              </div>
+            </div>
+            <div id="step-targets" class="step-card">
+              <span class="step-num">1</span>
+              <div>
+                <div class="step-title">Escolha a planilha de máquinas</div>
+                <div class="step-desc">
+                  Arquivo <code>.xlsx</code> ou <code>.csv</code> com uma coluna <code>IP</code>, uma máquina por linha.
+                  Colunas como <code>LOCATION</code> são opcionais. Sem planilha pronta, crie o modelo e preencha.
+                  Também dá para arrastar o arquivo para esta janela.
+                </div>
+                <div class="step-actions">
+                  <button class="btn btn-primary" onclick="browseTargetFile()">Escolher planilha…</button>
+                  <button class="btn" onclick="createTemplate()">Criar modelo</button>
+                </div>
+              </div>
+            </div>
+            <div id="step-ssh" class="step-card">
+              <span class="step-num">2</span>
+              <div>
+                <div class="step-title">Informe o acesso SSH</div>
+                <div class="step-desc">
+                  Usuário e senha, ou chave privada. A senha fica só na memória enquanto o app está aberto.
+                </div>
+                <div class="step-actions">
+                  <button class="btn" onclick="event.stopPropagation(); togglePopover('ssh')">Configurar acesso</button>
+                </div>
+              </div>
+            </div>
+            <div id="step-scan" class="step-card">
+              <span class="step-num">3</span>
+              <div>
+                <div class="step-title">Inicie a coleta</div>
+                <div class="step-desc">
+                  Cada máquina recebe uma conexão e um único comando de leitura: sistema, processador, memória,
+                  discos, placa-mãe, vídeo e rede. Nada é instalado ou gravado nela.
+                </div>
+              </div>
+            </div>
+            <div class="onboarding-foot">
+              Formato da planilha, status e pastas dos arquivos:
+              <button class="link-btn" onclick="openHelp()">Como usar</button>
+            </div>
+          </div>
+          <table id="hosts-table">
             <thead>
               <tr>
                 <th style="width: 11%;">Status</th>
@@ -1308,6 +1675,63 @@
   </main>
 </div>
 
+<div id="help-sheet" class="sheet-backdrop" onclick="if (event.target === this) closeHelp()">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="sheet-header">
+      <span id="help-title" class="sheet-title">Como usar o Invent-SSH</span>
+      <button class="btn btn-small" onclick="closeHelp()">Fechar</button>
+    </div>
+    <section class="sheet-section">
+      <h4>Passo a passo</h4>
+      <ol>
+        <li><strong>Alvos</strong>: escolha a planilha de máquinas ou arraste o arquivo para a janela.</li>
+        <li><strong>SSH</strong>: informe usuário e senha, ou chave privada.</li>
+        <li><strong>Iniciar Coleta</strong>: acompanhe cada máquina na tabela; clique numa linha para ver os detalhes.</li>
+        <li><strong>Exportar</strong>: gere a planilha Excel, o relatório HTML ou o CSV.</li>
+        <li><strong>Snapshots</strong>: cada coleta fica salva e é comparada com a anterior.</li>
+      </ol>
+    </section>
+    <section class="sheet-section">
+      <h4>Onde ficam os arquivos</h4>
+      <div id="help-paths" class="path-list"></div>
+    </section>
+    <section class="sheet-section">
+      <h4>Planilha de máquinas</h4>
+      <p>
+        Formatos <code>.xlsx</code>, <code>.xlsm</code> ou <code>.csv</code> (separador vírgula ou ponto e vírgula).
+        A primeira linha é o cabeçalho e cada linha seguinte é uma máquina.
+      </p>
+      <table class="mini-table">
+        <thead><tr><th>Coluna</th><th>Obrigatória</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>IP</code></td><td>Sim</td><td>Endereço ou nome da máquina. Também vale <code>HOST</code>, <code>HOSTNAME</code>, <code>ADDRESS</code>, <code>IP_ADDRESS</code>, <code>ENDPOINT</code> ou <code>TARGET</code>.</td></tr>
+          <tr><td><code>LOCATION</code></td><td>Não</td><td>Unidade ou local; agrupa a visão Parque. Também vale <code>LOCAL</code>, <code>UNIDADE</code>, <code>FILIAL</code> ou <code>SETOR</code>.</td></tr>
+          <tr><td>Qualquer outra</td><td>Não</td><td>Copiada como está para a tabela e os relatórios, por exemplo <code>ASSET_TAG</code>, <code>OWNER</code> ou <code>NOTES</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A conexão usa a porta 22.</p>
+    </section>
+    <section class="sheet-section">
+      <h4>O que é coletado</h4>
+      <p>
+        Uma conexão SSH por máquina executa um único script de leitura: sistema e kernel, processador, memória e
+        módulos, discos e partições, placa-mãe e BIOS, vídeo, rede e tempo ligado. Nada é instalado, alterado ou
+        gravado na máquina. Campos que exigem root ou ferramentas ausentes aparecem como "—".
+      </p>
+    </section>
+    <section class="sheet-section">
+      <h4>Status</h4>
+      <ul>
+        <li><strong>Online</strong>: hardware coletado.</li>
+        <li><strong>Offline</strong>: a máquina não respondeu; o motivo aparece na linha (desligada, porta 22 fechada, tempo esgotado ou nome inexistente).</li>
+        <li><strong>Falha SSH</strong>: respondeu, mas recusou a senha ou a chave, ou a chave do host mudou desde o último acesso.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div id="drop-overlay" class="drop-overlay">Solte a planilha para carregar</div>
+
 <script>
   const SESSION_TOKEN = window.__INVENT_TOKEN__ || "";
   let appState = {
@@ -1318,6 +1742,8 @@
     selectedSnapshotId: null,
     selectedSnapshotDiff: null,
     selectedHostIp: null,
+    paths: {},
+    targetsInfo: {},
     statusFilter: "ALL",
     scanning: false
   };
@@ -1399,6 +1825,101 @@
     }
   }
 
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeHelp();
+      closePopovers();
+    }
+  });
+
+  function openHelp() {
+    closePopovers();
+    renderPaths();
+    document.getElementById("help-sheet").classList.add("open");
+  }
+
+  function closeHelp() {
+    document.getElementById("help-sheet").classList.remove("open");
+  }
+
+  function shortPath(path) {
+    const home = (appState.paths || {}).home;
+    return home && path && path.startsWith(home) ? "~" + path.slice(home.length) : path;
+  }
+
+  function renderPaths() {
+    const p = appState.paths || {};
+    const rows = [
+      ["reports", "Relatórios", p.reports],
+      ["data", "Histórico e chaves", p.data],
+      ["logs", "Logs", p.logs]
+    ];
+    document.getElementById("help-paths").innerHTML = rows.map(([key, label, path]) => `
+      <div class="path-row">
+        <span>${label}</span>
+        <span class="path-value" title="${escapeHtml(path || "")}">${escapeHtml(shortPath(path) || "—")}</span>
+        <button class="btn btn-small" onclick="openLocation('${key}')">Abrir pasta</button>
+      </div>`).join("");
+    document.getElementById("export-dir").textContent = p.reports ? `Salvos em ${shortPath(p.reports)}` : "";
+    document.getElementById("export-dir").title = p.reports || "";
+  }
+
+  async function openLocation(target) {
+    try {
+      await api("/api/open", "POST", { target });
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  async function openFile(path) {
+    try {
+      await api("/api/open", "POST", { path });
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  function sshConfigured() {
+    const cfg = appState.config || {};
+    const user = (document.getElementById("input-ssh-user").value || cfg.ssh_user || "").trim();
+    const key = (document.getElementById("input-ssh-key").value || cfg.ssh_key_path || "").trim();
+    const pass = document.getElementById("input-ssh-pass").value || cfg.has_password;
+    return Boolean(user && (key || pass));
+  }
+
+  function renderOnboarding() {
+    const empty = !appState.records.length;
+    document.getElementById("onboarding").style.display = empty ? "" : "none";
+    document.getElementById("hosts-table").style.display = empty ? "none" : "";
+    document.getElementById("step-ssh").classList.toggle("done", sshConfigured());
+  }
+
+  function renderTargetSummary() {
+    const info = appState.targetsInfo || {};
+    const el = document.getElementById("target-summary");
+    if (!info.filename) {
+      el.innerHTML = appState.records.length
+        ? "Exibindo a última coleta salva. Escolha a planilha para coletar de novo."
+        : "Nenhuma planilha carregada. Você também pode arrastar o arquivo para a janela.";
+      return;
+    }
+    const lines = [
+      `<strong>${escapeHtml(info.filename)}</strong>: ${info.count} máquina(s)`,
+      `Coluna de endereço: <code>${escapeHtml(info.target_column)}</code>`
+    ];
+    if (info.extra_columns && info.extra_columns.length) {
+      lines.push(`Outras colunas: ${info.extra_columns.map(c => `<code>${escapeHtml(c)}</code>`).join(" ")}`);
+    }
+    if (info.rows_without_target && info.rows_without_target.length) {
+      lines.push(`Linhas sem IP ignoradas: ${info.rows_without_target.join(", ")}`);
+    }
+    if (info.duplicate_rows && info.duplicate_rows.length) {
+      lines.push(`IPs repetidos ignorados (linhas): ${info.duplicate_rows.join(", ")}`);
+    }
+    el.innerHTML = lines.join("<br>");
+  }
+
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".popover") && !e.target.closest(".popover-trigger") && !e.target.closest("#export-trigger")) {
       closePopovers();
@@ -1431,6 +1952,7 @@
     document.getElementById("footer-workers").textContent = `${workers} conexões`;
     document.getElementById("footer-timeout").textContent = `${timeout} segundos`;
     document.getElementById("footer-tofu").textContent = tofu ? "TOFU ativo" : "Estrito";
+    renderOnboarding();
   }
 
   async function syncSshSettings() {
@@ -1497,10 +2019,9 @@
     });
 
     const tbody = document.getElementById("hosts-tbody");
+    renderOnboarding();
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">${
-        total ? "Nenhuma máquina corresponde ao filtro atual." : "Selecione uma planilha de alvos (.xlsx ou .csv) na barra superior para iniciar."
-      }</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhuma máquina corresponde ao filtro atual.</td></tr>`;
       renderInspector(null);
       return;
     }
@@ -1549,7 +2070,11 @@
   function renderInspector(rec) {
     const pane = document.getElementById("inspector-pane");
     if (!rec) {
-      pane.innerHTML = `<div class="empty-state">Selecione uma máquina na tabela para inspecionar os detalhes de hardware.</div>`;
+      pane.innerHTML = `<div class="empty-state">${
+        appState.records.length
+          ? "Selecione uma máquina na tabela para ver os detalhes de hardware."
+          : "Os detalhes de cada máquina aparecem aqui depois da coleta."
+      }</div>`;
       return;
     }
     const cls = classifyStatus(rec.status);
@@ -1559,15 +2084,30 @@
 
     const storageLines = cleanValue(det.storage_devices) || (cleanValue(rec.disk_type) ? `${rec.disk_type} · ${rec.disk_size || ""}` : "—");
     const netLines = cleanValue(det.network_adapters) || "—";
+    let diagnostic = "";
+    if (cls.group !== "ONLINE") {
+      const reason = cls.group === "PENDING" ? "Aguardando coleta." : (cleanValue(rec.erro) || "Sem detalhes do erro.");
+      diagnostic = `
+      <div class="inspector-section">
+        <span class="inspector-section-title">Diagnóstico</span>
+        <div class="inspector-card"><div class="kv-multiline">${escapeHtml(reason)}</div></div>
+      </div>`;
+    }
 
-    pane.innerHTML = `
+    const header = `
       <div class="inspector-header">
         <div class="inspector-title-row">
           <span class="inspector-hostname">${escapeHtml(hostname !== "—" ? hostname : rec.ip)}</span>
           <span class="status-cell"><span class="dot ${cls.dot}"></span>${escapeHtml(cls.label)}</span>
         </div>
         <span class="inspector-sub">${escapeHtml(rec.ip)}${location !== "—" ? " · " + escapeHtml(location) : ""}</span>
-      </div>
+      </div>`;
+    if (diagnostic) {
+      pane.innerHTML = header + diagnostic;
+      return;
+    }
+
+    pane.innerHTML = header + `
 
       <div class="inspector-section">
         <span class="inspector-section-title">Equipamento</span>
@@ -1735,14 +2275,19 @@
     if (!appState.selectedSnapshotId) return;
     try {
       const res = await api(`/api/snapshots/${appState.selectedSnapshotId}/diff/export`, "POST");
-      setBanner(`Alterações salvas em ${res.path}`);
+      setBanner(`Alterações salvas em ${res.path}`, res.path);
     } catch (err) {
       setBanner(err.message);
     }
   }
 
-  function setBanner(text) {
-    document.getElementById("status-banner").innerHTML = `<span title="${escapeHtml(text)}">${escapeHtml(text)}</span>`;
+  function setBanner(text, filePath) {
+    const actions = filePath
+      ? `<button class="btn btn-small" data-path="${escapeHtml(filePath)}" onclick="openFile(this.dataset.path)">Abrir</button>
+         <button class="btn btn-small" onclick="openLocation('reports')">Abrir pasta</button>`
+      : "";
+    document.getElementById("status-banner").innerHTML =
+      `<span title="${escapeHtml(text)}">${escapeHtml(text)}</span>${actions}`;
   }
 
   async function browseTargetFile() {
@@ -1761,9 +2306,12 @@
     }
   }
 
-  async function uploadTargetFile(input) {
-    if (!input.files || !input.files.length) return;
-    const file = input.files[0];
+  function uploadTargetFile(input) {
+    if (input.files && input.files.length) uploadFile(input.files[0]);
+    input.value = "";
+  }
+
+  function uploadFile(file) {
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -1772,9 +2320,7 @@
           filename: file.name,
           content_base64: base64
         });
-        applyServerState(data);
-        closePopovers();
-        setBanner(`${data.records.length} máquinas carregadas de ${file.name}`);
+        afterTargetsLoaded(data);
       } catch (err) {
         setBanner(err.message);
       }
@@ -1782,12 +2328,44 @@
     reader.readAsDataURL(file);
   }
 
+  function afterTargetsLoaded(data) {
+    applyServerState(data);
+    closePopovers();
+    switchView("scan", document.querySelector("#main-nav .nav-btn"));
+    if (!sshConfigured()) {
+      togglePopover("ssh");
+    }
+  }
+
+  let dragDepth = 0;
+  function draggingFiles(e) {
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  }
+  window.addEventListener("dragenter", (e) => {
+    if (!draggingFiles(e)) return;
+    dragDepth++;
+    document.getElementById("drop-overlay").classList.add("open");
+  });
+  window.addEventListener("dragleave", () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (!dragDepth) document.getElementById("drop-overlay").classList.remove("open");
+  });
+  window.addEventListener("dragover", (e) => {
+    if (draggingFiles(e)) e.preventDefault();
+  });
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.getElementById("drop-overlay").classList.remove("open");
+    const file = e.dataTransfer && e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  });
+
   async function loadTargetPath(filepath) {
     if (!filepath || !filepath.trim()) return;
     try {
       const data = await api("/api/targets/load", "POST", { filepath: filepath.trim() });
-      applyServerState(data);
-      setBanner(`${data.records.length} máquinas carregadas`);
+      afterTargetsLoaded(data);
     } catch (err) {
       setBanner(err.message);
     }
@@ -1808,7 +2386,8 @@
   async function createTemplate() {
     try {
       const res = await api("/api/targets/template", "POST");
-      setBanner(`Planilha modelo salva em ${res.path}`);
+      closePopovers();
+      setBanner(`Modelo salvo em ${res.path}. Preencha a coluna IP e escolha o arquivo em Alvos.`, res.path);
     } catch (err) {
       setBanner(err.message);
     }
@@ -1818,7 +2397,7 @@
     closePopovers();
     try {
       const res = await api("/api/export", "POST", { format });
-      setBanner(`Relatório ${format} salvo em ${res.path}`);
+      setBanner(`Relatório ${format} salvo em ${res.path}`, res.path);
     } catch (err) {
       setBanner(err.message);
     }
@@ -1895,6 +2474,14 @@
     if (Array.isArray(data.snapshots)) {
       appState.snapshots = data.snapshots;
     }
+    if (data.paths) {
+      appState.paths = data.paths;
+      renderPaths();
+    }
+    if (data.targets_info) {
+      appState.targetsInfo = data.targets_info;
+    }
+    renderTargetSummary();
     appState.scanning = Boolean(data.scanning);
 
     const scanBtn = document.getElementById("scan-btn");
