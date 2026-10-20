@@ -1,4 +1,2 @@
 -r requirements.txt
 pyinstaller>=6.10,<7.0
-# PyInstaller converts the PNG icon to .icns on macOS through Pillow.
-pillow>=10.0,<14.0

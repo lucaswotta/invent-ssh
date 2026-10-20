@@ -30,53 +30,54 @@ STATUS_OFFLINE_FG = "B42318"
 STATUS_OTHER_BG = "FEF4E6"
 STATUS_OTHER_FG = "B54708"
 
-HARDWARE_COLUMNS = [
-    ("status", "Status"),
-    ("placa_mae", "Motherboard"),
-    ("processador", "Processor"),
-    ("cores_threads", "CPU cores / threads"),
-    ("ram", "Memory"),
-    ("disk_type", "Storage type"),
-    ("disk_size", "Storage capacity"),
-    ("distro", "Linux distribution"),
-    ("kernel", "Kernel"),
-    ("dta_atualizacao", "Last collected"),
-    ("erro", "Details / error"),
+# (source, key, label, group); "record" keys are top-level, "details" keys live in hardware_details.
+REPORT_COLUMNS = [
+    ("details", "hostname", "Detected hostname", "machine"),
+    ("record", "status", "Status", "status"),
+    ("record", "dta_atualizacao", "Last collected", "status"),
+    ("record", "erro", "Details / error", "status"),
+    ("details", "coverage_percent", "Data coverage", "status"),
+    ("details", "manufacturer", "Manufacturer", "hardware"),
+    ("details", "model", "System model", "hardware"),
+    ("record", "placa_mae", "Motherboard", "hardware"),
+    ("details", "bios", "BIOS / firmware", "hardware"),
+    ("record", "processador", "Processor", "hardware"),
+    ("record", "cores_threads", "CPU cores / threads", "hardware"),
+    ("details", "cpu_sockets", "CPU sockets", "hardware"),
+    ("details", "cpu_max_frequency", "CPU max frequency", "hardware"),
+    ("details", "cpu_virtualization", "CPU virtualization", "hardware"),
+    ("record", "ram", "Memory", "hardware"),
+    ("details", "ram_slots", "Memory slots", "hardware"),
+    ("details", "ram_modules", "Memory modules", "hardware"),
+    ("details", "ram_max_capacity", "Max memory capacity", "hardware"),
+    ("details", "ram_speed", "Memory speed", "hardware"),
+    ("details", "ram_used", "RAM used", "hardware"),
+    ("details", "ram_available", "RAM available", "hardware"),
+    ("record", "disk_type", "Storage type", "hardware"),
+    ("record", "disk_size", "Storage capacity", "hardware"),
+    ("details", "storage_devices", "Storage devices", "hardware"),
+    ("details", "gpu", "Graphics", "hardware"),
+    ("details", "network_adapters", "Network adapters", "hardware"),
+    ("details", "virtualization", "Virtualization", "hardware"),
+    ("details", "system_serial", "System serial (opt-in)", "hardware"),
+    ("record", "distro", "Linux distribution", "system"),
+    ("details", "os_version", "OS version", "system"),
+    ("record", "kernel", "Kernel", "system"),
+    ("details", "architecture", "Architecture", "system"),
+    ("details", "desktop", "Desktop environment", "system"),
+    ("details", "displays", "Displays", "system"),
+    ("details", "packages", "Installed packages", "system"),
+    ("details", "timezone", "Time zone", "system"),
+    ("details", "root_disk_usage", "Root filesystem usage", "system"),
+    ("details", "uptime", "System uptime", "system"),
+    ("details", "collection_notes", "Collection notes", "collection"),
+    ("details", "storage_classification_basis", "Storage classification basis", "collection"),
+    ("details", "collection_sources", "Collection sources", "collection"),
 ]
-
-HARDWARE_DETAIL_COLUMNS = [
-    ("hostname", "Detected hostname"),
-    ("os_name", "Operating system"),
-    ("os_version", "OS version"),
-    ("desktop", "Desktop environment"),
-    ("displays", "Displays"),
-    ("packages", "Installed packages"),
-    ("timezone", "Time zone"),
-    ("root_disk_usage", "Root filesystem usage"),
-    ("manufacturer", "Manufacturer"),
-    ("model", "System model"),
-    ("architecture", "Architecture"),
-    ("cpu_sockets", "CPU sockets"),
-    ("cpu_max_frequency", "CPU max frequency"),
-    ("cpu_virtualization", "CPU virtualization"),
-    ("ram_speed", "Memory speed"),
-    ("ram_slots", "Memory slots"),
-    ("ram_modules", "Memory modules"),
-    ("ram_max_capacity", "Max memory capacity"),
-    ("ram_used", "RAM used"),
-    ("ram_available", "RAM available"),
-    ("storage_devices", "Storage devices"),
-    ("gpu", "Graphics"),
-    ("network_adapters", "Network adapters"),
-    ("bios", "BIOS / firmware"),
-    ("uptime", "System uptime"),
-    ("virtualization", "Virtualization"),
-    ("system_serial", "System serial (opt-in)"),
-    ("coverage_percent", "Data coverage"),
-    ("collection_notes", "Collection notes"),
-    ("storage_classification_basis", "Storage classification basis"),
-    ("collection_sources", "Collection sources"),
-]
+MULTILINE_KEYS = {
+    "ram_modules", "storage_devices", "gpu", "network_adapters", "displays",
+    "collection_notes", "storage_classification_basis", "collection_sources", "erro",
+}
 
 METADATA_LABELS = {
     "HOSTNAME": "Hostname",
@@ -172,6 +173,12 @@ REPORT_TEXT = {
         "devices": "DEVICES", "snapshot": "devices in this snapshot",
         "coverage": "Average data coverage", "coverage_suffix": "avg",
         "inventory_hint": "Use the Inventory sheet to filter, sort, and inspect individual devices.",
+        "availability": "of the fleet reachable", "share_of_total": "of total", "average": "average",
+        "storage_by_type": "Storage by type", "memory_capacity": "Memory capacity",
+        "distributions": "Linux distributions", "by_location": "By location", "online_hosts": "online hosts",
+        "kind": "Type", "machines": "Machines", "share": "Share", "location": "Location",
+        "flash": "Flash", "hdd": "HDD", "groups": {"machine": "MACHINE", "status": "STATUS", "hardware": "HARDWARE", "system": "SYSTEM", "collection": "COLLECTION"},
+        "date_format": "yyyy-mm-dd hh:mm", "page": "Page &P of &N",
         "status_options": [("ONLINE", "Online"), ("OFFLINE", "Offline"), ("FALHA_AUTH", "Authentication failed"), ("ERRO_SSH", "SSH error"), ("ERRO_DESCONHECIDO", "Unknown error"), ("ERRO_CHAVE_HOST", "Host key rejected"), ("ERROR", "Error")],
     },
     "pt-br": {
@@ -186,6 +193,12 @@ REPORT_TEXT = {
         "devices": "MÁQUINAS", "snapshot": "máquinas nesta coleta",
         "coverage": "Cobertura média dos dados", "coverage_suffix": "média",
         "inventory_hint": "Use a aba Inventário para filtrar, ordenar e inspecionar as máquinas.",
+        "availability": "do parque acessível", "share_of_total": "do total", "average": "média",
+        "storage_by_type": "Armazenamento por tipo", "memory_capacity": "Memória RAM",
+        "distributions": "Distribuições Linux", "by_location": "Por local", "online_hosts": "máquinas acessíveis",
+        "kind": "Tipo", "machines": "Máquinas", "share": "Participação", "location": "Local",
+        "flash": "Flash", "hdd": "HDD", "groups": {"machine": "MÁQUINA", "status": "SITUAÇÃO", "hardware": "HARDWARE", "system": "SISTEMA", "collection": "COLETA"},
+        "date_format": "dd/mm/yyyy hh:mm", "page": "Página &P de &N",
         "status_options": [("ONLINE", "Acessível"), ("OFFLINE", "Inacessível"), ("FALHA_AUTH", "Falha de autenticação"), ("ERRO_SSH", "Erro SSH"), ("ERRO_DESCONHECIDO", "Erro desconhecido"), ("ERRO_CHAVE_HOST", "Chave SSH rejeitada"), ("ERROR", "Erro")],
     },
 }
@@ -306,14 +319,9 @@ def _prepare(
 ) -> tuple[list[str], list[dict[str, str]]]:
     source = [dict(record) for record in records]
     column_labels = COLUMN_LABELS[language]
-    hardware_columns = [(key, column_labels[label]) for key, label in HARDWARE_COLUMNS]
-    detail_columns = [(key, column_labels.get(label, label)) for key, label in HARDWARE_DETAIL_COLUMNS]
+    report_columns = [(source, key, column_labels[label]) for source, key, label, _group in REPORT_COLUMNS]
     host_label = column_labels["Host / IP"]
-    reserved_labels = {
-        host_label,
-        *(label for _, label in hardware_columns),
-        *(label for _, label in detail_columns),
-    }
+    reserved_labels = {host_label, *(label for _, _, label in report_columns)}
 
     metadata_columns: dict[str, str] = {}
     custom_columns: list[str] = []
@@ -334,12 +342,7 @@ def _prepare(
             metadata_columns[key] = candidate
             custom_columns.append(candidate)
 
-    columns = [
-        host_label,
-        *custom_columns,
-        *(label for _, label in hardware_columns),
-        *(label for _, label in detail_columns),
-    ]
+    columns = [host_label, *custom_columns, *(label for _, _, label in report_columns)]
     rows: list[dict[str, str]] = []
     for record in source:
         row = {column: "" for column in columns}
@@ -349,11 +352,12 @@ def _prepare(
             label = metadata_columns.get(str(raw_key))
             if label:
                 row[label] = _value(value)
-        for key, label in hardware_columns:
-            row[label] = _value(record.get(key))
         hardware_details = record.get("hardware_details") or {}
-        for key, label in detail_columns:
-            row[label] = _localize_detail_value(key, hardware_details.get(key), language)
+        for source, key, label in report_columns:
+            if source == "record":
+                row[label] = _value(record.get(key))
+            else:
+                row[label] = _localize_detail_value(key, hardware_details.get(key), language)
         rows.append(row)
     return columns, rows
 
@@ -366,6 +370,7 @@ def save_report(
 ) -> Path:
     """Save inventory data as styled XLSX, portable CSV, or interactive HTML."""
     language = "pt-br" if str(language).lower().startswith("pt") else "en"
+    records = list(records)
     columns, rows = _prepare(records, language)
     if not rows:
         raise ValueError("There are no inventory records to export.")
@@ -385,7 +390,7 @@ def save_report(
     elif output_format == "HTML":
         _write_html(path, columns, rows, language)
     else:
-        _write_xlsx(path, columns, rows, language)
+        _write_xlsx(path, columns, rows, language, records)
     return path
 
 
@@ -559,123 +564,288 @@ td{{color:#1c1c1e;border-bottom:1px solid #e5e5ea;overflow:visible;max-width:non
     path.write_text(document, encoding="utf-8")
 
 
+_FONT = "Segoe UI"
+_BORDER = "E5E5EA"
+_MUTED = "6E6E73"
+_ANALYTICS_LABELS_EN = {
+    "SSD SATA / Flash": "SATA SSD / flash", "HDD Mecânico": "Hard disk",
+    "Até 4 GB": "Up to 4 GB", "16 GB ou superior": "16 GB or more",
+    "Não identificado": "Unidentified", "Geral": "General",
+}
+_GROUP_TINTS = {
+    "machine": "E8F2FF", "status": "EAF8EE", "hardware": "F2ECFB", "system": "FFF4E5", "collection": "F2F2F7",
+}
+
+
+def _logo_image(size: int):
+    """The product mark, or None when Pillow (needed by openpyxl images) is missing."""
+    try:
+        from openpyxl.drawing.image import Image as XLImage
+
+        logo = XLImage(str(Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "brand" / "invent-ssh-mark-128.png"))
+    except (ImportError, OSError, ValueError):
+        return None
+    logo.width = logo.height = size
+    return logo
+
+
+def _parse_timestamp(text: str):
+    try:
+        return datetime.fromisoformat(text.strip()) if text.strip() else None
+    except ValueError:
+        return None
+
+
 def _write_xlsx(
-    path: Path, columns: Sequence[str], rows: Sequence[Mapping[str, str]], language: str = "en"
+    path: Path,
+    columns: Sequence[str],
+    rows: Sequence[Mapping[str, str]],
+    language: str = "en",
+    records: Sequence[Mapping[str, Any]] = (),
 ) -> None:
     try:
         from openpyxl import Workbook
-        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.formatting.rule import DataBarRule
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
         from openpyxl.utils import get_column_letter
     except ImportError as exc:
         raise RuntimeError("Excel export needs openpyxl. Install the project requirements first.") from exc
+    from snapshots import compute_fleet_analytics
 
     copy = REPORT_TEXT[language]
-    online, offline, other = _status_counts(rows, COLUMN_LABELS[language]["Status"])
-    coverage_label = COLUMN_LABELS[language]["Data coverage"]
-    average_coverage = _average_coverage(rows, coverage_label)
-    generated = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+    labels = COLUMN_LABELS[language]
+    status_label = labels["Status"]
+    status_names = dict(copy["status_options"])
+    online, offline, other = _status_counts(rows, status_label)
+    total = len(rows)
+    average_coverage = _average_coverage(rows, labels["Data coverage"])
+    generated = datetime.now().astimezone()
+    generated_text = generated.strftime("%d/%m/%Y %H:%M" if language == "pt-br" else "%Y-%m-%d %H:%M")
+    analytics = compute_fleet_analytics(records)
+
+    def font(size=10, bold=False, color="1C1C1E"):
+        return Font(name=_FONT, size=size, bold=bold, color=color)
+
+    def fill(color):
+        return PatternFill("solid", fgColor=color)
+
+    thin = Side(style="thin", color=_BORDER)
+
+    def label_text(text):
+        return _ANALYTICS_LABELS_EN.get(text, text) if language == "en" else text
+
+    def band(sheet, last_column, title_cell, logo_size, subtitle):
+        for row in (1, 2):
+            for column in range(1, last_column + 1):
+                sheet.cell(row, column).fill = fill(BRAND_DARK)
+        sheet.row_dimensions[1].height = 34
+        sheet.row_dimensions[2].height = 20
+        sheet[title_cell] = copy["title"]
+        sheet[title_cell].font = font(18, True, "F5F5F7")
+        sheet[title_cell].alignment = Alignment(vertical="bottom")
+        subtitle_cell = sheet.cell(2, sheet[title_cell].column)
+        subtitle_cell.value = subtitle
+        subtitle_cell.font = font(10, color="98989D")
+        subtitle_cell.alignment = Alignment(vertical="top")
+        logo = _logo_image(logo_size)
+        if logo is not None:
+            sheet.add_image(logo, "A1" if title_cell.startswith("B") else "B1")
+
+    subtitle = f"{BRAND} · {copy['generated']} {generated_text} · {total:,} {copy['snapshot']}"
+
     wb = Workbook()
     overview = wb.active
     overview.title = copy["overview_sheet"]
     overview.sheet_view.showGridLines = False
-    overview.column_dimensions["A"].width = 8
-    overview.column_dimensions["B"].width = 32
-    overview.column_dimensions["C"].width = 18
-    overview.merge_cells("B1:F1")
-    overview["B1"] = f"{BRAND} — {copy['title']}"
-    overview["B1"].font = Font(name="Calibri", size=16, bold=True, color="F5F5F7")
-    overview["B1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
-    overview["B1"].alignment = Alignment(vertical="center")
-    overview.row_dimensions[1].height = 36
-    overview.merge_cells("B2:F2")
-    overview["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['snapshot']}"
-    overview["B2"].font = Font(name="Calibri", size=10, color="98989D")
-    overview.row_dimensions[2].height = 22
-    for row_cells in overview.iter_rows(min_row=1, max_row=2, min_col=1, max_col=6):
-        for cell in row_cells:
-            cell.fill = PatternFill("solid", fgColor=BRAND_DARK)
+    overview.column_dimensions["A"].width = 3
+    for column in range(2, 13):
+        overview.column_dimensions[get_column_letter(column)].width = 13
+    band(overview, 12, "C1", 40, subtitle)
+    overview.row_dimensions[3].height = 14
 
-    overview["B4"], overview["C4"] = copy["metric"], copy["devices"]
-    for cell in (overview["B4"], overview["C4"]):
-        cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
-        cell.font = Font(name="Calibri", bold=True, color="F5F5F7")
-    summary = [
-        (copy["total"], len(rows)),
-        (copy["online"], online),
-        (copy["offline"], offline),
-        (copy["other"], other),
-        (copy["coverage"], f"{average_coverage}% {copy['coverage_suffix']}"),
+    cards = [
+        (copy["total"], total, "1C1C1E", copy["devices_inventoried"]),
+        (copy["online"], online, STATUS_ONLINE_FG, f"{(online / total * 100 if total else 0):.1f}% {copy['availability']}"),
+        (copy["offline"], offline, STATUS_OFFLINE_FG, f"{(offline / total * 100 if total else 0):.1f}% {copy['share_of_total']}"),
+        (copy["other"], other, STATUS_OTHER_FG, f"{(other / total * 100 if total else 0):.1f}% {copy['share_of_total']}"),
+        (copy["coverage"], f"{average_coverage}%", BRAND_ACCENT, copy["average"]),
     ]
-    for row_index, (label, count) in enumerate(summary, start=5):
-        row_fill = ROW_EVEN if row_index % 2 else ROW_ODD
-        label_cell = overview.cell(row_index, 2, label)
-        value_cell = overview.cell(row_index, 3, count)
-        label_cell.fill = PatternFill("solid", fgColor=row_fill)
-        value_cell.fill = PatternFill("solid", fgColor=row_fill)
-        label_cell.font = Font(name="Calibri", bold=True, color="1C1C1E")
-        value_cell.font = Font(name="Calibri", bold=True, size=12, color=BRAND_ACCENT if label == copy["online"] else "1C1C1E")
-    overview.column_dimensions["D"].width = 18
-    overview.merge_cells("B12:F12")
-    overview["B12"] = copy["inventory_hint"]
-    overview["B12"].font = Font(name="Calibri", size=10, color="6E6E73")
+    for index, (title, value, color, note) in enumerate(cards):
+        first = 2 + index * 2
+        for row, (text, style, height) in enumerate(
+            ((title.upper(), font(8, True, _MUTED), 18), (value, font(22, True, color), 32), (note, font(8, color=_MUTED), 16)),
+            start=4,
+        ):
+            overview.merge_cells(start_row=row, start_column=first, end_row=row, end_column=first + 1)
+            cell = overview.cell(row, first, text)
+            cell.font = style
+            cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+            overview.row_dimensions[row].height = height
+            for column in (first, first + 1):
+                target = overview.cell(row, column)
+                target.fill = fill(ROW_ODD)
+                target.border = Border(
+                    left=Side(style="thick", color=color) if column == first else None,
+                    top=thin if row == 4 else None,
+                    bottom=thin if row == 6 else None,
+                    right=thin if column == first + 1 else None,
+                )
+    if language == "pt-br":
+        for index in range(1, 4):
+            cell = overview.cell(6, 2 + index * 2)
+            cell.value = str(cell.value).replace(".", ",", 1)
+
+    def distribution(top_row, first_column, title, headers, items):
+        """Small titled table; the last column is a share with data bars."""
+        overview.cell(top_row, first_column, title).font = font(12, True)
+        overview.row_dimensions[top_row].height = 22
+        header_row = top_row + 1
+        span = len(headers) + 1
+        for offset in range(span):
+            cell = overview.cell(header_row, first_column + offset)
+            cell.fill = fill(BRAND_DARK)
+            cell.font = font(9, True, "F5F5F7")
+            cell.alignment = Alignment(vertical="center", horizontal="left" if offset < 2 else "right", indent=1 if offset == 0 else 0)
+        overview.merge_cells(start_row=header_row, start_column=first_column, end_row=header_row, end_column=first_column + 1)
+        overview.cell(header_row, first_column).value = headers[0]
+        for offset, header in enumerate(headers[1:], start=2):
+            overview.cell(header_row, first_column + offset).value = header
+        row = header_row
+        for row, values in enumerate(items, start=header_row + 1):
+            overview.merge_cells(start_row=row, start_column=first_column, end_row=row, end_column=first_column + 1)
+            for offset in range(span):
+                cell = overview.cell(row, first_column + offset)
+                cell.fill = fill(ROW_EVEN if (row - header_row) % 2 else ROW_ODD)
+                cell.border = Border(bottom=thin)
+                cell.font = font(10)
+            overview.cell(row, first_column, values[0]).alignment = Alignment(indent=1)
+            for offset, value in enumerate(values[1:], start=2):
+                cell = overview.cell(row, first_column + offset, value)
+                cell.alignment = Alignment(horizontal="right")
+                if isinstance(value, float):
+                    cell.number_format = "0.0%"
+        if row > header_row:
+            share_column = get_column_letter(first_column + span - 1)
+            overview.conditional_formatting.add(
+                f"{share_column}{header_row + 1}:{share_column}{row}",
+                DataBarRule(start_type="num", start_value=0, end_type="num", end_value=1, color=BRAND_ACCENT, showValue=True),
+            )
+        return row
+
+    share_headers = [copy["kind"], copy["machines"], copy["share"]]
+    storage = [(label_text(item["label"]), item["count"], item["percent"] / 100) for item in analytics["storage_distribution"]]
+    memory = [(label_text(item["label"]), item["count"], item["percent"] / 100) for item in analytics["ram_distribution"]]
+    distros = [(label_text(item["label"]), item["count"], item["percent"] / 100) for item in analytics["distro_distribution"]]
+    end_left = distribution(9, 2, copy["storage_by_type"], share_headers, storage)
+    end_right = distribution(9, 7, copy["memory_capacity"], share_headers, memory)
+    next_row = max(end_left, end_right) + 2
+    end_left = distribution(next_row, 2, copy["distributions"], share_headers, distros)
+    locations = [
+        (label_text(item["location"]), item["total"], item["online"], item["flash"], item["online"] / item["total"] if item["total"] else 0.0)
+        for item in analytics["locations"]
+    ]
+    end_right = distribution(
+        next_row, 7, copy["by_location"],
+        [copy["location"], copy["machines"], copy["online"], copy["flash"], copy["share"]], locations,
+    )
+    hint_row = max(end_left, end_right) + 2
+    overview.cell(hint_row, 2, copy["inventory_hint"]).font = font(9, color=_MUTED)
     overview.freeze_panes = "A4"
+    overview.page_setup.orientation = "landscape"
+    overview.sheet_properties.pageSetUpPr.fitToPage = True
+    overview.page_setup.fitToWidth = 1
+    overview.page_setup.fitToHeight = 0
 
     sheet = wb.create_sheet(copy["inventory_sheet"])
-    sheet.sheet_view.showGridLines = True
-    last_column = get_column_letter(len(columns))
-    sheet.merge_cells(f"B1:{last_column}1")
-    sheet["A1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
-    sheet["B1"] = f"{BRAND} — {copy['title']}"
-    sheet["B1"].font = Font(name="Calibri", size=15, bold=True, color="F5F5F7")
-    sheet["B1"].fill = PatternFill("solid", fgColor=BRAND_DARK)
-    sheet["B1"].alignment = Alignment(vertical="center")
-    sheet.row_dimensions[1].height = 36
-    sheet.merge_cells(f"B2:{last_column}2")
-    sheet["A2"].fill = PatternFill("solid", fgColor=BRAND_DARK)
-    sheet["B2"] = f"{copy['generated']} {generated} · {len(rows):,} {copy['devices_inventoried']}"
-    sheet["B2"].font = Font(name="Calibri", size=10, color="98989D")
-    sheet["B2"].fill = PatternFill("solid", fgColor=BRAND_DARK)
+    sheet.sheet_view.showGridLines = False
+    last_column = len(columns)
+    last_letter = get_column_letter(last_column)
+    band(sheet, last_column, "B1", 32, subtitle)
+
+    groups = {labels[label]: group for _source, _key, label, group in REPORT_COLUMNS}
+    keys = {labels[label]: key for _source, key, label, _group in REPORT_COLUMNS}
+    column_group = [groups.get(label, "machine") for label in columns]
+    start = 0
+    while start < last_column:
+        end = start
+        while end + 1 < last_column and column_group[end + 1] == column_group[start]:
+            end += 1
+        if end > start:
+            sheet.merge_cells(start_row=3, start_column=start + 1, end_row=3, end_column=end + 1)
+        cell = sheet.cell(3, start + 1, copy["groups"][column_group[start]])
+        cell.font = font(8, True, BRAND_ACCENT)
+        cell.alignment = Alignment(vertical="center", indent=1)
+        for column in range(start + 1, end + 2):
+            sheet.cell(3, column).fill = fill(_GROUP_TINTS[column_group[start]])
+        start = end + 1
+    sheet.row_dimensions[3].height = 18
+
     for column_index, label in enumerate(columns, start=1):
         cell = sheet.cell(4, column_index, label)
-        cell.font = Font(name="Calibri", bold=True, color="F5F5F7", size=10)
-        cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
-        cell.alignment = Alignment(vertical="center", wrap_text=True)
-    sheet.row_dimensions[4].height = 28
-    for row_index, row in enumerate(rows, start=5):
-        for column_index, label in enumerate(columns, start=1):
-            cell = sheet.cell(row_index, column_index, _spreadsheet_safe(row.get(label, "")))
-            cell.font = Font(name="Calibri", color="1C1C1E")
-            cell.fill = PatternFill("solid", fgColor=ROW_EVEN if row_index % 2 else ROW_ODD)
-            cell.alignment = Alignment(
-                vertical="top",
-                wrap_text=label in {
-                    COLUMN_LABELS[language]["Storage devices"],
-                    COLUMN_LABELS[language]["Graphics"],
-                    COLUMN_LABELS[language]["Network adapters"],
-                    COLUMN_LABELS[language]["Collection notes"],
-                    COLUMN_LABELS[language]["Storage classification basis"],
-                    COLUMN_LABELS[language]["Collection sources"],
-                },
-            )
-            if label == COLUMN_LABELS[language]["Status"]:
-                status = str(row.get(label, "")).upper()
-                bg = STATUS_ONLINE_BG if status == "ONLINE" else STATUS_OFFLINE_BG if status == "OFFLINE" else STATUS_OTHER_BG
-                fg = STATUS_ONLINE_FG if status == "ONLINE" else STATUS_OFFLINE_FG if status == "OFFLINE" else STATUS_OTHER_FG
-                cell.fill = PatternFill("solid", fgColor=bg)
-                cell.font = Font(name="Calibri", bold=True, color=fg)
-            if label == COLUMN_LABELS[language]["Details / error"] and row.get(label):
-                cell.font = Font(name="Calibri", color=STATUS_OFFLINE_FG)
+        cell.font = font(9, True, "F5F5F7")
+        cell.fill = fill(BRAND_HEADER)
+        cell.alignment = Alignment(vertical="center", wrap_text=True, indent=1)
+        cell.border = Border(bottom=Side(style="medium", color=BRAND_ACCENT))
+    sheet.row_dimensions[4].height = 30
+
+    widths = {}
     for column_index, label in enumerate(columns, start=1):
-        values = [label] + [row.get(label, "") for row in rows[:250]]
-        maximum = max((len(str(value)) for value in values), default=10)
-        sheet.column_dimensions[get_column_letter(column_index)].width = max(12, min(maximum + 2, 46))
-    sheet.freeze_panes = "A5"
-    sheet.auto_filter.ref = f"A4:{last_column}{max(4, 4 + len(rows))}"
+        key = keys.get(label)
+        sample = [label] + [row.get(label, "") for row in rows[:250]]
+        longest = max((len(line) for value in sample for line in str(value).splitlines() or [""]), default=10)
+        cap = 48 if key in MULTILINE_KEYS else 30
+        widths[column_index] = max(11, min(longest + 3, cap))
+        sheet.column_dimensions[get_column_letter(column_index)].width = widths[column_index]
+    widths_by_label = {label: widths[index] for index, label in enumerate(columns, start=1)}
+
+    for row_index, row in enumerate(rows, start=5):
+        band_color = ROW_EVEN if row_index % 2 else "F7F7F9"
+        line_count = 1
+        for column_index, label in enumerate(columns, start=1):
+            key = keys.get(label)
+            raw = row.get(label, "")
+            value: Any = _spreadsheet_safe(raw)
+            cell = sheet.cell(row_index, column_index)
+            cell.font = font(10)
+            cell.fill = fill(band_color)
+            cell.border = Border(bottom=thin)
+            wrap = key in MULTILINE_KEYS
+            if key == "status":
+                status = str(raw).upper()
+                value = status_names.get(status, raw)
+                tone = "ONLINE" if status == "ONLINE" else "OFFLINE" if status == "OFFLINE" else "OTHER"
+                cell.fill = fill({"ONLINE": STATUS_ONLINE_BG, "OFFLINE": STATUS_OFFLINE_BG}.get(tone, STATUS_OTHER_BG))
+                cell.font = font(10, True, {"ONLINE": STATUS_ONLINE_FG, "OFFLINE": STATUS_OFFLINE_FG}.get(tone, STATUS_OTHER_FG))
+            elif key == "dta_atualizacao" and _parse_timestamp(str(raw)):
+                value = _parse_timestamp(str(raw))
+                cell.number_format = copy["date_format"]
+            elif key == "coverage_percent" and re.fullmatch(r"\d{1,3}%", str(raw).strip()):
+                value = int(str(raw).strip()[:-1]) / 100
+                cell.number_format = "0%"
+            elif key == "erro" and raw:
+                cell.font = font(10, color=STATUS_OFFLINE_FG)
+            elif label == columns[0]:
+                cell.font = font(10, True)
+            cell.value = value
+            cell.alignment = Alignment(vertical="top", wrap_text=wrap, indent=1 if column_index == 1 else 0)
+            if wrap and raw:
+                width = widths_by_label[label]
+                line_count = max(line_count, sum(max(1, -(-len(line) // max(1, width - 2))) for line in str(raw).splitlines()))
+        # openpyxl cannot autofit; Excel keeps the default height for wrapped text otherwise.
+        sheet.row_dimensions[row_index].height = min(15 * line_count + 4, 160)
+
+    sheet.freeze_panes = "B5"
+    sheet.auto_filter.ref = f"A4:{last_letter}{max(4, 4 + len(rows))}"
+    # Dozens of columns are unreadable on one page; spread them over a few with the host repeated.
     sheet.sheet_properties.pageSetUpPr.fitToPage = True
-    sheet.page_setup.fitToWidth = 1
+    sheet.page_setup.fitToWidth = 4
     sheet.page_setup.fitToHeight = 0
     sheet.page_setup.orientation = "landscape"
-    sheet.print_title_rows = "1:4"
+    sheet.print_title_rows = "3:4"
+    sheet.print_title_cols = "A:A"
+    for page_sheet in (overview, sheet):
+        page_sheet.oddFooter.left.text = BRAND
+        page_sheet.oddFooter.right.text = copy["page"]
     wb.properties.title = f"{BRAND} {copy['title']}"
     wb.properties.subject = copy["subtitle"]
     wb.properties.creator = BRAND
