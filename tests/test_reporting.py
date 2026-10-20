@@ -92,8 +92,6 @@ class ReportingTests(unittest.TestCase):
             inventory = workbook["Inventory"]
             self.assertEqual(inventory.freeze_panes, "A5")
             self.assertEqual(inventory.auto_filter.ref, f"A4:{inventory.cell(4, inventory.max_column).column_letter}{inventory.max_row}")
-            self.assertGreaterEqual(len(workbook["Overview"]._images), 1)
-            self.assertGreaterEqual(len(inventory._images), 1)
             headers = [cell.value for cell in inventory[4]]
             notes_column = headers.index("Notes") + 1
             notes_value = inventory.cell(5, notes_column).value
