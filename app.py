@@ -669,65 +669,78 @@ def launch_desktop_window(
     url: str, on_close: Callable[[], None], seconds_since_request: Callable[[], float]
 ) -> None:
     """Open the Invenux desktop window via pywebview, GTK WebKit2, or default browser."""
-    try:
-        import webview  # type: ignore
+    linux = sys.platform.startswith("linux")
+    # Qt aborts the whole process when it cannot reach a display, before any exception.
+    has_display = not linux or bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"))
+    log = logging.getLogger(__name__)
 
-        window = webview.create_window(
-            APP_BRAND,
-            url,
-            width=1440,
-            height=880,
-            min_size=(720, 520),
-            background_color=COLORS["bg_window"],
-        )
-        window.events.closed += on_close
-        webview.start()
-        return
-    except Exception:
-        pass
-
-    try:
-        import gi  # type: ignore
-
-        gi.require_version("Gtk", "3.0")
+    if has_display:
         try:
-            gi.require_version("WebKit2", "4.1")
-        except ValueError:
-            gi.require_version("WebKit2", "4.0")
-        from gi.repository import Gdk, Gtk, WebKit2  # type: ignore
+            import webview  # type: ignore
 
-        win = Gtk.Window(title=APP_BRAND)
-        win.set_default_size(1440, 880)
-        win.set_size_request(720, 520)
-        display = Gdk.Display.get_default()
-        if display is not None and display.get_n_monitors():
-            workarea = display.get_monitor(0).get_workarea()
-            if workarea.width < 1440 or workarea.height < 880:
-                win.maximize()
-        icon_path = resource_path("brand/icons/invenux-128.png")
-        if icon_path.is_file():
+            if linux and os.geteuid() == 0:
+                # Qt WebEngine (Chromium) refuses to start as root with its sandbox enabled.
+                os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+            window = webview.create_window(
+                APP_BRAND,
+                url,
+                width=1440,
+                height=880,
+                min_size=(720, 520),
+                background_color=COLORS["bg_window"],
+                # pywebview blocks selection by default; IPs and serials must be copyable.
+                text_select=True,
+            )
+            window.events.closed += on_close
+            # The Linux package bundles Qt only; probing GTK first would just log an ImportError.
+            gui = "qt" if linux and getattr(sys, "frozen", False) else None
+            webview.start(gui=gui, icon=str(resource_path("brand/icons/invenux-256.png")))
+            return
+        except Exception as exc:
+            log.info("pywebview window unavailable: %s", exc)
+
+        try:
+            import gi  # type: ignore
+
+            gi.require_version("Gtk", "3.0")
             try:
-                win.set_icon_from_file(str(icon_path))
-            except Exception:
-                pass
+                gi.require_version("WebKit2", "4.1")
+            except ValueError:
+                gi.require_version("WebKit2", "4.0")
+            from gi.repository import Gdk, Gtk, WebKit2  # type: ignore
 
-        webview_widget = WebKit2.WebView()
-        rgba = Gdk.RGBA()
-        rgba.parse(COLORS["bg_window"])
-        webview_widget.set_background_color(rgba)
-        webview_widget.load_uri(url)
-        win.add(webview_widget)
+            win = Gtk.Window(title=APP_BRAND)
+            win.set_default_size(1440, 880)
+            win.set_size_request(720, 520)
+            display = Gdk.Display.get_default()
+            if display is not None and display.get_n_monitors():
+                workarea = display.get_monitor(0).get_workarea()
+                if workarea.width < 1440 or workarea.height < 880:
+                    win.maximize()
+            icon_path = resource_path("brand/icons/invenux-128.png")
+            if icon_path.is_file():
+                try:
+                    win.set_icon_from_file(str(icon_path))
+                except Exception:
+                    pass
 
-        def _handle_destroy(*_args: Any) -> None:
-            on_close()
-            Gtk.main_quit()
+            webview_widget = WebKit2.WebView()
+            rgba = Gdk.RGBA()
+            rgba.parse(COLORS["bg_window"])
+            webview_widget.set_background_color(rgba)
+            webview_widget.load_uri(url)
+            win.add(webview_widget)
 
-        win.connect("destroy", _handle_destroy)
-        win.show_all()
-        Gtk.main()
-        return
-    except Exception:
-        pass
+            def _handle_destroy(*_args: Any) -> None:
+                on_close()
+                Gtk.main_quit()
+
+            win.connect("destroy", _handle_destroy)
+            win.show_all()
+            Gtk.main()
+            return
+        except Exception as exc:
+            log.info("GTK WebKit2 window unavailable: %s", exc)
 
     # Without a window there is no close event; stop once the tab stops pinging.
     print(f"{APP_BRAND} v{APP_VERSION} running at {url}")

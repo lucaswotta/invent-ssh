@@ -42,8 +42,23 @@ jobs:
       - name: Install packaging requirements
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-build.txt
 
+      - name: Install the Qt system libraries (Linux)
+        if: runner.os == 'Linux'
+        # PyInstaller copies these into the bundle, so X11 sessions work on machines without them.
+        run: sudo apt-get update && sudo apt-get install -y libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-randr0 libxcb-xkb1 libnss3 xvfb
+
       - name: Build the native package
         run: python build.py
+
+      - name: Open the window and check the UI loads
+        shell: bash
+        run: |
+          version=$(python -c "import build; print(build.read_app_version())")
+          case "${{ runner.os }}" in
+            Linux) xvfb-run -a python scripts/smoke_window.py "dist/invenux-v${version}/invenux-v${version}" ;;
+            Windows) python scripts/smoke_window.py "dist/invenux-v${version}.exe" ;;
+            macOS) python scripts/smoke_window.py "dist/invenux-v${version}.app/Contents/MacOS/invenux-v${version}" ;;
+          esac
 
       - name: Name the release files
         shell: bash
@@ -53,11 +68,12 @@ jobs:
           mkdir release
           case "${{ runner.os }}" in
             Linux)
-              mkdir "$name"
-              cp "dist/invenux-v${version}" "$name/invenux"
-              cp packaging/linux/invenux.desktop "$name/"
+              cp -R "dist/invenux-v${version}" "$name"
+              mv "$name/invenux-v${version}" "$name/invenux"
+              cp packaging/linux/invenux.desktop packaging/linux/install.sh "$name/"
               cp brand/icons/invenux-256.png "$name/invenux.png"
-              tar -czf "release/${name}.tar.gz" "$name"
+              # xz keeps the Qt WebEngine runtime at about 135 MB instead of 185 MB with gzip.
+              tar -cf - "$name" | xz -T0 -6 > "release/${name}.tar.xz"
               ;;
             Windows)
               cp "dist/invenux-v${version}.exe" "release/${name}.exe"

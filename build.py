@@ -1,7 +1,8 @@
 """Build a native Invenux bundle with PyInstaller on the current OS.
 
 This script deliberately does not install packages, remove old distributions, or
-write binaries into the source tree. Install requirements-build.txt explicitly
+write binaries into the source tree; it only prunes unused Qt files from the
+bundle it just built. Install requirements-build.txt explicitly
 in a virtual environment before running it.
 """
 from __future__ import annotations
@@ -20,6 +21,19 @@ ROOT = Path(__file__).resolve().parent
 ENTRY_POINT = ROOT / "app.py"
 BRAND_DIR = ROOT / "brand"
 UI_DIR = ROOT / "ui"
+# pywebview's Qt backend uses only the widgets-based web engine; the hooks would
+# otherwise follow these bindings into hundreds of MB of QML, 3D and charts.
+QT_UNUSED_MODULES = (
+    "PySide6.QtQml",
+    "PySide6.QtQuick",
+    "PySide6.QtQuickWidgets",
+    "PySide6.QtDataVisualization",
+    "PySide6.QtOpenGL",
+    "PySide6.QtOpenGLWidgets",
+    "PySide6.QtDBus",
+)
+# Chromium UI strings (context menu) for the app languages; the other 50 locales add 40 MB.
+QT_WEBENGINE_LOCALES = ("en-US.pak", "es.pak", "es-419.pak", "pt-BR.pak")
 ICON_ICO = BRAND_DIR / "invenux.ico"
 ICON_ICNS = BRAND_DIR / "invenux.icns"
 APP_SLUG = "invenux"
@@ -43,6 +57,7 @@ def read_app_version() -> str:
 def build_command(console: bool = False) -> list[str]:
     """Create the platform-native PyInstaller command and keep resources explicit."""
     version = read_app_version()
+    system = platform.system()
     build_root = ROOT / "build" / f"pyinstaller-{platform.system().lower()}"
     dist_root = ROOT / "dist"
     command = [
@@ -51,7 +66,9 @@ def build_command(console: bool = False) -> list[str]:
         "PyInstaller",
         "--noconfirm",
         "--clean",
-        "--onefile",
+        # A single Windows .exe is the expected download; on Linux and macOS a onefile
+        # build would unpack the 300 MB Qt/WebKit runtime to a temp folder on every launch.
+        "--onefile" if system == "Windows" else "--onedir",
         "--name",
         f"{APP_SLUG}-v{version}",
         "--distpath",
@@ -75,13 +92,14 @@ def build_command(console: bool = False) -> list[str]:
         "--hidden-import",
         "cryptography.hazmat.bindings._rust",
     ]
+    for module in QT_UNUSED_MODULES:
+        command.extend(["--exclude-module", module])
 
     if console:
         command.append("--console")
     else:
         command.append("--windowed")
 
-    system = platform.system()
     if system == "Windows" and ICON_ICO.is_file():
         command.extend(["--icon", str(ICON_ICO)])
     elif system == "Darwin":
@@ -90,6 +108,24 @@ def build_command(console: bool = False) -> list[str]:
 
     command.append(str(ENTRY_POINT))
     return command
+
+
+def prune_qt_resources(dist_root: Path) -> int:
+    """Drop Qt files the window never loads: Qt's own translations (no QTranslator is
+    installed), extra Chromium locales and the DevTools frontend. Returns bytes freed."""
+    freed = 0
+    for translations in dist_root.glob("**/PySide6/Qt/translations"):
+        for path in translations.rglob("*"):
+            unused = path.suffix == ".qm" or (
+                path.suffix == ".pak" and path.name not in QT_WEBENGINE_LOCALES
+            )
+            if path.is_file() and unused:
+                freed += path.stat().st_size
+                path.unlink()
+    for devtools in dist_root.glob("**/PySide6/Qt/resources/qtwebengine_devtools_resources*.pak"):
+        freed += devtools.stat().st_size
+        devtools.unlink()
+    return freed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -133,6 +169,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"PyInstaller exited with status {completed.returncode}.", file=sys.stderr)
             return completed.returncode
 
+        freed = prune_qt_resources(ROOT / "dist" / f"{APP_SLUG}-v{version}")
+        if freed:
+            print(f"Removed {freed / 1_000_000:.0f} MB of unused Qt translations and DevTools files.")
         print("Build completed. Inspect the dist/ directory for the native executable/app bundle.")
         return 0
     except (OSError, SyntaxError, RuntimeError, ValueError) as exc:
