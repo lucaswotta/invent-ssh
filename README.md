@@ -11,7 +11,7 @@ Idioma: [Português (Brasil)](README.pt-BR.md)
 - Runtime Python packages (`requirements.txt`):
   - `openpyxl>=3.1.0,<4.0.0`
   - `paramiko>=3.3.0,<5.0.0`
-- Optional desktop window backends: `pywebview` or `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); falls back to the system web browser when neither is installed.
+- Optional desktop window backends: `pywebview` or `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); falls back to the system web browser when neither is installed. In browser mode the process exits about 3 minutes after the tab is closed. Packaged builds include neither backend and always use the browser.
 
 ## Installation
 
@@ -59,11 +59,14 @@ User paths follow platform conventions via `paths.py`:
 - Snapshots and TOFU host keys: `~/.local/share/invent-ssh/snapshots.db` and `~/.local/share/invent-ssh/known_hosts`.
 - Exported reports: `~/Documents/Invent-SSH Reports/`.
 
+Reports are written only when you choose `Exportar` or run the command line. SSH host keys use trust on first use by default; see [SECURITY.md](SECURITY.md).
+
 SSH passwords are kept only in memory for the active session and are never written to `config.json`.
 
 ## Limitations
 
-- Targets must be Linux systems accessible over SSH; Windows and macOS endpoints are not collected.
+- Targets must be Linux systems accessible over SSH on port `22`; Windows and macOS endpoints are not collected.
+- The interface is in Portuguese; exported reports and log messages follow the system language (`pt-br` or `en`).
 - Hardware collection is read-only and executes a single POSIX shell probe per target (`inspector.py`). Fields that require root privileges (`dmidecode`, serial numbers) or optional utilities (`lscpu`, `lsblk`, `lspci`) are reported as `N/A` when unavailable or unpermitted.
 - Storage classification (`NVMe`, `SSD / flash`, `HDD`) relies on transport names and the Linux kernel rotational flag (`ROTA`), which can report virtual disks as non-rotating media.
 

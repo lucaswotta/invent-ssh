@@ -2,6 +2,29 @@
 
 Notable changes to Invent-SSH are recorded here.
 
+## [0.5.0] — 2026-10-20
+
+### Changed
+
+- Replaced the Tk desktop UI with a local web interface (`ui/index.html`) served by `app.py` on `127.0.0.1` and shown in `pywebview`, GTK WebKit2 or the default browser.
+- Replaced the mascot with a geometric mark and a dark macOS-style palette.
+- Reports are written only through Exportar or the CLI; a scan no longer saves an XLSX by itself.
+- SSH host keys use TOFU by default: unknown keys are stored in the app `known_hosts` and a changed key is rejected.
+
+### Added
+
+- SQLite snapshot history with field-by-field comparison and CSV export of the changes.
+- Fleet view with storage, memory and distribution breakdowns per location.
+
+### Fixed
+
+- XLSX export failed without Pillow (`ImportError`) because of the embedded logo.
+- Parallel workers overwrote each other's TOFU entries in `known_hosts`.
+- CPU lists such as `0-3,8` counted a single CPU as its index.
+- The local server accepted any `Host` header, so a DNS-rebinding page could read the session token.
+- In browser mode the server kept running after the tab closed; it now stops after 180 s without requests.
+- SQLite connections were never closed.
+
 ## [0.4.0] — 2026-10-19
 
 ### Changed
