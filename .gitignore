@@ -51,3 +51,14 @@ config.json
 crash_log.txt
 *.xlsx
 *.csv
+# Local Windows binaries are build artifacts, not source files.
+*.exe
+
+*.log
+
+# Environment secrets (keep example templates explicit if ever added).
+.env.*
+!.env.example
+
+# Runtime crash dumps may contain local paths, hostnames, and stack traces.
+crash_log.txt
