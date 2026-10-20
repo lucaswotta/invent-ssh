@@ -10,6 +10,6 @@ Comment[es]=Inventario de hardware Linux por SSH
 Exec=invenux
 Icon=invenux
 Terminal=false
-Categories=System;Monitor;Network;
+Categories=System;Monitor;
 Keywords=inventory;hardware;ssh;linux;inventario;
 StartupWMClass=Invenux
