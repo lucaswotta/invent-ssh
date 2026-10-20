@@ -36,10 +36,29 @@ class LanguageResolutionTests(unittest.TestCase):
         ):
             self.assertEqual(i18n._system_language(), "pt-br")
 
+    def test_spanish_locale_is_supported(self):
+        with (
+            patch.dict(os.environ, {"LANG": "es_ES.UTF-8"}, clear=True),
+            patch("i18n.locale.getlocale", return_value=(None, None)),
+        ):
+            self.assertEqual(i18n._system_language(), "es")
+
+    def test_unsupported_locale_falls_back_to_english(self):
+        with (
+            patch.dict(os.environ, {"LANG": "de_DE.UTF-8"}, clear=True),
+            patch("i18n.locale.getlocale", return_value=("de_DE", "UTF-8")),
+        ):
+            self.assertEqual(i18n._system_language(), "en")
+
+    def test_every_language_has_every_message(self):
+        keys = set(i18n.STRINGS["en"])
+        for language in i18n.SUPPORTED_LANGUAGES:
+            self.assertEqual(set(i18n.STRINGS[language]), keys, language)
+
     def test_explicit_saved_preference_overrides_system_language(self):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "config.json"
-            config.write_text(json.dumps({"language": "en"}), encoding="utf-8")
+            config.write_text(json.dumps({"language_choice": "en"}), encoding="utf-8")
             with (
                 patch("i18n.CONFIG_FILE", str(config)),
                 patch("i18n._system_language", return_value="pt-br"),

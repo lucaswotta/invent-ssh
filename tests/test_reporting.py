@@ -121,6 +121,26 @@ class ReportingTests(unittest.TestCase):
             self.assertIn("Responsável", headers)
             self.assertIn("Placa-mãe", headers)
 
+    @unittest.skipUnless(importlib.util.find_spec("openpyxl"), "openpyxl is not installed")
+    def test_spanish_report_and_template(self):
+        from openpyxl import load_workbook
+
+        from reporting import create_template_workbook
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = save_report([SAMPLE], "XLSX", directory, language="es")
+            workbook = load_workbook(path)
+            self.addCleanup(workbook.close)
+            self.assertEqual(workbook.sheetnames, ["Resumen", "Inventario"])
+            headers = [cell.value for cell in workbook["Inventario"][4]]
+            self.assertIn("Placa base", headers)
+            self.assertIn("Ubicación", headers)
+
+            template = load_workbook(create_template_workbook(f"{directory}/t.xlsx", language="es"))
+            self.addCleanup(template.close)
+            self.assertEqual(template.sheetnames, ["Destinos", "Cómo rellenar"])
+            self.assertEqual(template["Destinos"]["A1"].value, "IP")
+
     def test_html_report_respects_portuguese_locale(self):
         with tempfile.TemporaryDirectory() as directory:
             path = save_report([SAMPLE], "HTML", directory, language="pt-br")
