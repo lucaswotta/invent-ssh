@@ -8,7 +8,7 @@ Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
 - Release packages open their own window instead of a browser tab: WebView2 on Windows, WebKit on macOS and a bundled Qt WebEngine on Linux. Closing the window stops the program.
 - `install.sh` in the Linux package installs the program, menu entry and icon for the current user; `--uninstall` removes them.
-- CI opens each packaged window and checks that the interface loads.
+- CI opens each package and checks it shows its own window instead of falling back to the browser; on Linux it also checks that the interface loads.
 
 ### Changed
 
