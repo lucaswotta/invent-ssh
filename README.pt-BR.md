@@ -11,6 +11,7 @@ Language: [English](README.md)
 - Pacotes Python de execução (`requirements.txt`):
   - `openpyxl>=3.1.0,<4.0.0`
   - `paramiko>=3.3.0,<5.0.0`
+  - `pillow>=10.0,<14.0` (logo nas planilhas Excel)
 - Backends opcionais para janela nativa: `pywebview` ou `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); na ausência de ambos, abre no navegador padrão do sistema. No modo navegador, o processo encerra cerca de 3 minutos depois que a aba é fechada. Os executáveis empacotados não incluem nenhum dos dois e sempre usam o navegador.
 
 ## Instalação

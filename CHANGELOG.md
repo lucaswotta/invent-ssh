@@ -8,6 +8,11 @@ Notable changes to Invent-SSH are recorded here.
 
 - First-run guide in three steps, a `Como usar` sheet with the spreadsheet format, collected data, status meanings and folders, and `Abrir pasta`/`Abrir` buttons after exports.
 - Drag and drop of the target spreadsheet onto the window.
+- System details in the inspector and reports: OS version and codename, desktop and display server, connected displays, package count, init, time zone, root filesystem usage, IPv4 and MAC per adapter.
+- Every memory slot with locator, size, type, speed and part number, total slots and maximum capacity.
+- Collection time per machine in the table and the inspector.
+- Responsive layout down to 600 px wide; the window minimum is 720x520 and it opens maximized on smaller screens.
+- Excel export with the logo, indicator cards, storage/memory/distribution/location tables with data bars, grouped and colored inventory columns, real dates and numeric coverage.
 - After loading targets, the app lists rows without an address and repeated addresses, and opens the SSH panel when access is missing.
 
 ### Changed
@@ -18,6 +23,8 @@ Notable changes to Invent-SSH are recorded here.
 
 ### Fixed
 
+- Alvos, SSH and Exportar did not open in browsers with the Popover API: the inline `togglePopover()` call resolved to the native element method.
+- The probe parser dropped sections whose name has a digit (`ipv4`).
 - A repeated address in the spreadsheet left one row in `PENDING` after the scan.
 - The log claimed a report was saved after each scan and recorded every host's full record.
 
