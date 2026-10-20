@@ -23,6 +23,13 @@ class InventoryEngineTests(unittest.TestCase):
         import core
         cls.core = core
 
+    def setUp(self):
+        from i18n import get_language, set_language
+
+        previous = get_language()
+        set_language("en")
+        self.addCleanup(set_language, previous)
+
     def make_engine(self, **extra):
         config = {
             "max_workers": 3,
@@ -183,7 +190,7 @@ class InventoryEngineTests(unittest.TestCase):
         queued = []
         while not engine.log_queue.empty():
             queued.append(engine.log_queue.get_nowait())
-        self.assertTrue(any("circuit" in entry[1].lower() for entry in queued))
+        self.assertTrue(any("first 10 connections failed" in entry[1] for entry in queued))
 
     def test_run_inventory_reports_partial_results_as_warning(self):
         from i18n import get_language, set_language

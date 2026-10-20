@@ -113,6 +113,23 @@ METADATA_LABELS_PT = {
     "MANUFACTURER": "Fabricante do ativo",
     "OPERATING_SYSTEM": "Sistema operacional esperado",
 }
+METADATA_LABELS_ES = {
+    "HOSTNAME": "Nombre del host",
+    "ASSET_TAG": "Etiqueta del activo",
+    "ASSET_ID": "ID del activo",
+    "SERIAL_NUMBER": "Número de serie",
+    "SERIAL": "Número de serie",
+    "LOCATION": "Ubicación",
+    "SITE": "Sede",
+    "DEPARTMENT": "Departamento",
+    "OWNER": "Responsable",
+    "ENVIRONMENT": "Entorno",
+    "ROLE": "Función",
+    "NOTES": "Notas",
+    "MODEL": "Modelo del activo",
+    "MANUFACTURER": "Fabricante del activo",
+    "OPERATING_SYSTEM": "Sistema operativo esperado",
+}
 COLUMN_LABELS = {
     "en": {
         "Host / IP": "Host / IP", "Status": "Status", "Motherboard": "Motherboard",
@@ -160,6 +177,29 @@ COLUMN_LABELS = {
         "Max memory capacity": "Capacidade máxima de memória",
     },
 }
+COLUMN_LABELS["es"] = {
+    "Host / IP": "Host / IP", "Status": "Estado", "Motherboard": "Placa base",
+    "Processor": "Procesador", "CPU cores / threads": "Núcleos / hilos de CPU",
+    "Memory": "Memoria", "Storage type": "Tipo de almacenamiento",
+    "Storage capacity": "Capacidad de almacenamiento", "Linux distribution": "Distribución Linux",
+    "Kernel": "Kernel", "Last collected": "Última recopilación", "Details / error": "Detalles / error",
+    "Detected hostname": "Hostname detectado", "Manufacturer": "Fabricante", "System model": "Modelo del equipo",
+    "Architecture": "Arquitectura", "CPU sockets": "Zócalos de CPU",
+    "CPU max frequency": "Frecuencia máxima de CPU", "CPU virtualization": "Virtualización de CPU",
+    "Memory speed": "Velocidad de memoria", "Memory slots": "Ranuras de memoria", "RAM used": "RAM en uso",
+    "RAM available": "RAM disponible", "Storage devices": "Unidades de almacenamiento", "Graphics": "GPU / gráficos",
+    "Network adapters": "Adaptadores de red", "BIOS / firmware": "BIOS / firmware",
+    "System uptime": "Tiempo encendido", "Virtualization": "Entorno virtual",
+    "System serial (opt-in)": "Número de serie del sistema (opcional)",
+    "Data coverage": "Cobertura de datos", "Collection notes": "Notas de la recopilación",
+    "Storage classification basis": "Criterio de clasificación del almacenamiento",
+    "Collection sources": "Fuentes de la recopilación",
+    "Operating system": "Sistema operativo", "OS version": "Versión del sistema",
+    "Desktop environment": "Entorno gráfico", "Displays": "Pantallas",
+    "Installed packages": "Paquetes instalados", "Time zone": "Zona horaria",
+    "Root filesystem usage": "Uso del disco (/)", "Memory modules": "Módulos de memoria",
+    "Max memory capacity": "Capacidad máxima de memoria",
+}
 REPORT_TEXT = {
     "en": {
         "title": "Hardware inventory", "kicker": "INVENTORY REPORT",
@@ -204,6 +244,75 @@ REPORT_TEXT = {
 }
 
 
+REPORT_TEXT["es"] = {
+    "title": "Inventario de hardware", "kicker": "INFORME DE INVENTARIO",
+    "subtitle": "Una vista clara de su parque Linux, lista para analizar y compartir.",
+    "generated": "Generado el", "devices_inventoried": "equipos inventariados",
+    "summary": "Resumen del inventario", "total": "Total de equipos", "online": "Accesibles",
+    "offline": "Inaccesibles", "other": "Otros / errores", "search_label": "Buscar en el inventario",
+    "search_placeholder": "Buscar host, modelo, ubicación, responsable…", "all_statuses": "Todos los estados",
+    "devices_shown": "equipos mostrados", "footer": "Generado localmente por {brand}. Los datos permanecen en este archivo.",
+    "overview_sheet": "Resumen", "inventory_sheet": "Inventario", "metric": "INDICADOR",
+    "devices": "EQUIPOS", "snapshot": "equipos en esta recopilación",
+    "coverage": "Cobertura media de datos", "coverage_suffix": "media",
+    "inventory_hint": "Use la hoja Inventario para filtrar, ordenar e inspeccionar los equipos.",
+    "availability": "del parque accesible", "share_of_total": "del total", "average": "media",
+    "storage_by_type": "Almacenamiento por tipo", "memory_capacity": "Memoria RAM",
+    "distributions": "Distribuciones Linux", "by_location": "Por ubicación", "online_hosts": "equipos accesibles",
+    "kind": "Tipo", "machines": "Equipos", "share": "Participación", "location": "Ubicación",
+    "flash": "Flash", "hdd": "HDD", "groups": {"machine": "EQUIPO", "status": "ESTADO", "hardware": "HARDWARE", "system": "SISTEMA", "collection": "RECOPILACIÓN"},
+    "date_format": "dd/mm/yyyy hh:mm", "page": "Página &P de &N",
+    "status_options": [("ONLINE", "Accesible"), ("OFFLINE", "Inaccesible"), ("FALHA_AUTH", "Fallo de autenticación"), ("ERRO_SSH", "Error SSH"), ("ERRO_DESCONHECIDO", "Error desconocido"), ("ERRO_CHAVE_HOST", "Clave SSH rechazada"), ("ERROR", "Error")],
+}
+REPORT_LANGUAGES = ("en", "pt-br", "es")
+
+
+def report_language(language: str) -> str:
+    code = str(language).lower()
+    return "pt-br" if code.startswith("pt") else "es" if code.startswith("es") else "en"
+
+
+# Explanatory phrases the collector writes in English; identifiers and numbers stay untouched.
+DETAIL_TEXT = {
+    "pt-br": {
+        "not_collected": "Não coletado (opcional)", "slots": "{used} de {total} ocupados",
+        "modules_one": "1 módulo instalado", "modules_many": "{count} módulo(s) instalado(s)",
+        "N/A": "Não disponível", "Not detected": "Não detectado", "Available": "Disponível",
+        "Not detected (physical host not independently confirmed)": "Não detectado (host físico não confirmado independentemente)",
+        "storage_basis": "NVMe é identificado pelo nome/transporte; HDD versus mídia não rotativa usa a flag do kernel Linux. Discos virtuais e mídia flash podem afetar essa classificação.",
+        "sources": {"OS:": "Sistema operacional:", "Memory:": "Memória:", "Storage:": "Armazenamento:", "System/board/firmware:": "Sistema/placa/firmware:", "Graphics:": "Gráficos:", "Network:": "Rede:"},
+        "core_missing": "Dados essenciais indisponíveis: ", "optional_missing": "Inventário principal coletado; detalhes opcionais indisponíveis: ",
+        "core_ok": "Inventário principal coletado. Valores e classificações dependem das interfaces do kernel e das ferramentas disponíveis no sistema.",
+        "fields": {
+            "Linux distribution": "distribuição Linux", "Kernel version": "versão do kernel", "Machine architecture": "arquitetura da máquina",
+            "CPU model": "modelo da CPU", "CPU topology": "topologia da CPU", "Usable RAM total": "memória RAM total",
+            "Storage inventory": "inventário de armazenamento", "System vendor/model": "fabricante/modelo do sistema",
+            "motherboard": "placa-mãe", "DIMM speed": "velocidade dos módulos de memória", "GPU": "GPU",
+            "network adapter detail": "detalhes dos adaptadores de rede",
+        },
+        "asset_field": "Campo do ativo · {label}",
+    },
+    "es": {
+        "not_collected": "No recopilado (opcional)", "slots": "{used} de {total} ocupadas",
+        "modules_one": "1 módulo instalado", "modules_many": "{count} módulo(s) instalado(s)",
+        "N/A": "No disponible", "Not detected": "No detectado", "Available": "Disponible",
+        "Not detected (physical host not independently confirmed)": "No detectado (equipo físico no confirmado de forma independiente)",
+        "storage_basis": "NVMe se identifica por nombre/transporte; HDD frente a medio no rotativo usa el indicador del kernel Linux. Los discos virtuales y la memoria flash pueden afectar esta clasificación.",
+        "sources": {"OS:": "Sistema operativo:", "Memory:": "Memoria:", "Storage:": "Almacenamiento:", "System/board/firmware:": "Sistema/placa/firmware:", "Graphics:": "Gráficos:", "Network:": "Red:"},
+        "core_missing": "Datos esenciales no disponibles: ", "optional_missing": "Inventario principal recopilado; detalles opcionales no disponibles: ",
+        "core_ok": "Inventario principal recopilado. Los valores y clasificaciones dependen de las interfaces del kernel y de las herramientas disponibles en el sistema.",
+        "fields": {
+            "Linux distribution": "distribución Linux", "Kernel version": "versión del kernel", "Machine architecture": "arquitectura del equipo",
+            "CPU model": "modelo de CPU", "CPU topology": "topología de CPU", "Usable RAM total": "memoria RAM total",
+            "Storage inventory": "inventario de almacenamiento", "System vendor/model": "fabricante/modelo del sistema",
+            "motherboard": "placa base", "DIMM speed": "velocidad de los módulos de memoria", "GPU": "GPU",
+            "network adapter detail": "detalles de los adaptadores de red",
+        },
+        "asset_field": "Campo del activo · {label}",
+    },
+}
+
+
 def _value(value: Any) -> str:
     if value is None:
         return ""
@@ -227,7 +336,7 @@ def _spreadsheet_safe(value: Any) -> str:
 
 def metadata_label(key: str, language: str = "en") -> str:
     normalized = str(key).strip().upper().replace(" ", "_").replace("-", "_")
-    labels = METADATA_LABELS_PT if language == "pt-br" else METADATA_LABELS
+    labels = {"pt-br": METADATA_LABELS_PT, "es": METADATA_LABELS_ES}.get(language, METADATA_LABELS)
     label = labels.get(normalized, str(key).strip().replace("_", " ").replace("-", " ").title())
     return _spreadsheet_safe(label)
 
@@ -235,72 +344,37 @@ def metadata_label(key: str, language: str = "en") -> str:
 def _localize_detail_value(key: str, value: Any, language: str) -> str:
     """Translate explanatory labels without changing raw identifiers or numeric facts."""
     text = _value(value)
-    if language != "pt-br" or not text:
+    phrases = DETAIL_TEXT.get(language)
+    if phrases is None or not text:
         return text
 
     if key == "system_serial" and text == "Not collected (opt-in)":
-        return "Não coletado (opcional)"
+        return phrases["not_collected"]
     if key == "ram_slots":
         match = re.fullmatch(r"(\d+) of (\d+) populated", text)
         if match:
-            return f"{match.group(1)} de {match.group(2)} ocupados"
+            return phrases["slots"].format(used=match.group(1), total=match.group(2))
         match = re.fullmatch(r"(\d+) populated", text)
         if match:
             count = int(match.group(1))
-            return f"{count} módulo(s) instalado(s)" if count != 1 else "1 módulo instalado"
-    if key == "virtualization":
-        return {
-            "N/A": "Não disponível",
-            "Not detected (physical host not independently confirmed)": "Não detectado (host físico não confirmado independentemente)",
-            "Not detected": "Não detectado",
-        }.get(text, text)
-    if key == "cpu_virtualization":
-        return {"Available": "Disponível", "Not detected": "Não detectado", "N/A": "Não disponível"}.get(text, text)
+            return phrases["modules_one"] if count == 1 else phrases["modules_many"].format(count=count)
+    if key in {"virtualization", "cpu_virtualization"}:
+        return phrases.get(text, text)
     if key == "storage_classification_basis":
-        return (
-            "NVMe é identificado pelo nome/transporte; HDD versus mídia não rotativa usa a flag "
-            "do kernel Linux. Discos virtuais e mídia flash podem afetar essa classificação."
-        )
+        return phrases["storage_basis"]
     if key == "collection_sources":
-        labels = {
-            "OS:": "Sistema operacional:",
-            "CPU:": "CPU:",
-            "Memory:": "Memória:",
-            "Storage:": "Armazenamento:",
-            "System/board/firmware:": "Sistema/placa/firmware:",
-            "Graphics:": "Gráficos:",
-            "Network:": "Rede:",
-        }
-        for source, translated in labels.items():
+        for source, translated in phrases["sources"].items():
             text = text.replace(source, translated)
         return text
     if key == "collection_notes":
-        if text.startswith("Core data unavailable: "):
-            fields = text.removeprefix("Core data unavailable: ").split(", ")
-            labels = {
-                "Linux distribution": "distribuição Linux",
-                "Kernel version": "versão do kernel",
-                "Machine architecture": "arquitetura da máquina",
-                "CPU model": "modelo da CPU",
-                "CPU topology": "topologia da CPU",
-                "Usable RAM total": "memória RAM total",
-                "Storage inventory": "inventário de armazenamento",
-                "System vendor/model": "fabricante/modelo do sistema",
-            }
-            return "Dados essenciais indisponíveis: " + ", ".join(labels.get(field, field) for field in fields)
-        if text.startswith("Core inventory collected; optional detail unavailable: "):
-            fields = text.removeprefix("Core inventory collected; optional detail unavailable: ").split(", ")
-            labels = {
-                "motherboard": "placa-mãe", "DIMM speed": "velocidade dos módulos de memória",
-                "GPU": "GPU", "network adapter detail": "detalhes dos adaptadores de rede",
-            }
-            return "Inventário principal coletado; detalhes opcionais indisponíveis: " + ", ".join(
-                labels.get(field, field) for field in fields
-            )
+        for prefix, english in (("core_missing", "Core data unavailable: "),
+                                ("optional_missing", "Core inventory collected; optional detail unavailable: ")):
+            if text.startswith(english):
+                fields = text.removeprefix(english).split(", ")
+                return phrases[prefix] + ", ".join(phrases["fields"].get(field, field) for field in fields)
         if text.startswith("Core inventory collected."):
-            return "Inventário principal coletado. Valores e classificações dependem das interfaces do kernel e das ferramentas disponíveis no sistema."
+            return phrases["core_ok"]
     return text
-
 
 def _brand_mark_data_uri() -> str:
     """Embed the mark so HTML exports remain self-contained and work offline."""
@@ -333,7 +407,7 @@ def _prepare(
                 continue
             label = metadata_label(key, language)
             if label in reserved_labels:
-                label = f"Asset field · {label}" if language == "en" else f"Campo do ativo · {label}"
+                label = DETAIL_TEXT[language]["asset_field"].format(label=label) if language in DETAIL_TEXT else f"Asset field · {label}"
             candidate = label
             suffix = 2
             while candidate in reserved_labels or candidate in custom_columns:
@@ -369,7 +443,7 @@ def save_report(
     language: str = "en",
 ) -> Path:
     """Save inventory data as styled XLSX, portable CSV, or interactive HTML."""
-    language = "pt-br" if str(language).lower().startswith("pt") else "en"
+    language = report_language(language)
     records = list(records)
     columns, rows = _prepare(records, language)
     if not rows:
@@ -567,10 +641,18 @@ td{{color:#1c1c1e;border-bottom:1px solid #e5e5ea;overflow:visible;max-width:non
 _FONT = "Segoe UI"
 _BORDER = "E5E5EA"
 _MUTED = "6E6E73"
-_ANALYTICS_LABELS_EN = {
-    "SSD SATA / Flash": "SATA SSD / flash", "HDD Mecânico": "Hard disk",
-    "Até 4 GB": "Up to 4 GB", "16 GB ou superior": "16 GB or more",
-    "Não identificado": "Unidentified", "Geral": "General",
+# compute_fleet_analytics labels its buckets in Portuguese.
+_ANALYTICS_LABELS = {
+    "en": {
+        "SSD SATA / Flash": "SATA SSD / flash", "HDD Mecânico": "Hard disk",
+        "Até 4 GB": "Up to 4 GB", "16 GB ou superior": "16 GB or more",
+        "Não identificado": "Unidentified", "Geral": "General",
+    },
+    "es": {
+        "SSD SATA / Flash": "SSD SATA / flash", "HDD Mecânico": "Disco duro",
+        "Até 4 GB": "Hasta 4 GB", "16 GB ou superior": "16 GB o más",
+        "Não identificado": "No identificado", "Geral": "General",
+    },
 }
 _GROUP_TINTS = {
     "machine": "E8F2FF", "status": "EAF8EE", "hardware": "F2ECFB", "system": "FFF4E5", "collection": "F2F2F7",
@@ -620,7 +702,7 @@ def _write_xlsx(
     total = len(rows)
     average_coverage = _average_coverage(rows, labels["Data coverage"])
     generated = datetime.now().astimezone()
-    generated_text = generated.strftime("%d/%m/%Y %H:%M" if language == "pt-br" else "%Y-%m-%d %H:%M")
+    generated_text = generated.strftime("%Y-%m-%d %H:%M" if language == "en" else "%d/%m/%Y %H:%M")
     analytics = compute_fleet_analytics(records)
 
     def font(size=10, bold=False, color="1C1C1E"):
@@ -632,7 +714,7 @@ def _write_xlsx(
     thin = Side(style="thin", color=_BORDER)
 
     def label_text(text):
-        return _ANALYTICS_LABELS_EN.get(text, text) if language == "en" else text
+        return _ANALYTICS_LABELS.get(language, {}).get(text, text)
 
     def band(sheet, last_column, title_cell, logo_size, subtitle):
         for row in (1, 2):
@@ -690,7 +772,7 @@ def _write_xlsx(
                     bottom=thin if row == 6 else None,
                     right=thin if column == first + 1 else None,
                 )
-    if language == "pt-br":
+    if language != "en":
         for index in range(1, 4):
             cell = overview.cell(6, 2 + index * 2)
             cell.value = str(cell.value).replace(".", ",", 1)
@@ -852,39 +934,129 @@ def _write_xlsx(
     wb.save(path)
 
 
-def create_template_workbook(destination: str | Path, language: str = "pt-br") -> Path:
-    """Create a starter target spreadsheet (.xlsx) with standard inventory columns."""
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
+TEMPLATE_TEXT = {
+    "en": {
+        "file": "invent_ssh_targets_template.xlsx", "sheet": "Targets", "guide": "How to fill",
+        "title": "Target spreadsheet", "intro": "One machine per row. Keep the header in row 1 and fill from row 2.",
+        "required": "Required", "optional": "Optional", "column": "Column", "use": "What it is for",
+        "rows": [
+            ("IP", True, "Address or name of the machine. HOST, HOSTNAME, ADDRESS, IP_ADDRESS, ENDPOINT or TARGET also work."),
+            ("HOSTNAME", False, "Name you know the machine by; the collected hostname is shown too."),
+            ("LOCATION", False, "Site or room. Groups the Fleet view and the reports."),
+            ("ASSET_TAG", False, "Asset number. Any other column is kept as is in the reports."),
+            ("OWNER", False, "Team or person responsible."),
+            ("NOTES", False, "Free text."),
+        ],
+        "tips": "Save as .xlsx or .csv (comma or semicolon). Rows without an address and repeated addresses are skipped and listed after loading.",
+        "samples": [
+            ["192.0.2.10", "srv-app-01", "HQ · Rack B2", "ASSET-0104", "Infrastructure", "Main server"],
+            ["192.0.2.21", "pos-01", "Branch 04 · Front", "ASSET-0419", "Operations", "Linux terminal"],
+        ],
+    },
+    "pt-br": {
+        "file": "modelo_alvos_invent_ssh.xlsx", "sheet": "Alvos", "guide": "Como preencher",
+        "title": "Planilha de alvos", "intro": "Uma máquina por linha. Mantenha o cabeçalho na linha 1 e preencha a partir da linha 2.",
+        "required": "Obrigatória", "optional": "Opcional", "column": "Coluna", "use": "Para que serve",
+        "rows": [
+            ("IP", True, "Endereço ou nome da máquina. Também vale HOST, HOSTNAME, ADDRESS, IP_ADDRESS, ENDPOINT ou TARGET."),
+            ("HOSTNAME", False, "Nome pelo qual você conhece a máquina; o hostname coletado também aparece."),
+            ("LOCATION", False, "Unidade ou sala. Agrupa a visão Parque e os relatórios."),
+            ("ASSET_TAG", False, "Número de patrimônio. Qualquer outra coluna vai como está para os relatórios."),
+            ("OWNER", False, "Equipe ou pessoa responsável."),
+            ("NOTES", False, "Texto livre."),
+        ],
+        "tips": "Salve em .xlsx ou .csv (vírgula ou ponto e vírgula). Linhas sem IP e IPs repetidos são ignorados e listados depois de carregar.",
+        "samples": [
+            ["192.0.2.10", "srv-app-01", "Matriz · Rack B2", "PAT-0104", "Infraestrutura", "Servidor principal"],
+            ["192.0.2.21", "pdv-01", "Filial 04 · Frente", "PAT-0419", "Operações", "Terminal Linux"],
+        ],
+    },
+    "es": {
+        "file": "plantilla_destinos_invent_ssh.xlsx", "sheet": "Destinos", "guide": "Cómo rellenar",
+        "title": "Hoja de destinos", "intro": "Un equipo por fila. Mantenga el encabezado en la fila 1 y rellene desde la fila 2.",
+        "required": "Obligatoria", "optional": "Opcional", "column": "Columna", "use": "Para qué sirve",
+        "rows": [
+            ("IP", True, "Dirección o nombre del equipo. También valen HOST, HOSTNAME, ADDRESS, IP_ADDRESS, ENDPOINT o TARGET."),
+            ("HOSTNAME", False, "Nombre con el que conoce el equipo; también se muestra el hostname recopilado."),
+            ("LOCATION", False, "Sede o sala. Agrupa la vista Parque y los informes."),
+            ("ASSET_TAG", False, "Número de activo. Cualquier otra columna pasa tal cual a los informes."),
+            ("OWNER", False, "Equipo o persona responsable."),
+            ("NOTES", False, "Texto libre."),
+        ],
+        "tips": "Guarde en .xlsx o .csv (coma o punto y coma). Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar.",
+        "samples": [
+            ["192.0.2.10", "srv-app-01", "Sede central · Rack B2", "ACT-0104", "Infraestructura", "Servidor principal"],
+            ["192.0.2.21", "tpv-01", "Sucursal 04 · Frente", "ACT-0419", "Operaciones", "Terminal Linux"],
+        ],
+    },
+}
 
+
+def template_filename(language: str) -> str:
+    return TEMPLATE_TEXT[report_language(language)]["file"]
+
+
+def create_template_workbook(destination: str | Path, language: str = "pt-br") -> Path:
+    """Create the starter target spreadsheet with a filled example and a how-to sheet."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    text = TEMPLATE_TEXT[report_language(language)]
     path = Path(destination)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb = Workbook()
-    ws = wb.active
-    is_pt = str(language).lower().startswith("pt")
-    ws.title = "Alvos" if is_pt else "Targets"
-    headers = ["IP", "HOSTNAME", "LOCATION", "ASSET_TAG", "OWNER", "NOTES"]
-    ws.append(headers)
-    samples = (
-        [
-            ["10.24.8.104", "srv-app-sp04", "Matriz · Rack B2", "PAT-00104", "Infraestrutura", "Servidor principal"],
-            ["10.24.12.19", "pdv-fl04-cx01", "Filial 04 · Frente", "PAT-00419", "Operações", "Terminal Linux"],
-        ]
-        if is_pt
-        else [
-            ["10.24.8.104", "srv-app-sp04", "HQ · Rack B2", "ASSET-00104", "Infrastructure", "Primary server"],
-            ["10.24.12.19", "pos-br04-01", "Branch 04 · Front", "ASSET-00419", "Operations", "Linux endpoint"],
-        ]
-    )
-    for row in samples:
-        ws.append(row)
-    for col_idx, width in enumerate((16, 20, 24, 16, 18, 28), start=1):
-        cell = ws.cell(1, col_idx)
-        cell.font = Font(name="Calibri", bold=True, color="F5F5F7")
+    targets = wb.active
+    targets.title = text["sheet"]
+    headers = [name for name, _required, _use in text["rows"]]
+    targets.append(headers)
+    for row in text["samples"]:
+        targets.append(row)
+    thin = Side(style="thin", color=_BORDER)
+    for column_index, width in enumerate((18, 18, 24, 16, 18, 28), start=1):
+        header = targets.cell(1, column_index)
+        header.font = Font(name=_FONT, bold=True, color="F5F5F7")
+        header.fill = PatternFill("solid", fgColor=BRAND_ACCENT if column_index == 1 else BRAND_HEADER)
+        header.alignment = Alignment(vertical="center", indent=1)
+        targets.column_dimensions[header.column_letter].width = width
+        for row_index in range(2, 2 + len(text["samples"])):
+            cell = targets.cell(row_index, column_index)
+            cell.font = Font(name=_FONT, color="1C1C1E")
+            cell.border = Border(bottom=thin)
+            cell.alignment = Alignment(indent=1)
+    targets.row_dimensions[1].height = 24
+    targets.freeze_panes = "A2"
+
+    guide = wb.create_sheet(text["guide"])
+    guide.sheet_view.showGridLines = False
+    guide.column_dimensions["A"].width = 3
+    guide.column_dimensions["B"].width = 16
+    guide.column_dimensions["C"].width = 14
+    guide.column_dimensions["D"].width = 80
+    for column in range(1, 5):
+        guide.cell(1, column).fill = PatternFill("solid", fgColor=BRAND_DARK)
+    guide.row_dimensions[1].height = 34
+    guide["B1"] = f"{BRAND} · {text['title']}"
+    guide["B1"].font = Font(name=_FONT, size=16, bold=True, color="F5F5F7")
+    guide["B1"].alignment = Alignment(vertical="center")
+    guide["B3"] = text["intro"]
+    guide["B3"].font = Font(name=_FONT, size=11, color="1C1C1E")
+    for column, header in zip("BCD", (text["column"], text["required"] + " / " + text["optional"], text["use"])):
+        cell = guide[f"{column}5"]
+        cell.value = header
+        cell.font = Font(name=_FONT, bold=True, color="F5F5F7", size=10)
         cell.fill = PatternFill("solid", fgColor=BRAND_HEADER)
-        cell.alignment = Alignment(vertical="center")
-        ws.column_dimensions[cell.column_letter].width = width
-    ws.row_dimensions[1].height = 24
+        cell.alignment = Alignment(vertical="center", indent=1)
+    for row_index, (name, required, use) in enumerate(text["rows"], start=6):
+        values = (name, text["required"] if required else text["optional"], use)
+        for column, value in zip("BCD", values):
+            cell = guide[f"{column}{row_index}"]
+            cell.value = value
+            cell.font = Font(name=_FONT, bold=column == "B", color=BRAND_ACCENT if (required and column != "D") else "1C1C1E")
+            cell.border = Border(bottom=thin)
+            cell.alignment = Alignment(vertical="top", wrap_text=True, indent=1)
+    tips_row = 7 + len(text["rows"])
+    guide[f"B{tips_row}"] = text["tips"]
+    guide[f"B{tips_row}"].font = Font(name=_FONT, size=10, color=_MUTED)
     wb.save(path)
     wb.close()
     return path

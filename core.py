@@ -157,7 +157,7 @@ class InventoryEngine:
                     reader = csv.reader(handle, dialect)
                     headers = next(reader, None)
                     return self._terminals_from_rows(headers, reader)
-            raise ValueError("Supported input formats are .xlsx, .xlsm, and .csv.")
+            raise ValueError(t("loader_unsupported_format"))
         except FileNotFoundError:
             self.log("ERROR", t("log_file_not_found", filepath=filepath))
         except ValueError as exc:
@@ -175,29 +175,25 @@ class InventoryEngine:
     def _terminals_from_rows(self, headers, rows) -> List[Terminal]:
         """Validate normalized headers and build records incrementally from row values."""
         if not headers:
-            raise ValueError("The input file is empty or has no header row.")
+            raise ValueError(t("loader_empty_file"))
 
         normalized = list(headers)
         # Ignore trailing formatting-only columns in Excel and retain meaningful interior blanks.
         while normalized and _cell_value(normalized[-1]) in (None, ""):
             normalized.pop()
         if not normalized:
-            raise ValueError("The input file has no column names.")
+            raise ValueError(t("loader_no_columns"))
 
         columns = [
             _normalize_column_name(name) if _cell_value(name) not in (None, "") else f"UNNAMED_{index + 1}"
             for index, name in enumerate(normalized)
         ]
         if len(set(columns)) != len(columns):
-            raise ValueError(
-                "Column names must be unique after normalization (for example, IP and ip collide)."
-            )
+            raise ValueError(t("loader_duplicate_columns"))
 
         endpoint_column = next((name for name in _ENDPOINT_ALIASES if name in columns), None)
         if endpoint_column is None:
-            raise ValueError(
-                "The input file must contain a target column such as IP, HOST, HOSTNAME, or ADDRESS."
-            )
+            raise ValueError(t("loader_no_target_column"))
         endpoint_index = columns.index(endpoint_column)
 
         terminals: List[Terminal] = []
@@ -212,9 +208,7 @@ class InventoryEngine:
             if not values:
                 continue
             if len(values) > len(columns):
-                raise ValueError(
-                    f"Row {row_number} has data beyond the last named column. Check the header row."
-                )
+                raise ValueError(t("loader_data_beyond_header", row=row_number))
             if len(values) < len(columns):
                 values.extend([None] * (len(columns) - len(values)))
 
@@ -330,9 +324,9 @@ class InventoryEngine:
             executor.shutdown(wait=True, cancel_futures=True)
 
         if circuit_tripped:
-            self.log("WARNING", f"Collection stopped early after {processed} consecutive connection failures.")
+            self.log("WARNING", t("log_stopped_early", count=processed))
         elif self.cancel_event.is_set():
-            self.log("WARNING", f"Collection cancelled after {processed} of {total} targets.")
+            self.log("WARNING", t("log_cancelled_after", processed=processed, total=total))
         return results
 
     def _process_single_terminal(self, terminal: Terminal, timeout: int) -> Terminal:

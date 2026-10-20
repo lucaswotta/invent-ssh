@@ -25,7 +25,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 
 from core import InventoryEngine
-from i18n import get_language, set_language
+from i18n import SUPPORTED_LANGUAGES, format_decimal, get_language, set_language, system_language, t
 from paths import (
     get_config_path,
     get_documents_dir,
@@ -35,7 +35,7 @@ from paths import (
     get_user_data_dir,
     save_user_config,
 )
-from reporting import create_template_workbook, save_report, save_snapshot_diff
+from reporting import create_template_workbook, save_report, save_snapshot_diff, template_filename
 from snapshots import SnapshotStore, compute_fleet_analytics
 
 APP_BRAND = "Invent-SSH"
@@ -100,7 +100,7 @@ class InventoryController:
         self.config: dict[str, Any] = self._load_config()
         self.records: list[dict[str, Any]] = []
         self.scanning: bool = False
-        self.status_text: str = "Pronto para coleta"
+        self.status_text: str = t("app_ready")
         self.targets_info: dict[str, Any] = {}
         self.active_engine: InventoryEngine | None = None
         self._bootstrap_initial_records()
@@ -117,6 +117,8 @@ class InventoryController:
             "include_sensitive_identifiers": False,
             "output_format": "XLSX",
             "language": get_language(),
+            "language_choice": "auto",
+            "system_language": system_language(),
         }
         try:
             if self.config_path.is_file():
@@ -130,9 +132,11 @@ class InventoryController:
                     defaults["trust_unknown_hosts"] = bool(saved.get("trust_unknown_hosts", True))
                     defaults["include_sensitive_identifiers"] = bool(saved.get("include_sensitive_identifiers", False))
                     defaults["output_format"] = str(saved.get("report_format") or saved.get("output_format") or "XLSX").upper()
-                    if saved.get("language"):
-                        set_language(str(saved["language"]))
+                    # Only an explicit choice is saved; otherwise the OS language applies on every start.
+                    if saved.get("language_choice") in SUPPORTED_LANGUAGES:
+                        set_language(str(saved["language_choice"]))
                         defaults["language"] = get_language()
+                        defaults["language_choice"] = get_language()
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             pass
         return defaults
@@ -147,8 +151,9 @@ class InventoryController:
             "trust_unknown_hosts": bool(self.config.get("trust_unknown_hosts", True)),
             "include_sensitive_identifiers": bool(self.config.get("include_sensitive_identifiers", False)),
             "report_format": str(self.config.get("output_format", "XLSX")).upper(),
-            "language": get_language(),
         }
+        if self.config.get("language_choice") in SUPPORTED_LANGUAGES:
+            persisted["language_choice"] = self.config["language_choice"]
         try:
             if self.config_path == get_config_path():
                 save_user_config(persisted)
@@ -167,9 +172,8 @@ class InventoryController:
                 online = latest["online_hosts"]
                 total = latest["total_hosts"]
                 pct = round((online / total) * 100, 1) if total else 0.0
-                self.status_text = (
-                    f"Concluído em {str(latest['duration_seconds']).replace('.', ',')} s · "
-                    f"{str(pct).replace('.', ',')}% acessíveis"
+                self.status_text = t(
+                    "app_finished", seconds=format_decimal(latest["duration_seconds"]), percent=format_decimal(pct)
                 )
                 return
 
@@ -196,6 +200,11 @@ class InventoryController:
                 self.config["trust_unknown_hosts"] = bool(updates["trust_unknown_hosts"])
             if "include_sensitive_identifiers" in updates:
                 self.config["include_sensitive_identifiers"] = bool(updates["include_sensitive_identifiers"])
+            if "language" in updates:
+                choice = str(updates["language"])
+                self.config["language_choice"] = choice if choice in SUPPORTED_LANGUAGES else "auto"
+                set_language(choice if choice in SUPPORTED_LANGUAGES else system_language())
+                self.config["language"] = get_language()
             self._persist_non_secret_config()
             return self.public_config()
 
@@ -231,7 +240,7 @@ class InventoryController:
     def load_targets(self, filepath: str) -> dict[str, Any]:
         resolved = Path(filepath).expanduser()
         if not resolved.is_file():
-            raise ValueError(f"Arquivo de alvos não encontrado: {filepath}")
+            raise ValueError(t("app_targets_not_found", filepath=filepath))
 
         q: Queue = Queue()
         engine = InventoryEngine({"filepath": str(resolved)}, q)
@@ -242,20 +251,20 @@ class InventoryController:
                 level, msg, _ = q.get_nowait()
                 if level == "ERROR":
                     errors.append(msg)
-            raise ValueError(errors[-1] if errors else "Nenhum alvo válido encontrado na planilha.")
+            raise ValueError(errors[-1] if errors else t("app_no_valid_targets"))
 
         summary = engine.load_summary
         notes = []
         if summary["rows_without_target"]:
-            notes.append(f"linhas sem IP ignoradas: {_row_list(summary['rows_without_target'])}")
+            notes.append(t("app_rows_without_target", rows=_row_list(summary["rows_without_target"])))
         if summary["duplicate_rows"]:
-            notes.append(f"IPs repetidos ignorados: {_row_list(summary['duplicate_rows'])}")
+            notes.append(t("app_duplicate_rows", rows=_row_list(summary["duplicate_rows"])))
         with self.lock:
             self.config["filepath"] = str(resolved)
             self._persist_non_secret_config()
             self.records = [_serialize_record(asdict(term)) for term in terminals]
             self.targets_info = {"filename": resolved.name, "count": len(terminals), **summary}
-            self.status_text = f"{len(self.records)} máquinas carregadas de {resolved.name}"
+            self.status_text = t("app_targets_loaded", count=len(self.records), filename=resolved.name)
             if notes:
                 self.status_text += " · " + " · ".join(notes)
         return self.get_state()
@@ -270,17 +279,17 @@ class InventoryController:
         return self.load_targets(str(dest))
 
     def create_template(self, destination: Path | None = None) -> Path:
-        target = destination or (get_reports_dir() / "modelo_alvos_invent_ssh.xlsx")
+        target = destination or (get_reports_dir() / template_filename(get_language()))
         path = create_template_workbook(target, language=get_language())
         with self.lock:
-            self.status_text = f"Modelo salvo em {path}"
+            self.status_text = t("app_template_saved", path=path)
         return path
 
     def export_current(self, output_format: str = "XLSX") -> Path:
         with self.lock:
             records_copy = list(self.records)
         if not records_copy:
-            raise ValueError("Não há máquinas na tabela para exportar.")
+            raise ValueError(t("app_nothing_to_export"))
         path = save_report(
             records_copy,
             output_format,
@@ -288,7 +297,7 @@ class InventoryController:
             language=get_language(),
         )
         with self.lock:
-            self.status_text = f"Relatório exportado: {path.name}"
+            self.status_text = t("app_report_exported", filename=path.name)
         return path
 
     def open_location(self, target: str = "", path: str = "") -> None:
@@ -296,44 +305,44 @@ class InventoryController:
         if path:
             chosen = Path(path).resolve()
             if chosen.parent != folders["reports"].resolve() or not chosen.is_file():
-                raise ValueError("Só é possível abrir arquivos da pasta de relatórios.")
+                raise ValueError(t("app_open_reports_only"))
         elif target in folders:
             chosen = folders[target]
         else:
-            raise ValueError("Local desconhecido.")
+            raise ValueError(t("app_unknown_location"))
         _open_in_file_manager(chosen)
 
     def export_snapshot_diff(self, snapshot_id: int) -> Path:
         changes = self.snapshot_store.compute_diff(snapshot_id)["changes"]
         if not changes:
-            raise ValueError("Não há alterações neste snapshot para exportar.")
+            raise ValueError(t("app_no_changes_to_export"))
         return save_snapshot_diff(changes, get_reports_dir(), snapshot_id)
 
     def load_snapshot_into_workspace(self, snapshot_id: int) -> dict[str, Any]:
         snap = self.snapshot_store.get_snapshot(snapshot_id)
         if snap is None:
-            raise ValueError(f"Snapshot #{snapshot_id} não encontrado.")
+            raise ValueError(t("app_snapshot_not_found", snapshot_id=snapshot_id))
         with self.lock:
             self.records = list(snap.get("records", []))
-            self.status_text = f"Visualizando snapshot de {snap['created_at']}"
+            self.status_text = t("app_viewing_snapshot", created_at=snap["created_at"])
         return self.get_state()
 
     def start_scan(self) -> dict[str, Any]:
         with self.lock:
             if self.scanning:
-                raise ValueError("Uma coleta já está em andamento.")
+                raise ValueError(t("app_scan_running"))
             filepath = str(self.config.get("filepath", "")).strip()
             if not filepath or not Path(filepath).expanduser().is_file():
-                raise ValueError("Selecione uma planilha de alvos válida antes de iniciar.")
+                raise ValueError(t("app_select_targets_first"))
             ssh_user = str(self.config.get("ssh_user", "")).strip()
             if not ssh_user:
-                raise ValueError("Informe o Usuário SSH antes de iniciar a coleta.")
+                raise ValueError(t("app_ssh_user_required"))
             ssh_key = str(self.config.get("ssh_key_path", "")).strip()
             ssh_pass = str(self.config.get("ssh_pass", ""))
             if not ssh_key and not ssh_pass:
-                raise ValueError("Informe uma Chave Privada SSH ou Senha SSH.")
+                raise ValueError(t("app_ssh_auth_required"))
             if ssh_key and not Path(ssh_key).expanduser().is_file():
-                raise ValueError(f"Chave SSH não encontrada: {ssh_key}")
+                raise ValueError(t("app_ssh_key_not_found", path=ssh_key))
 
             run_config = dict(self.config)
             run_config["filepath"] = str(Path(filepath).expanduser())
@@ -344,12 +353,12 @@ class InventoryController:
             engine = InventoryEngine(run_config, q)
             terminals = engine._load_from_spreadsheet()
             if not terminals:
-                raise ValueError("Nenhum destino válido encontrado na planilha.")
+                raise ValueError(t("app_no_valid_targets"))
 
             self.records = [_serialize_record(asdict(term)) for term in terminals]
             self.scanning = True
             self.active_engine = engine
-            self.status_text = f"Coletando 0/{len(self.records)} (0,0%)..."
+            self.status_text = t("app_collecting", done=0, total=len(self.records), percent=format_decimal(0))
 
         worker = threading.Thread(
             target=self._run_scan_worker,
@@ -364,7 +373,7 @@ class InventoryController:
         with self.lock:
             if self.active_engine is not None:
                 self.active_engine.cancel()
-                self.status_text = "Cancelando coleta..."
+                self.status_text = t("app_cancelling")
         return self.get_state()
 
     def _run_scan_worker(self, engine: InventoryEngine, q: Queue, source_name: str) -> None:
@@ -396,8 +405,8 @@ class InventoryController:
                         self.records[idx] = serialized
                     else:
                         self.records.append(serialized)
-                    self.status_text = (
-                        f"Coletando {processed}/{total} ({str(pct).replace('.', ',')}%)..."
+                    self.status_text = t(
+                        "app_collecting", done=processed, total=total, percent=format_decimal(pct)
                     )
 
         runner.join(timeout=1.0)
@@ -410,10 +419,7 @@ class InventoryController:
 
             online = sum(str(r.get("status", "")).upper() == "ONLINE" for r in all_records)
             avail = round((online / len(all_records)) * 100, 1) if all_records else 0.0
-            self.status_text = (
-                f"Concluído em {str(elapsed).replace('.', ',')} s · "
-                f"{str(avail).replace('.', ',')}% acessíveis"
-            )
+            self.status_text = t("app_finished", seconds=format_decimal(elapsed), percent=format_decimal(avail))
 
         if final_records:
             try:
@@ -428,7 +434,7 @@ class InventoryController:
 
 def _row_list(rows: list[int], limit: int = 5) -> str:
     shown = ", ".join(str(row) for row in rows[:limit])
-    return shown + (f" e mais {len(rows) - limit}" if len(rows) > limit else "")
+    return t("app_more_rows", rows=shown, count=len(rows) - limit) if len(rows) > limit else shown
 
 
 def _open_in_file_manager(path: Path) -> None:
@@ -489,13 +495,13 @@ def create_http_server(
             port = self.server.server_address[1]
             if self.headers.get("Host", "") in {f"127.0.0.1:{port}", f"localhost:{port}"}:
                 return True
-            self._send_json({"error": "Host não autorizado."}, status=HTTPStatus.FORBIDDEN)
+            self._send_json({"error": t("api_host_forbidden")}, status=HTTPStatus.FORBIDDEN)
             return False
 
         def _check_token(self) -> bool:
             provided = self.headers.get("X-Invent-Token", "")
             if not secrets.compare_digest(provided, session_token):
-                self._send_json({"error": "Sessão não autorizada."}, status=HTTPStatus.FORBIDDEN)
+                self._send_json({"error": t("api_session_forbidden")}, status=HTTPStatus.FORBIDDEN)
                 return False
             return True
 
@@ -504,7 +510,7 @@ def create_http_server(
             if length <= 0:
                 return {}
             if length > 25_000_000:
-                raise ValueError("Payload excede o limite permitido.")
+                raise ValueError(t("api_payload_too_large"))
             raw = self.rfile.read(length)
             return json.loads(raw.decode("utf-8"))
 
@@ -553,7 +559,7 @@ def create_http_server(
                     self._send_json({"error": str(exc)}, status=HTTPStatus.NOT_FOUND)
                 return
 
-            self._send_json({"error": "Rota não encontrada."}, status=HTTPStatus.NOT_FOUND)
+            self._send_json({"error": t("api_route_not_found")}, status=HTTPStatus.NOT_FOUND)
 
         def do_POST(self) -> None:
             if not self._check_host() or not self._check_token():
@@ -607,7 +613,7 @@ def create_http_server(
                     return
 
                 if path == "/api/dialog/targets":
-                    chosen = _pick_local_file("Selecionar lista de máquinas", ["*.xlsx", "*.xlsm", "*.csv"])
+                    chosen = _pick_local_file(t("dialog_targets_title"), ["*.xlsx", "*.xlsm", "*.csv"])
                     if chosen:
                         self._send_json({"filepath": chosen})
                     else:
@@ -615,7 +621,7 @@ def create_http_server(
                     return
 
                 if path == "/api/dialog/key":
-                    chosen = _pick_local_file("Selecionar Chave Privada SSH")
+                    chosen = _pick_local_file(t("dialog_key_title"))
                     self._send_json({"filepath": chosen})
                     return
 
@@ -631,7 +637,7 @@ def create_http_server(
                     self._send_json(controller.load_snapshot_into_workspace(snap_id))
                     return
 
-                self._send_json({"error": "Rota não encontrada."}, status=HTTPStatus.NOT_FOUND)
+                self._send_json({"error": t("api_route_not_found")}, status=HTTPStatus.NOT_FOUND)
             except ValueError as exc:
                 self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
             except Exception as exc:
@@ -710,7 +716,7 @@ def launch_desktop_window(
         pass
 
     # Without a window there is no close event; stop once the tab stops pinging.
-    print(f"{APP_BRAND} v{APP_VERSION} ativo em {url}")
+    print(f"{APP_BRAND} v{APP_VERSION} running at {url}")
     webbrowser.open(url)
     try:
         while seconds_since_request() < BROWSER_IDLE_TIMEOUT_SECONDS:
@@ -721,12 +727,12 @@ def launch_desktop_window(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=f"{APP_BRAND} — Inventário de hardware Linux via SSH.")
-    parser.add_argument("--port", type=int, default=0, help="Porta local do servidor HTTP (padrão: automática).")
-    parser.add_argument("--no-window", action="store_true", help="Executa apenas o servidor local sem abrir janela.")
-    parser.add_argument("--input", type=str, help="Executa coleta via linha de comando a partir da planilha informada.")
-    parser.add_argument("--user", type=str, help="Usuário SSH para coleta via linha de comando.")
-    parser.add_argument("--key", type=str, help="Caminho da chave privada SSH para coleta via linha de comando.")
+    parser = argparse.ArgumentParser(description=f"{APP_BRAND}: Linux hardware inventory over SSH.")
+    parser.add_argument("--port", type=int, default=0, help="Local HTTP port (default: any free port).")
+    parser.add_argument("--no-window", action="store_true", help="Run only the local server, without a window.")
+    parser.add_argument("--input", type=str, help="Collect from this spreadsheet on the command line.")
+    parser.add_argument("--user", type=str, help="SSH user for a command-line collection.")
+    parser.add_argument("--key", type=str, help="SSH private key for a command-line collection.")
     parser.add_argument("--output-format", type=str, default="XLSX", choices=["XLSX", "CSV", "HTML"])
     args = parser.parse_args(argv)
 
@@ -755,7 +761,7 @@ def main(argv: list[str] | None = None) -> int:
     server_thread.start()
 
     if args.no_window:
-        print(f"{APP_BRAND} v{APP_VERSION} disponível em {url}", flush=True)
+        print(f"{APP_BRAND} v{APP_VERSION} available at {url}", flush=True)
         try:
             while True:
                 time.sleep(1.0)
