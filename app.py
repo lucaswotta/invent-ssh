@@ -657,7 +657,7 @@ def launch_desktop_window(
             url,
             width=1440,
             height=880,
-            min_size=(1080, 680),
+            min_size=(720, 520),
             background_color=COLORS["bg_window"],
         )
         window.events.closed += on_close
@@ -678,7 +678,12 @@ def launch_desktop_window(
 
         win = Gtk.Window(title=APP_BRAND)
         win.set_default_size(1440, 880)
-        win.set_size_request(1024, 640)
+        win.set_size_request(720, 520)
+        display = Gdk.Display.get_default()
+        if display is not None and display.get_n_monitors():
+            workarea = display.get_monitor(0).get_workarea()
+            if workarea.width < 1440 or workarea.height < 880:
+                win.maximize()
         icon_path = resource_path("brand/invent-ssh-mark-128.png")
         if icon_path.is_file():
             try:

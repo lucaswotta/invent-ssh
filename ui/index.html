@@ -386,9 +386,9 @@
     display: flex;
   }
 
-  #popover-targets { left: 18px; width: 360px; }
-  #popover-ssh { left: 220px; width: 340px; }
-  #popover-export { right: 130px; width: 290px; gap: 6px; padding: 8px; }
+  #popover-targets { width: 360px; }
+  #popover-ssh { width: 340px; }
+  #popover-export { width: 290px; gap: 6px; padding: 8px; }
 
   .popover-title {
     font-size: 12.5px;
@@ -488,7 +488,7 @@
   .view {
     display: none;
     flex: 1;
-    height: calc(100vh - 52px);
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -610,9 +610,9 @@
   /* Split Content: Table + Inspector */
   .workspace-split {
     display: grid;
-    grid-template-columns: 1fr 330px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     flex: 1;
-    height: calc(100vh - 96px);
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -622,7 +622,7 @@
   }
 
   .table-pane table {
-    min-width: 760px;
+    min-width: 860px;
   }
 
   table {
@@ -632,6 +632,9 @@
   }
 
   thead th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     position: sticky;
     top: 0;
     height: 30px;
@@ -1006,6 +1009,123 @@
     display: flex;
   }
 
+  .popover {
+    max-width: calc(100vw - 24px);
+  }
+
+  .inspector-meta {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+
+  /* Responsive layout: narrower windows stack the inspector, then compact the sidebar. */
+  @media (max-width: 1280px) {
+    .workspace-split {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .workspace-split {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) minmax(200px, 42%);
+    }
+
+    .inspector-pane {
+      border-left: none;
+      border-top: 1px solid var(--sep-strong);
+    }
+
+    .search-input {
+      width: 180px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .app-shell {
+      grid-template-columns: 56px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      padding: 14px 6px 12px;
+    }
+
+    .app-brand {
+      padding: 4px 4px 16px;
+      justify-content: center;
+    }
+
+    .app-title-group,
+    .sidebar-label,
+    .sidebar-footer,
+    .nav-count {
+      display: none;
+    }
+
+    .nav-btn {
+      justify-content: center;
+      padding: 0;
+    }
+
+    .nav-btn-left {
+      font-size: 0;
+      gap: 0;
+    }
+
+    .toolbar {
+      padding: 0 10px;
+    }
+
+    .popover-trigger .trigger-label,
+    .btn .btn-text {
+      display: none;
+    }
+
+    .popover-trigger .trigger-value {
+      max-width: 120px;
+    }
+
+    .snapshots-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(120px, 34%) minmax(0, 1fr);
+    }
+
+    .snapshots-sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--sep-strong);
+    }
+  }
+
+  @media (max-width: 680px) {
+    .subbar {
+      height: auto;
+      padding: 8px 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .subbar-right {
+      margin-left: 0;
+      flex-basis: 100%;
+    }
+
+    .search-input-wrap,
+    .search-input {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    .summary-inline {
+      display: none;
+    }
+
+    .parque-content,
+    .snapshots-content {
+      padding: 12px;
+    }
+  }
+
   /* Inspector Pane */
   .inspector-pane {
     background: var(--bg-sidebar);
@@ -1083,9 +1203,7 @@
   .kv-val {
     color: var(--text-primary);
     text-align: right;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
     user-select: text;
   }
 
@@ -1109,7 +1227,7 @@
 
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 12px;
     flex-shrink: 0;
   }
@@ -1143,7 +1261,7 @@
 
   .charts-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 12px;
     flex-shrink: 0;
   }
@@ -1240,8 +1358,9 @@
   /* VIEW 3: SNAPSHOTS */
   .snapshots-layout {
     display: grid;
-    grid-template-columns: 290px 1fr;
-    height: calc(100vh - 52px);
+    grid-template-columns: 290px minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -1315,20 +1434,20 @@
 
     <div class="sidebar-label">Visões</div>
     <div id="main-nav" class="nav-list">
-      <button class="nav-btn active" onclick="switchView('scan', this)">
+      <button class="nav-btn active" title="Coleta" onclick="switchView('scan', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/></svg>
           Coleta
         </span>
         <span id="nav-count-scan" class="nav-count">0</span>
       </button>
-      <button class="nav-btn" onclick="switchView('dashboard', this)">
+      <button class="nav-btn" title="Parque" onclick="switchView('dashboard', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round"/></svg>
           Parque
         </span>
       </button>
-      <button class="nav-btn" onclick="switchView('history', this)">
+      <button class="nav-btn" title="Snapshots" onclick="switchView('history', this)">
         <span class="nav-btn-left">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
           Snapshots
@@ -1375,13 +1494,13 @@
       </div>
 
       <div class="toolbar-group">
-        <button class="btn" onclick="openHelp()">
+        <button class="btn" title="Como usar" onclick="openHelp()">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.6-2.4 2-2.4 3.5"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
-          Como usar
+          <span class="btn-text">Como usar</span>
         </button>
-        <button id="export-trigger" class="btn" onclick="togglePanel('export')">
+        <button id="export-trigger" class="btn" title="Exportar" onclick="togglePanel('export')">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar
+          <span class="btn-text">Exportar</span>
         </button>
         <button id="scan-btn" class="btn btn-primary" onclick="handleScanAction()">
           Iniciar Coleta
@@ -1542,14 +1661,15 @@
           <table id="hosts-table">
             <thead>
               <tr>
-                <th style="width: 11%;">Status</th>
-                <th style="width: 12%;">Endereço IP</th>
-                <th style="width: 13%;">Hostname</th>
-                <th style="width: 11%;">Local</th>
-                <th style="width: 20%;">Processador</th>
-                <th style="width: 10%;">Memória</th>
-                <th style="width: 12%;">Armazenamento</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 11%;">Endereço IP</th>
+                <th style="width: 12%;">Hostname</th>
+                <th style="width: 9%;">Local</th>
+                <th style="width: 16%;">Processador</th>
+                <th style="width: 9%;">Memória</th>
+                <th style="width: 11%;">Armazenamento</th>
                 <th style="width: 11%;">Sistema</th>
+                <th style="width: 11%;" title="Data e hora da última coleta da máquina">Coletado</th>
               </tr>
             </thead>
             <tbody id="hosts-tbody"></tbody>
@@ -1822,7 +1942,14 @@
     closePopovers();
     if (pop && !wasOpen) {
       pop.classList.add("open");
-      if (trig) trig.classList.add("open");
+      if (trig) {
+        trig.classList.add("open");
+        const area = document.querySelector(".main-area").getBoundingClientRect();
+        const anchor = trig.getBoundingClientRect();
+        const left = Math.min(anchor.left - area.left, area.width - pop.offsetWidth - 12);
+        pop.style.left = `${Math.max(12, left)}px`;
+        pop.style.top = `${anchor.bottom - area.top + 6}px`;
+      }
     }
   }
 
@@ -2022,7 +2149,7 @@
     const tbody = document.getElementById("hosts-tbody");
     renderOnboarding();
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhuma máquina corresponde ao filtro atual.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Nenhuma máquina corresponde ao filtro atual.</td></tr>`;
       renderInspector(null);
       return;
     }
@@ -2043,6 +2170,7 @@
       const storage = cleanValue(r.disk_type)
         ? `${cleanValue(r.disk_type)}${cleanValue(r.disk_size) ? " · " + cleanValue(r.disk_size).split(" total")[0] : ""}`
         : "—";
+      const collected = formatCollected(r.dta_atualizacao);
       const osText = cleanValue(r.distro)
         ? `${cleanValue(r.distro)}${cleanValue(r.kernel) ? ` (${cleanValue(r.kernel).split("-")[0]})` : ""}`
         : "—";
@@ -2056,6 +2184,7 @@
         <td>${escapeHtml(ram)}</td>
         <td>${escapeHtml(storage)}</td>
         <td class="cell-secondary">${escapeHtml(osText)}</td>
+        <td class="cell-secondary" title="${escapeHtml(collected.full)}">${escapeHtml(collected.short)}</td>
       </tr>`;
     }).join("");
 
@@ -2066,6 +2195,57 @@
   function selectHost(ip) {
     appState.selectedHostIp = ip;
     renderScanTable();
+  }
+
+  function formatCollected(value) {
+    if (!value) return { short: "—", full: "Ainda não coletada", relative: "" };
+    const date = new Date(String(value).replace(" ", "T"));
+    if (isNaN(date)) return { short: String(value), full: String(value), relative: "" };
+    const pad = (n) => String(n).padStart(2, "0");
+    const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const day = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+    const today = new Date().toDateString() === date.toDateString();
+    const minutes = Math.round((Date.now() - date.getTime()) / 60000);
+    let relative = "agora";
+    if (minutes >= 2880) relative = `há ${Math.round(minutes / 1440)} dias`;
+    else if (minutes >= 1440) relative = "há 1 dia";
+    else if (minutes >= 60) relative = `há ${Math.round(minutes / 60)} h`;
+    else if (minutes >= 1) relative = `há ${minutes} min`;
+    return {
+      short: today ? time : `${day} ${time}`,
+      full: `${day}/${date.getFullYear()} ${time}:${pad(date.getSeconds())}`,
+      relative
+    };
+  }
+
+  function kv(label, value) {
+    const text = cleanValue(value) || "—";
+    return `<div class="kv-row"><span class="kv-key">${label}</span><span class="kv-val" title="${escapeHtml(text)}">${escapeHtml(text)}</span></div>`;
+  }
+
+  function inspectorSection(title, body) {
+    return `<div class="inspector-section">
+        <span class="inspector-section-title">${title}</span>
+        <div class="inspector-card">${body}</div>
+      </div>`;
+  }
+
+  function multiline(value) {
+    const text = cleanValue(value);
+    return text ? `<div class="kv-multiline">${escapeHtml(text)}</div>` : "";
+  }
+
+  function slotsLabel(value) {
+    const text = cleanValue(value);
+    const full = /^(\d+) of (\d+) populated$/.exec(text);
+    if (full) return `${full[1]} de ${full[2]} ocupados`;
+    const partial = /^(\d+) populated$/.exec(text);
+    return partial ? `${partial[1]} ocupado(s)` : text;
+  }
+
+  function virtualizationLabel(value) {
+    const text = cleanValue(value);
+    return text.startsWith("Not detected") ? "Não detectada (máquina física)" : text;
   }
 
   function renderInspector(rec) {
@@ -2082,18 +2262,7 @@
     const det = rec.hardware_details || {};
     const hostname = hostHostname(rec);
     const location = hostLocation(rec);
-
-    const storageLines = cleanValue(det.storage_devices) || (cleanValue(rec.disk_type) ? `${rec.disk_type} · ${rec.disk_size || ""}` : "—");
-    const netLines = cleanValue(det.network_adapters) || "—";
-    let diagnostic = "";
-    if (cls.group !== "ONLINE") {
-      const reason = cls.group === "PENDING" ? "Aguardando coleta." : (cleanValue(rec.erro) || "Sem detalhes do erro.");
-      diagnostic = `
-      <div class="inspector-section">
-        <span class="inspector-section-title">Diagnóstico</span>
-        <div class="inspector-card"><div class="kv-multiline">${escapeHtml(reason)}</div></div>
-      </div>`;
-    }
+    const collected = formatCollected(rec.dta_atualizacao);
 
     const header = `
       <div class="inspector-header">
@@ -2102,51 +2271,62 @@
           <span class="status-cell"><span class="dot ${cls.dot}"></span>${escapeHtml(cls.label)}</span>
         </div>
         <span class="inspector-sub">${escapeHtml(rec.ip)}${location !== "—" ? " · " + escapeHtml(location) : ""}</span>
+        <span class="inspector-meta" title="${escapeHtml(collected.full)}">${
+          rec.dta_atualizacao ? `Coletado em ${escapeHtml(collected.full)} (${escapeHtml(collected.relative)})` : "Ainda não coletada"
+        }</span>
       </div>`;
-    if (diagnostic) {
-      pane.innerHTML = header + diagnostic;
+
+    if (cls.group !== "ONLINE") {
+      const reason = cls.group === "PENDING" ? "Aguardando coleta." : (cleanValue(rec.erro) || "Sem detalhes do erro.");
+      pane.innerHTML = header + inspectorSection("Diagnóstico", multiline(reason));
       return;
     }
 
-    pane.innerHTML = header + `
+    const session = [det.desktop, det.display_server].map(cleanValue).filter(Boolean).join(" · ");
+    const displays = (cleanValue(det.displays) || "").replace(/\n/g, ", ");
+    const storageLines = cleanValue(det.storage_devices) || (cleanValue(rec.disk_type) ? `${rec.disk_type} · ${rec.disk_size || ""}` : "—");
 
-      <div class="inspector-section">
-        <span class="inspector-section-title">Equipamento</span>
-        <div class="inspector-card">
-          <div class="kv-row"><span class="kv-key">Fabricante</span><span class="kv-val">${escapeHtml(cleanValue(det.manufacturer) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Modelo</span><span class="kv-val">${escapeHtml(cleanValue(det.model) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Placa-mãe</span><span class="kv-val">${escapeHtml(cleanValue(rec.placa_mae) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Firmware BIOS</span><span class="kv-val">${escapeHtml(cleanValue(det.bios) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Tempo ativo</span><span class="kv-val">${escapeHtml(cleanValue(det.uptime) || "—")}</span></div>
-        </div>
-      </div>
-
-      <div class="inspector-section">
-        <span class="inspector-section-title">Processador e Memória</span>
-        <div class="inspector-card">
-          <div class="kv-row"><span class="kv-key">Modelo</span><span class="kv-val">${escapeHtml(cleanValue(rec.processador) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Núcleos / Threads</span><span class="kv-val">${escapeHtml(cleanValue(rec.cores_threads) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Frequência</span><span class="kv-val">${escapeHtml(cleanValue(det.cpu_max_frequency) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Memória Total</span><span class="kv-val">${escapeHtml(cleanValue(rec.ram) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Módulos</span><span class="kv-val">${escapeHtml(cleanValue(det.ram_slots) || "—")}</span></div>
-          <div class="kv-row"><span class="kv-key">Disponível</span><span class="kv-val">${escapeHtml(cleanValue(det.ram_available) || "—")}</span></div>
-        </div>
-      </div>
-
-      <div class="inspector-section">
-        <span class="inspector-section-title">Armazenamento</span>
-        <div class="inspector-card">
-          <div class="kv-multiline">${escapeHtml(storageLines)}</div>
-        </div>
-      </div>
-
-      <div class="inspector-section">
-        <span class="inspector-section-title">Rede</span>
-        <div class="inspector-card">
-          <div class="kv-multiline">${escapeHtml(netLines)}</div>
-        </div>
-      </div>
-    `;
+    pane.innerHTML = header
+      + inspectorSection("Sistema",
+          kv("Distribuição", det.os_name || rec.distro)
+          + kv("Versão", det.os_version)
+          + kv("Base", det.os_like)
+          + kv("Kernel", rec.kernel)
+          + kv("Arquitetura", det.architecture)
+          + kv("Hostname", det.hostname)
+          + kv("Ambiente gráfico", session)
+          + kv("Telas", displays)
+          + kv("Pacotes", det.packages)
+          + kv("Init", det.init_system)
+          + kv("Fuso horário", det.timezone)
+          + kv("Ligada há", det.uptime)
+          + kv("Disco (/)", det.root_disk_usage))
+      + inspectorSection("Equipamento",
+          kv("Fabricante", det.manufacturer)
+          + kv("Modelo", det.model)
+          + kv("Placa-mãe", rec.placa_mae)
+          + kv("BIOS", det.bios)
+          + kv("Virtualização", virtualizationLabel(det.virtualization)))
+      + inspectorSection("Processador",
+          kv("Modelo", rec.processador)
+          + kv("Núcleos / threads", rec.cores_threads)
+          + kv("Frequência máx.", det.cpu_max_frequency)
+          + kv("Soquetes", det.cpu_sockets)
+          + kv("Extensão de virtualização", det.cpu_virtualization))
+      + inspectorSection("Memória",
+          kv("Total", rec.ram)
+          + kv("Em uso", det.ram_used)
+          + kv("Disponível", det.ram_available)
+          + kv("Slots", slotsLabel(det.ram_slots))
+          + kv("Capacidade máx.", det.ram_max_capacity)
+          + kv("Velocidade", det.ram_speed)
+          + multiline(det.ram_modules))
+      + inspectorSection("Armazenamento", multiline(storageLines))
+      + inspectorSection("Vídeo", multiline(det.gpu) || kv("Placa de vídeo", ""))
+      + inspectorSection("Rede", multiline(det.network_adapters) || kv("Adaptadores", ""))
+      + inspectorSection("Coleta",
+          kv("Cobertura dos dados", det.coverage_percent)
+          + kv("Coletado em", collected.full));
   }
 
   function renderDistList(containerId, items) {
