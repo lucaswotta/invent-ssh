@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Inventory orchestration: load endpoints, collect hardware, and export reports."""
+"""Inventory orchestration: load endpoints and collect hardware."""
 from __future__ import annotations
 
 import concurrent.futures
@@ -13,10 +13,8 @@ from datetime import datetime
 from queue import Queue
 from typing import Any, Dict, List, Optional
 
-from i18n import get_language, t
+from i18n import t
 from inspector import get_hardware_info
-from reporting import save_report
-from paths import get_reports_dir
 
 
 @dataclass
@@ -104,7 +102,6 @@ class InventoryEngine:
             online = sum(result.status == "ONLINE" for result in results)
             failed = len(results) - online
             self.log("INFO", t("log_collection_finished", count=len(results)))
-            self._save_results(results)
 
             if self.cancel_event.is_set():
                 final_message = t("log_process_cancelled_with_results", count=len(results))
@@ -359,16 +356,3 @@ class InventoryEngine:
             terminal.hardware_details = details
         terminal.dta_atualizacao = datetime.now()
         return terminal
-
-    def _save_results(self, results: List[Terminal]) -> None:
-        """Export a portable report; no database service is required."""
-        records = [asdict(result) for result in results]
-        output_format = str(self.config.get("output_format", "XLSX")).upper()
-        path = save_report(
-            records,
-            output_format,
-            output_dir=get_reports_dir(),
-            language=get_language(),
-        )
-        self.log("INFO", t("log_results_saved", filename=str(path)))
-        self.log("OPEN_FILE", t("log_opening_result_file"), os.path.abspath(path))
