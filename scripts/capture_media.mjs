@@ -63,6 +63,18 @@ async function openBrowser(profile, port) {
     (await send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true })).result?.result?.value;
   await send("Emulation.setDeviceMetricsOverride", { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1.5, mobile: false });
   await send("Page.enable");
+  // demo_server.py pins the app clock at 10:42; shift the page clock the same way so
+  // "collected N ago" stays in minutes instead of the gap to the real time of day.
+  const pinned = new Date();
+  pinned.setHours(10, 42, 0, 0);
+  await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
+    const offset = ${pinned.getTime() - Date.now()};
+    const RealDate = Date;
+    window.Date = class extends RealDate {
+      constructor(...args) { super(...(args.length ? args : [RealDate.now() + offset])); }
+      static now() { return RealDate.now() + offset; }
+    };
+  })();` });
   return { chrome, ws, send, evaluate };
 }
 
