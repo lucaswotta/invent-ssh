@@ -43,6 +43,7 @@ class DesktopUtilityUITests(unittest.TestCase):
         self.assertIn("Snapshots", html)
         self.assertNotIn("Parque & Upgrade", html)
         self.assertNotIn("Snapshots & Diff", html)
+        self.assertNotIn("Invent-SSH", html)
         self.assertIn('id="popover-ssh"', html)
         self.assertIn('id="popover-targets"', html)
         self.assertIn('id="popover-export"', html)
