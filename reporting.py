@@ -46,6 +46,13 @@ HARDWARE_COLUMNS = [
 
 HARDWARE_DETAIL_COLUMNS = [
     ("hostname", "Detected hostname"),
+    ("os_name", "Operating system"),
+    ("os_version", "OS version"),
+    ("desktop", "Desktop environment"),
+    ("displays", "Displays"),
+    ("packages", "Installed packages"),
+    ("timezone", "Time zone"),
+    ("root_disk_usage", "Root filesystem usage"),
     ("manufacturer", "Manufacturer"),
     ("model", "System model"),
     ("architecture", "Architecture"),
@@ -54,6 +61,8 @@ HARDWARE_DETAIL_COLUMNS = [
     ("cpu_virtualization", "CPU virtualization"),
     ("ram_speed", "Memory speed"),
     ("ram_slots", "Memory slots"),
+    ("ram_modules", "Memory modules"),
+    ("ram_max_capacity", "Max memory capacity"),
     ("ram_used", "RAM used"),
     ("ram_available", "RAM available"),
     ("storage_devices", "Storage devices"),
@@ -120,6 +129,11 @@ COLUMN_LABELS = {
         "System serial (opt-in)": "System serial (opt-in)", "Data coverage": "Data coverage",
         "Collection notes": "Collection notes", "Storage classification basis": "Storage classification basis",
         "Collection sources": "Collection sources",
+        "Operating system": "Operating system", "OS version": "OS version",
+        "Desktop environment": "Desktop environment", "Displays": "Displays",
+        "Installed packages": "Installed packages", "Time zone": "Time zone",
+        "Root filesystem usage": "Root filesystem usage", "Memory modules": "Memory modules",
+        "Max memory capacity": "Max memory capacity",
     },
     "pt-br": {
         "Host / IP": "Host / IP", "Status": "Status", "Motherboard": "Placa-mãe",
@@ -138,6 +152,11 @@ COLUMN_LABELS = {
         "Data coverage": "Cobertura dos dados", "Collection notes": "Notas da coleta",
         "Storage classification basis": "Critério de classificação do armazenamento",
         "Collection sources": "Fontes utilizadas na coleta",
+        "Operating system": "Sistema operacional", "OS version": "Versão do sistema",
+        "Desktop environment": "Ambiente gráfico", "Displays": "Telas",
+        "Installed packages": "Pacotes instalados", "Time zone": "Fuso horário",
+        "Root filesystem usage": "Uso do disco (/)", "Memory modules": "Módulos de memória",
+        "Max memory capacity": "Capacidade máxima de memória",
     },
 }
 REPORT_TEXT = {
@@ -209,6 +228,9 @@ def _localize_detail_value(key: str, value: Any, language: str) -> str:
     if key == "system_serial" and text == "Not collected (opt-in)":
         return "Não coletado (opcional)"
     if key == "ram_slots":
+        match = re.fullmatch(r"(\d+) of (\d+) populated", text)
+        if match:
+            return f"{match.group(1)} de {match.group(2)} ocupados"
         match = re.fullmatch(r"(\d+) populated", text)
         if match:
             count = int(match.group(1))
