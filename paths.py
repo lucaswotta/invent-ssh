@@ -83,6 +83,14 @@ def get_logs_dir() -> Path:
     return path
 
 
+def get_known_hosts_path() -> Path:
+    return get_user_data_dir() / "known_hosts"
+
+
+def get_snapshots_db_path() -> Path:
+    return get_user_data_dir() / "snapshots.db"
+
+
 def get_reports_dir() -> Path:
     path = Path.home() / "Documents" / "Invent-SSH Reports"
     path.mkdir(parents=True, exist_ok=True)
