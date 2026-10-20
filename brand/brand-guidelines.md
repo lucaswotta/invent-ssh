@@ -1,40 +1,25 @@
-# Invent-SSH brand system
+# Diretrizes Visuais — Invent-SSH
 
-## Positioning
-Invent-SSH turns SSH access into a clear, local-first Linux hardware inventory. Its personality is precise, confident and approachable: a practical infrastructure tool with a recognizable mascot, not a generic AI dashboard.
+## Conceito
 
-## Mascot
-The custom penguin mark is drawn specifically for Invent-SSH using midnight navy, white and signal yellow. Use the standalone mark at app/icon size and the lockup for editorial or repository placements. Never replace it with a generic database stack or generic AI symbol.
+Interface utilitária inspirada em sistemas operacionais desktop modernos (macOS Dark Mode), focada em legibilidade de tabelas densas, baixo ruído visual e precisão técnica.
 
-## Palette
-| Token | Hex | Purpose |
-| --- | --- | --- |
-| Midnight | #07172D | Primary canvas |
-| Deep navy | #0B2342 | Surfaces and cards |
-| Navy line | #183B63 | Dividers, borders and table rules |
-| Signal yellow | #FFC629 | Primary actions and key highlights |
-| Yellow hover | #E6A800 | Active/hover state |
-| White | #F4F7FF | Primary text and mascot belly |
-| Slate | #9DB6D7 | Supporting text |
-| Success | #10B981 | Successful collection status only |
-| Warning | #FFC629 | Warnings; always paired with a label |
-| Error | #F87171 | Errors; always paired with a label |
+## Paleta de Cores
 
-Yellow is the primary action accent. Blue is the structural color. Green is reserved for success status, not for the overall product identity.
+- `bg_window`: `#1C1C1E` — fundo principal da janela e área de tabela
+- `bg_sidebar`: `#232326` — navegação lateral e listas secundárias
+- `bg_toolbar`: `#252528` — barra superior unificada
+- `bg_card`: `#262629` — painéis de distribuição e cartões de resumo
+- `bg_control`: `#36363A` — botões e gatilhos de popover
+- `text_primary`: `#F5F5F7` — texto principal
+- `text_secondary`: `#98989D` — rótulos secundários e cabeçalhos
+- `text_tertiary`: `#6E6E73` — metadados de apoio
+- `accent_blue`: `#0A84FF` — ação primária e seleção de linha
+- `status_online`: `#30D158` — indicador de máquina online
+- `status_warning`: `#FF9F0A` — falha de autenticação ou coleta parcial
+- `status_offline`: `#FF453A` — máquina inacessível
 
-## Typography
-- Display: Georgia/serif for a small number of editorial statements.
-- Interface: native UI sans-serif (Avenir Next, Segoe UI, or system fallback).
-- Data: platform monospace for technical identifiers only.
-- Do not bundle fonts without redistribution rights.
+## Tipografia
 
-## UI principles
-1. One obvious next action; explain requirements before requesting credentials.
-2. Use the viewport, resize cleanly, and keep dense content scrollable.
-3. Prefer strong hierarchy, readable contrast and clear table headers over gradients, excessive cards or shadows.
-4. Persistent actions have explicit labels and visible running/disabled states.
-5. Missing or uncertain data must be marked honestly.
-6. Never expose passwords or private-key content in logs; inventory exports are saved locally unless the user shares them.
-
-## Reports
-Excel and HTML use the same navy/yellow identity and terminology as the desktop application. Reports remain usable offline, printable, navigable, and safe for untrusted host metadata.
+- Pilha principal: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif`
+- Alinhamento numérico: `font-variant-numeric: tabular-nums` em endereços IP, contadores, capacidades e durações.

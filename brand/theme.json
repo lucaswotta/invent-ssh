@@ -1,155 +1,18 @@
 {
-  "CTk": {
-    "fg_color": "#061327"
-  },
-  "CTkToplevel": {
-    "fg_color": "#061327"
-  },
-  "CTkFrame": {
-    "corner_radius": 14,
-    "border_width": 1,
-    "fg_color": "#0A1C35",
-    "top_fg_color": "#102746",
-    "border_color": "#183B63"
-  },
-  "CTkButton": {
-    "corner_radius": 10,
-    "border_width": 0,
-    "fg_color": "#FFC629",
-    "hover_color": "#E6A800",
-    "border_color": "#FFC629",
-    "text_color": "#07172D",
-    "text_color_disabled": "#6F85A5"
-  },
-  "CTkLabel": {
-    "corner_radius": 0,
-    "fg_color": "transparent",
-    "text_color": "#EDF4FF"
-  },
-  "CTkEntry": {
-    "corner_radius": 9,
-    "border_width": 1,
-    "fg_color": "#081A33",
-    "border_color": "#24466F",
-    "text_color": "#EDF4FF",
-    "placeholder_text_color": "#90A8CB"
-  },
-  "CTkCheckBox": {
-    "corner_radius": 4,
-    "border_width": 2,
-    "fg_color": "#FFC629",
-    "border_color": "#7B9BC5",
-    "hover_color": "#E6A800",
-    "checkmark_color": "#07172D",
-    "text_color": "#EDF4FF",
-    "text_color_disabled": "#7289A9"
-  },
-  "CTkSwitch": {
-    "corner_radius": 1000,
-    "border_width": 3,
-    "button_length": 0,
-    "fg_color": "#24466F",
-    "progress_color": "#FFC629",
-    "button_color": "#F4F7FF",
-    "button_hover_color": "#FFE28A",
-    "text_color": "#EDF4FF",
-    "text_color_disabled": "#7289A9"
-  },
-  "CTkRadioButton": {
-    "corner_radius": 1000,
-    "border_width_checked": 6,
-    "border_width_unchecked": 2,
-    "fg_color": "#FFC629",
-    "border_color": "#7B9BC5",
-    "hover_color": "#E6A800",
-    "text_color": "#EDF4FF",
-    "text_color_disabled": "#7289A9"
-  },
-  "CTkProgressBar": {
-    "corner_radius": 1000,
-    "border_width": 0,
-    "fg_color": "#183B63",
-    "progress_color": "#FFC629",
-    "border_color": "#183B63"
-  },
-  "CTkSlider": {
-    "corner_radius": 1000,
-    "button_corner_radius": 1000,
-    "border_width": 5,
-    "button_length": 0,
-    "fg_color": "#183B63",
-    "progress_color": "#FFC629",
-    "button_color": "#FFC629",
-    "button_hover_color": "#E6A800"
-  },
-  "CTkOptionMenu": {
-    "corner_radius": 9,
-    "fg_color": "#102746",
-    "button_color": "#FFC629",
-    "button_hover_color": "#E6A800",
-    "text_color": "#EDF4FF",
-    "text_color_disabled": "#90A8CB"
-  },
-  "CTkComboBox": {
-    "corner_radius": 9,
-    "border_width": 1,
-    "fg_color": "#081A33",
-    "border_color": "#24466F",
-    "button_color": "#FFC629",
-    "button_hover_color": "#E6A800",
-    "text_color": "#EDF4FF",
-    "text_color_disabled": "#90A8CB"
-  },
-  "CTkScrollbar": {
-    "corner_radius": 1000,
-    "border_spacing": 4,
-    "fg_color": "transparent",
-    "button_color": "#274B74",
-    "button_hover_color": "#4674A6"
-  },
-  "CTkSegmentedButton": {
-    "corner_radius": 9,
-    "border_width": 1,
-    "fg_color": "#081A33",
-    "selected_color": "#FFC629",
-    "selected_hover_color": "#E6A800",
-    "unselected_color": "#102746",
-    "unselected_hover_color": "#17385E",
-    "text_color": "#C4D5ED",
-    "text_color_disabled": "#7289A9"
-  },
-  "CTkTextbox": {
-    "corner_radius": 10,
-    "border_width": 1,
-    "fg_color": "#081A33",
-    "border_color": "#183B63",
-    "text_color": "#EDF4FF",
-    "scrollbar_button_color": "#274B74",
-    "scrollbar_button_hover_color": "#4674A6"
-  },
-  "CTkScrollableFrame": {
-    "label_fg_color": "#061327"
-  },
-  "DropdownMenu": {
-    "fg_color": "#0A1C35",
-    "hover_color": "#16365B",
-    "text_color": "#EDF4FF"
-  },
-  "CTkFont": {
-    "macOS": {
-      "family": "Avenir Next",
-      "size": 13,
-      "weight": "normal"
-    },
-    "Windows": {
-      "family": "Segoe UI",
-      "size": 13,
-      "weight": "normal"
-    },
-    "Linux": {
-      "family": "TkDefaultFont",
-      "size": 13,
-      "weight": "normal"
-    }
+  "brand": "Invent-SSH",
+  "style": "macOS Dark Utility",
+  "palette": {
+    "bg_window": "#1C1C1E",
+    "bg_sidebar": "#232326",
+    "bg_toolbar": "#252528",
+    "bg_card": "#262629",
+    "bg_control": "#36363A",
+    "text_primary": "#F5F5F7",
+    "text_secondary": "#98989D",
+    "text_tertiary": "#6E6E73",
+    "accent_blue": "#0A84FF",
+    "status_online": "#30D158",
+    "status_warning": "#FF9F0A",
+    "status_offline": "#FF453A"
   }
 }
