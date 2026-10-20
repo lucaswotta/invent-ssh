@@ -1,88 +1,51 @@
-<div align="center"><img src="app.ico" alt="invent-ssh icon" width="128"></div> 
+<div align="center">
+
+<img src="app.ico" alt="" width="96">
 
 # invent-ssh
 
-**Inventário de Hardware Linux via SSH**
+**Inventário de hardware de terminais Linux via SSH, com interface gráfica.**
 
----
+Coleta em paralelo, somente leitura, a partir de uma planilha ou de uma consulta ao Oracle.
 
-Uma ferramenta open source para automatizar a coleta de informações de hardware em sistemas Linux através de conexões SSH. Desenvolvida para resolver problemas reais de visibilidade de infraestrutura em ambientes distribuídos.
+[Baixar (Windows)](https://github.com/lucaswotta/invent-ssh/releases) ·
+[Como funciona](#como-funciona) ·
+[Uso](#uso) ·
+[Segurança](#segurança)
 
-![Demo do invent-ssh](https://i.imgur.com/Bba4sRb.gif)
+<br>
 
-[![GitHub Release](https://img.shields.io/github/v/release/lucaswotta/invent-ssh?include_prereleases&label=versão&color=5cb85c)](https://github.com/lucaswotta/invent-ssh/releases)
-[![License: MIT](https://img.shields.io/badge/Licença-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
+![Demonstração do invent-ssh](https://i.imgur.com/Bba4sRb.gif)
 
----
+</div>
 
-## O Problema
+## Problema
 
-"Precisamos fazer o upgrade das máquinas... mas qual é o hardware atual? Qual upgrade é mais necessário? Trocar o HDD por SSD? Aumentar a RAM? Ou substituir a máquina inteira?"
+Planejar o upgrade de uma frota de terminais Linux exige saber o que existe em cada máquina: trocar HDD por SSD, aumentar a RAM ou substituir o equipamento. Sem inventário, a decisão é no escuro. O invent-ssh nasceu como script interno e virou uma ferramenta completa. Foi validado com mais de 500 terminais.
 
-A falta de visibilidade sobre o hardware instalado em terminais Linux distribuídos era um problema comum. Esta ferramenta nasceu dessa necessidade real: um script interno que evoluiu para uma solução completa quando outros profissionais enfrentavam o mesmo ponto cego na infraestrutura.
+## Como funciona
 
----
+1. Lê a lista de IPs de uma planilha (`.xlsx` ou `.csv`) ou de uma consulta ao Oracle.
+2. Abre um pool de conexões SSH e coleta os dados em paralelo.
+3. Usa `inxi` como fonte principal, com fallback para `dmidecode`, `lscpu` e comandos nativos, conforme o que existir em cada máquina.
+4. Normaliza os dados e grava em planilha (`.xlsx` ou `.csv`) ou direto em uma tabela Oracle.
 
-## Como Funciona
-
-### Coleta
-- **Estratégia Híbrida**: Usa `inxi` como fonte primária, com fallback para `dmidecode`, `lscpu` e demais comandos nativos do Linux
-- **Somente Leitura**: Zero modificações no sistema alvo
-- **Detecção Automática**: Identifica as melhores ferramentas disponíveis em cada sistema
-
-### Performance
-- **Processamento Paralelo**: Coleta dados de dezenas de máquinas simultaneamente
-- **Timeouts Configuráveis**: Otimização para diferentes condições de rede
-- **Escalabilidade**: Validado em ambientes com 500+ endpoints
-
-### Segurança
-- **Credenciais Temporárias**: Nunca salvas em disco
-- **Suporte SSH Keys**: Autenticação padrão recomendada
-- **Logs Detalhados**: Auditoria completa das operações
-
----
-
-## Como Usar
-
-### Windows
-1. Baixe o executável em [Releases](https://github.com/lucaswotta/invent-ssh/releases)
-2. Execute o arquivo `.exe` - sem instalação necessária
-3. Siga o guia da interface gráfica
-
-### Linux/macOS
-```bash
-git clone https://github.com/lucaswotta/invent-ssh.git
-cd invent-ssh
-
-python -m venv venv
-source venv/bin/activate
-
-pip install -r requirements.txt
-python app.py
-```
-
-**Requisito**: Python 3.8+
-
----
-
-## Dados Coletados
+## Dados coletados
 
 | Componente | Informações |
-|------------|------------|
-| **Sistema** | Distribuição, kernel |
-| **Placa-mãe** | Fabricante, modelo |
-| **Processador** | Modelo, cores físicos/lógicos, frequência |
-| **Memória** | Capacidade total, tipo (DDR5/4/3) |
-| **Armazenamento** | Tipo (NVMe/SSD/HDD), capacidade |
+|---|---|
+| Sistema | Distribuição e kernel |
+| Placa-mãe | Fabricante e modelo |
+| Processador | Modelo, núcleos físicos e lógicos, frequência |
+| Memória | Capacidade total e tipo (DDR3, DDR4, DDR5) |
+| Armazenamento | Tipo (NVMe, SSD, HDD) e capacidade |
 
-### Exemplo de Saída
+Exemplo de saída, com valores ilustrativos:
+
 ```
-IP: 10.1.3.20
-NROEMPRESA: 100
-NROCHECKOUT: 20
+IP: 192.168.0.20
 STATUS: ONLINE
-PLACA_MAE: PCWARE - IPX4120G
+PLACA_MAE: Fabricante - Modelo
 PROCESSADOR: Intel(R) Celeron(R) N4120 CPU @ 1.10GHz
 CORES_THREADS: 4/4
 RAM: 8GB DDR4
@@ -90,97 +53,51 @@ TIPO_DISCO: NVMe
 TAMANHO_DISCO: 128GB
 DISTRO: Ubuntu 18.04.3 LTS
 KERNEL: 5.3
-DTAATUALIZACAO: 2025-09-13 00:00:00
 ```
 
----
+## Uso
 
-## Configurações
+**Windows:** baixe o `.exe` em [Releases](https://github.com/lucaswotta/invent-ssh/releases) e execute. Não precisa instalar.
 
-### Otimização
-- **Conexões Paralelas**: 1-50 simultâneas (padrão: 15)
-- **Timeout SSH**: 5-120 segundos (padrão: 30)
+**Linux e macOS** (Python 3.8 ou superior):
 
-### Fontes de Dados
-- **Planilhas**: Excel (.xlsx) ou CSV
-- **Oracle Database**: Query personalizada para descoberta de ativos
+```bash
+git clone https://github.com/lucaswotta/invent-ssh.git
+cd invent-ssh
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
 
-### Saída
-- **Planilhas**: XLSX ou CSV para relatórios
-- **Banco Oracle**: Inserção direta em tabelas corporativas
+### Configuração
 
-### Idioma
-- **Português (Brasil)** (padrão) ou **English**, selecionável na aba "Configurações"
-- A troca de idioma requer reiniciar a aplicação para ser aplicada por completo
+| Opção | Faixa | Padrão |
+|---|---|---|
+| Conexões paralelas | 1 a 50 | 15 |
+| Timeout SSH | 5 a 120 s | 30 s |
+| Idioma | Português (Brasil) ou English | Português (Brasil) |
 
----
+A troca de idioma exige reiniciar o aplicativo.
+
+## Segurança
+
+- Somente leitura: não instala nem altera nada nas máquinas de destino.
+- Credenciais informadas na sessão e nunca gravadas em disco. Aceita chave SSH.
+- No modo Oracle, valida que a consulta de busca é um `SELECT` e que a tabela de destino é um identificador válido antes de executar qualquer SQL.
 
 ## Estrutura
 
 ```
-invent-ssh/
-├── app.py           # Interface gráfica (CustomTkinter)
-├── core.py          # Lógica de negócio  
-├── inspector.py     # Coleta e parsing do hardware
-├── i18n.py          # Textos e suporte a múltiplos idiomas (pt-br/en)
-├── build.py         # Empacotamento (.exe)
-├── requirements.txt # Dependências
-├── app.ico
-├── LICENSE
-└── README.md
+app.py         interface gráfica (CustomTkinter)
+core.py        orquestração e regras de negócio
+inspector.py   coleta e parsing do hardware
+i18n.py        textos em pt-BR e inglês
+build.py       empacotamento do .exe
 ```
 
-### Fluxo de Processamento
-1. **Carregamento**: Lê lista de IPs (planilha ou Oracle)
-2. **Conexão**: Estabelece pool de conexões SSH
-3. **Coleta**: Executa comandos de hardware em paralelo
-4. **Parsing**: Normaliza dados para formato padrão
-5. **Saída**: Gera relatório ou insere no banco
-
----
-
-## Segurança
-
-### Práticas Recomendadas
-- Use autenticação por chaves SSH sempre que possível
-- Execute apenas em redes controladas e confiáveis
-- Aplique o princípio do menor privilégio para contas de acesso
-
-### Garantias
-- Não instala ou modifica software nas máquinas alvo
-- Não armazena credenciais permanentemente
-- Não executa comandos de escrita ou configuração
-- No Modo Oracle, valida que a query de busca é somente `SELECT` e que a tabela de destino é um identificador válido, antes de executar qualquer SQL
-
----
-
-## Stack
-
-| Componente | Tecnologia |
-|------------|------------|
-| **Interface** | CustomTkinter |
-| **SSH** | Paramiko |
-| **Dados** | Pandas |
-| **Database** | oracledb |
-| **Build** | PyInstaller |
-
----
-
-## Contribuição
-
-1. Abra uma Issue descrevendo sua ideia
-2. Fork o projeto e crie uma branch
-3. Implemente suas mudanças
-4. Teste em ambiente real
-5. Submeta um Pull Request
-
----
+Stack: CustomTkinter, Paramiko, Pandas, oracledb, PyInstaller.
 
 ## Licença
 
-MIT License - use, modifique e distribua livremente.
-
----
-
-**Lucas Motta**  
-[GitHub](https://github.com/lucaswotta) • [LinkedIn](https://www.linkedin.com/in/lucaswotta)
+MIT. Veja [LICENSE](LICENSE).
