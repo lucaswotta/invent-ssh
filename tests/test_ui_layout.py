@@ -75,6 +75,11 @@ class DesktopUtilityUITests(unittest.TestCase):
                 page = response.read().decode("utf-8")
             self.assertIn(token, page)
 
+            # A foreign Host header (DNS rebinding) never receives the token
+            with self.assertRaises(urllib.error.HTTPError) as ctx:
+                urllib.request.urlopen(urllib.request.Request(url, headers={"Host": "attacker.example"}))
+            self.assertEqual(ctx.exception.code, 403)
+
             # Unauthenticated API request is rejected with 403
             with self.assertRaises(urllib.error.HTTPError) as ctx:
                 urllib.request.urlopen(url + "api/state")

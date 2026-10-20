@@ -367,6 +367,23 @@ def save_report(
     return path
 
 
+def save_snapshot_diff(
+    changes: Sequence[Mapping[str, Any]], output_dir: str | Path, snapshot_id: int
+) -> Path:
+    """Save snapshot changes as CSV; values come from remote hosts and are neutralized."""
+    labels = {
+        "ip": "IP",
+        "hostname": "Hostname",
+        "field": "Campo",
+        "previous_value": "Valor anterior",
+        "current_value": "Valor atual",
+    }
+    rows = [{label: _value(change.get(key)) for key, label in labels.items()} for change in changes]
+    path = Path(output_dir) / f"snapshot_diff_{int(snapshot_id)}.csv"
+    _write_csv(path, list(labels.values()), rows)
+    return path
+
+
 def _write_csv(path: Path, columns: Sequence[str], rows: Sequence[Mapping[str, str]]) -> None:
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(columns), delimiter=";", extrasaction="ignore")

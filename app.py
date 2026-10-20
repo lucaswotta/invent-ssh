@@ -34,11 +34,13 @@ from paths import (
     get_user_data_dir,
     save_user_config,
 )
-from reporting import create_template_workbook, save_report
+from reporting import create_template_workbook, save_report, save_snapshot_diff
 from snapshots import SnapshotStore, compute_fleet_analytics
 
 APP_BRAND = "Invent-SSH"
 APP_VERSION = "0.5.0"
+# Browsers throttle timers in hidden tabs to about one per minute.
+BROWSER_IDLE_TIMEOUT_SECONDS = 180
 
 COLORS = {
     "bg_window": "#1C1C1E",
@@ -270,6 +272,12 @@ class InventoryController:
             self.status_text = f"Relatório exportado: {path.name}"
         return path
 
+    def export_snapshot_diff(self, snapshot_id: int) -> Path:
+        changes = self.snapshot_store.compute_diff(snapshot_id)["changes"]
+        if not changes:
+            raise ValueError("Não há alterações neste snapshot para exportar.")
+        return save_snapshot_diff(changes, get_reports_dir(), snapshot_id)
+
     def load_snapshot_into_workspace(self, snapshot_id: int) -> dict[str, Any]:
         snap = self.snapshot_store.get_snapshot(snapshot_id)
         if snap is None:
@@ -430,6 +438,15 @@ def create_http_server(
             self.end_headers()
             self.wfile.write(raw)
 
+        def _check_host(self) -> bool:
+            # A DNS-rebinding page reaches this port under its own host name.
+            self.server.last_request_at = time.monotonic()
+            port = self.server.server_address[1]
+            if self.headers.get("Host", "") in {f"127.0.0.1:{port}", f"localhost:{port}"}:
+                return True
+            self._send_json({"error": "Host não autorizado."}, status=HTTPStatus.FORBIDDEN)
+            return False
+
         def _check_token(self) -> bool:
             provided = self.headers.get("X-Invent-Token", "")
             if not secrets.compare_digest(provided, session_token):
@@ -447,6 +464,8 @@ def create_http_server(
             return json.loads(raw.decode("utf-8"))
 
         def do_GET(self) -> None:
+            if not self._check_host():
+                return
             parsed = urlparse(self.path)
             path = parsed.path
             if path in {"/", "/index.html"}:
@@ -472,6 +491,10 @@ def create_http_server(
                 self._send_json(controller.get_state())
                 return
 
+            if path == "/api/ping":
+                self._send_json({})
+                return
+
             if path == "/api/snapshots":
                 self._send_json({"snapshots": controller.snapshot_store.list_snapshots()})
                 return
@@ -488,7 +511,7 @@ def create_http_server(
             self._send_json({"error": "Rota não encontrada."}, status=HTTPStatus.NOT_FOUND)
 
         def do_POST(self) -> None:
-            if not self._check_token():
+            if not self._check_host() or not self._check_token():
                 return
             parsed = urlparse(self.path)
             path = parsed.path
@@ -546,6 +569,12 @@ def create_http_server(
                     self._send_json({"filepath": chosen})
                     return
 
+                match_export = re.fullmatch(r"/api/snapshots/(\d+)/diff/export", path)
+                if match_export:
+                    out_path = controller.export_snapshot_diff(int(match_export.group(1)))
+                    self._send_json({"path": str(out_path)})
+                    return
+
                 match_load = re.fullmatch(r"/api/snapshots/(\d+)/load", path)
                 if match_load:
                     snap_id = int(match_load.group(1))
@@ -560,12 +589,15 @@ def create_http_server(
                 self._send_json({"error": str(exc)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     server = ThreadingHTTPServer((host, port), RequestHandler)
+    server.last_request_at = time.monotonic()
     bound_host, bound_port = server.server_address[:2]
     url = f"http://{bound_host}:{bound_port}/"
     return server, url, session_token
 
 
-def launch_desktop_window(url: str, on_close: Callable[[], None]) -> None:
+def launch_desktop_window(
+    url: str, on_close: Callable[[], None], seconds_since_request: Callable[[], float]
+) -> None:
     """Open the Invent-SSH desktop window via pywebview, GTK WebKit2, or default browser."""
     try:
         import webview  # type: ignore
@@ -622,13 +654,15 @@ def launch_desktop_window(url: str, on_close: Callable[[], None]) -> None:
     except Exception:
         pass
 
+    # Without a window there is no close event; stop once the tab stops pinging.
     print(f"{APP_BRAND} v{APP_VERSION} ativo em {url}")
     webbrowser.open(url)
     try:
-        while True:
+        while seconds_since_request() < BROWSER_IDLE_TIMEOUT_SECONDS:
             time.sleep(1.0)
     except KeyboardInterrupt:
-        on_close()
+        pass
+    on_close()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -645,16 +679,19 @@ def main(argv: list[str] | None = None) -> int:
     controller = InventoryController()
 
     if args.input:
-        controller.load_targets(args.input)
-        if args.user:
-            controller.update_config({"ssh_user": args.user})
-        if args.key:
-            controller.update_config({"ssh_key_path": args.key})
-        controller.update_config({"output_format": args.output_format})
-        controller.start_scan()
-        while controller.get_state()["scanning"]:
-            time.sleep(0.2)
-        report = controller.export_current(args.output_format)
+        try:
+            controller.load_targets(args.input)
+            if args.user:
+                controller.update_config({"ssh_user": args.user})
+            if args.key:
+                controller.update_config({"ssh_key_path": args.key})
+            controller.start_scan()
+            while controller.get_state()["scanning"]:
+                time.sleep(0.2)
+            report = controller.export_current(args.output_format)
+        except ValueError as exc:
+            print(exc, file=sys.stderr)
+            return 2
         print(str(report))
         return 0
 
@@ -671,7 +708,11 @@ def main(argv: list[str] | None = None) -> int:
             server.shutdown()
         return 0
 
-    launch_desktop_window(url, on_close=server.shutdown)
+    launch_desktop_window(
+        url,
+        on_close=server.shutdown,
+        seconds_since_request=lambda: time.monotonic() - server.last_request_at,
+    )
     return 0
 
 
