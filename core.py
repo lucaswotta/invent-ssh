@@ -238,7 +238,8 @@ class InventoryEngine:
         target_iter = iter(self.terminals)
         pending: Dict[concurrent.futures.Future, Terminal] = {}
         processed = 0
-        connection_failures = 0
+        consecutive_failures = 0
+        online_count = 0
         exhausted = False
         circuit_tripped = False
 
@@ -278,13 +279,19 @@ class InventoryEngine:
                         result = future.result()
                         if result is not None:
                             results.append(result)
-                            if result.status != "ONLINE":
-                                connection_failures += 1
+                            if result.status == "ONLINE":
+                                online_count += 1
+                                consecutive_failures = 0
+                            else:
+                                consecutive_failures += 1
+                            self.log("HOST_RESULT", result.ip, asdict(result))
                     except Exception as exc:
                         terminal.status = "ERROR"
                         terminal.erro = str(exc)
                         terminal.dta_atualizacao = datetime.now()
                         results.append(terminal)
+                        consecutive_failures += 1
+                        self.log("HOST_RESULT", terminal.ip, asdict(terminal))
                         self.log("ERROR", t("log_processing_exception", ip=terminal.ip, error=exc))
 
                     self.log(
@@ -292,7 +299,7 @@ class InventoryEngine:
                         f"{processed}/{total}: {terminal.ip}",
                         processed / total * 100 if total else 100,
                     )
-                    if processed == 10 and connection_failures == 10:
+                    if consecutive_failures >= 10 and online_count == 0:
                         self.log("ERROR", t("log_circuit_breaker_tripped"))
                         self.log("ERROR", t("log_circuit_breaker_hint"))
                         circuit_tripped = True

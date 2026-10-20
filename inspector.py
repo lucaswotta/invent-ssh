@@ -10,6 +10,7 @@ import json
 import re
 import shlex
 import socket
+import threading
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -17,6 +18,9 @@ from typing import Any, Optional
 import paramiko
 
 from i18n import t
+from paths import get_known_hosts_path
+
+_KNOWN_HOSTS_LOCK = threading.Lock()
 
 
 def _clean_string(value: Any) -> str:
@@ -830,8 +834,15 @@ def get_hardware_info(
 ) -> dict[str, Any]:
     """Connect to one explicitly supplied host and discover Linux hardware read-only."""
     client = paramiko.SSHClient()
+    known_hosts = get_known_hosts_path()
     try:
         client.load_system_host_keys()
+        with _KNOWN_HOSTS_LOCK:
+            if known_hosts.is_file():
+                try:
+                    client.load_host_keys(str(known_hosts))
+                except OSError:
+                    pass
         client.set_missing_host_key_policy(
             paramiko.AutoAddPolicy() if trust_unknown_hosts else paramiko.RejectPolicy()
         )
@@ -872,6 +883,13 @@ def get_hardware_info(
             allow_agent=False,
             look_for_keys=False,
         )
+        if trust_unknown_hosts:
+            with _KNOWN_HOSTS_LOCK:
+                try:
+                    known_hosts.parent.mkdir(parents=True, exist_ok=True)
+                    client.save_host_keys(str(known_hosts))
+                except OSError:
+                    pass
         return _collect_linux_hardware(
             client,
             include_sensitive_identifiers=include_sensitive_identifiers,
