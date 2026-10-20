@@ -121,6 +121,17 @@ class HardwareParserTests(unittest.TestCase):
         self.assertEqual(inspector._count_cpu_list("0-3,8,10-11"), 7)
         self.assertEqual(inspector._count_cpu_list("0-3,x"), 0)
 
+    def test_custom_port_is_used_and_named_in_known_hosts(self):
+        client = Mock()
+        with (
+            patch.object(inspector.paramiko, "SSHClient", return_value=client),
+            patch.object(inspector, "_collect_linux_hardware", return_value={"status": "SUCESSO"}),
+            patch.object(inspector, "_remember_host_key") as remember,
+        ):
+            inspector.get_hardware_info("10.0.0.9", "reader", "secret", None, timeout=5, trust_unknown_hosts=True, port=2222)
+        self.assertEqual(client.connect.call_args.kwargs["port"], 2222)
+        self.assertEqual(remember.call_args.args[1], "[10.0.0.9]:2222")
+
     def test_tofu_keys_from_parallel_workers_are_all_kept(self):
         with tempfile.TemporaryDirectory() as tmp:
             known_hosts = Path(tmp) / "known_hosts"
@@ -144,7 +155,7 @@ class HardwareParserTests(unittest.TestCase):
         set_language("pt-br")
         self.addCleanup(set_language, previous)
         self.assertIn("desligada", inspector._connection_failure(wrapped(errno.EHOSTUNREACH), "10.0.0.9", 15))
-        self.assertIn("recusada", inspector._connection_failure(wrapped(errno.ECONNREFUSED), "10.0.0.9", 15))
+        self.assertIn("recusada na porta 2222", inspector._connection_failure(wrapped(errno.ECONNREFUSED), "10.0.0.9", 15, 2222))
         self.assertIn("15 s", inspector._connection_failure(socket.timeout(), "10.0.0.9", 15))
         self.assertIsNone(inspector._connection_failure(PermissionError(13, "denied"), "10.0.0.9", 15))
 
