@@ -105,6 +105,17 @@ class DesktopUtilityUITests(unittest.TestCase):
             saved_disk = cfg_path.read_text(encoding="utf-8")
             self.assertNotIn("ephemeral-secret", saved_disk)
 
+            # /api/open never hands arbitrary files to the desktop opener
+            req_open = urllib.request.Request(
+                url + "api/open",
+                data=json.dumps({"path": str(csv_path)}).encode("utf-8"),
+                headers={"X-Invent-Token": token, "Content-Type": "application/json"},
+                method="POST",
+            )
+            with self.assertRaises(urllib.error.HTTPError) as ctx:
+                urllib.request.urlopen(req_open)
+            self.assertEqual(ctx.exception.code, 400)
+
             # Load targets CSV via API
             req_load = urllib.request.Request(
                 url + "api/targets/load",
