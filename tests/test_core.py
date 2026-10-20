@@ -244,6 +244,7 @@ class InventoryEngineTests(unittest.TestCase):
                 with (
                     patch.object(inspector.paramiko, "SSHClient", return_value=client),
                     patch.object(inspector, "_collect_linux_hardware", return_value={"status": "SUCESSO", "processador": "Example CPU"}),
+                    patch.object(inspector, "_remember_host_key"),
                 ):
                     result = inspector.get_hardware_info(
                         ip="example.invalid",

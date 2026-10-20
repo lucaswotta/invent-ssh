@@ -1,6 +1,8 @@
 """Cross-distro hardware parsing tests using anonymized command-output fixtures."""
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import inspector
@@ -81,6 +83,20 @@ class HardwareParserTests(unittest.TestCase):
         self.assertEqual(len(parsed), 2)
         self.assertIn("Integrated GPU", parsed[0])
         self.assertIn("Accelerator", parsed[1])
+
+    def test_cpu_list_counts_single_cpus_as_one(self):
+        self.assertEqual(inspector._count_cpu_list("0-3,8,10-11"), 7)
+        self.assertEqual(inspector._count_cpu_list("0-3,x"), 0)
+
+    def test_tofu_keys_from_parallel_workers_are_all_kept(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            known_hosts = Path(tmp) / "known_hosts"
+            first, second = inspector.paramiko.ECDSAKey.generate(), inspector.paramiko.ECDSAKey.generate()
+            inspector._remember_host_key(known_hosts, "10.0.0.1", first)
+            inspector._remember_host_key(known_hosts, "10.0.0.2", second)
+            stored = inspector.paramiko.HostKeys(str(known_hosts))
+            self.assertTrue(stored.check("10.0.0.1", first))
+            self.assertTrue(stored.check("10.0.0.2", second))
 
     def test_uptime_format_and_unknown_value(self):
         self.assertEqual(inspector._format_uptime("90061.32 123.00"), "1d 1h 1m")

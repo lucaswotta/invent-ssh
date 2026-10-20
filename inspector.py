@@ -542,8 +542,10 @@ def _count_cpu_list(value: str) -> int:
                 if low < 0 or high < low:
                     return 0
                 total += high - low + 1
+            elif item.isdigit():
+                total += 1
             else:
-                total += int(item)
+                return 0
     except ValueError:
         return 0
     return total
@@ -823,6 +825,25 @@ def _collect_linux_hardware(
     }
 
 
+def _remember_host_key(known_hosts: Path, hostname: str, key: paramiko.PKey) -> None:
+    """Append a TOFU key to the shared file.
+
+    The file is re-read under the lock because parallel workers each loaded it
+    before connecting; saving a client's stale copy would drop other hosts.
+    """
+    with _KNOWN_HOSTS_LOCK:
+        try:
+            stored = paramiko.HostKeys()
+            if known_hosts.is_file():
+                stored.load(str(known_hosts))
+            if not stored.check(hostname, key):
+                stored.add(hostname, key.get_name(), key)
+                known_hosts.parent.mkdir(parents=True, exist_ok=True)
+                stored.save(str(known_hosts))
+        except OSError:
+            pass
+
+
 def get_hardware_info(
     ip: str,
     username: str,
@@ -884,12 +905,7 @@ def get_hardware_info(
             look_for_keys=False,
         )
         if trust_unknown_hosts:
-            with _KNOWN_HOSTS_LOCK:
-                try:
-                    known_hosts.parent.mkdir(parents=True, exist_ok=True)
-                    client.save_host_keys(str(known_hosts))
-                except OSError:
-                    pass
+            _remember_host_key(known_hosts, ip, client.get_transport().get_remote_server_key())
         return _collect_linux_hardware(
             client,
             include_sensitive_identifiers=include_sensitive_identifiers,
@@ -899,7 +915,7 @@ def get_hardware_info(
         return {"status": "FALHA_AUTH", "erro": t("hw_auth_failed")}
     except FileNotFoundError:
         return {"status": "FALHA_AUTH", "erro": t("hw_key_not_found", key_path=key_path)}
-    except (socket.timeout, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError):
+    except (socket.timeout, socket.gaierror, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError):
         return {"status": "FALHA_CONEXAO", "erro": t("hw_connection_timeout", ip=ip)}
     except paramiko.ssh_exception.BadHostKeyException:
         return {"status": "ERRO_CHAVE_HOST", "erro": t("hw_host_key_mismatch", ip=ip)}
