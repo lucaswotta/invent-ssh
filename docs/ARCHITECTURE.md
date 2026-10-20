@@ -1,61 +1,42 @@
-# Architecture overview
+# Architecture
 
-## Data flow
+## Data Flow
 
 ```text
 CSV / XLSX target list
         |
         v
-core.py — normalize columns, preserve asset metadata
+core.py (normalize columns, preserve metadata, bounded ThreadPoolExecutor)
+        |
+        +---> inspector.py (single SSH round-trip POSIX probe + TOFU known_hosts)
         |
         v
-Bounded ThreadPoolExecutor
+Terminal records (emitted incrementally via HOST_RESULT events)
         |
-        +---- inspector.py — SSH + Linux hardware collection
+        +---> snapshots.py (SQLite persistence, diff calculation, fleet analytics)
         |
-        v
-Normalized per-host Terminal records
-        |
-        v
-reporting.py — XLSX / CSV / self-contained HTML
+        +---> reporting.py (XLSX, CSV, and offline HTML generation)
         |
         v
-User Documents / Invent-SSH Reports
+app.py (InventoryController + local HTTP/JSON server + native WebView/browser shell)
 ```
 
-## Responsibilities
+## Modules
 
-- **app.py** — CustomTkinter desktop interface, SSH credentials, scan configuration, progress/log modal, and configuration persistence.
-- **core.py** — Input contract, per-host record model, bounded concurrency, cancellation, circuit breaker, and report coordination.
-- **inspector.py** — SSH lifecycle and a bounded, read-only POSIX-shell probe. Reads kernel interfaces and optional tools including `lscpu`, `lsblk`, `dmidecode`, `lspci`, `ip`, sysfs and `systemd-detect-virt`; missing optional tools reduce detail, not connectivity status.
-- **reporting.py** — Builds XLSX/CSV/HTML without GUI or database dependencies.
-- **i18n.py** — User-facing strings in Brazilian Portuguese and English; first-run locale follows the OS when supported.
-- **build.py** — Native PyInstaller package build for the OS on which it runs; it never deletes unrelated outputs or installs system packages.
-- **tests/** — Regression checks for export escaping and report structure, with engine tests to grow alongside the input contract.
+- `app.py`: `InventoryController`, local `ThreadingHTTPServer` bound to `127.0.0.1` with per-session token verification (`X-Invent-Token`), CLI runner, and desktop window launcher (`pywebview`, `Gtk 3.0` + `WebKit2`, or browser).
+- `ui/index.html`: Single-page macOS dark utility interface with three views (`Coleta`, `Parque`, `Snapshots`), popovers (`Alvos`, `SSH`, `Exportar`), and hardware inspector.
+- `core.py`: Streaming `.xlsx`/`.xlsm`/`.csv` target loader, `Terminal` dataclass, bounded worker pool (`max_workers`), consecutive-failure circuit breaker, and event queue emission.
+- `inspector.py`: SSH connection lifecycle and read-only POSIX shell probe (`_PROBE_SCRIPT`) reading `/etc/os-release`, `uname`, `lscpu`, `/proc/cpuinfo`, `/proc/meminfo`, `lsblk`, `/sys/class/dmi/id`, `lspci`, `/sys/class/net`, `/proc/uptime`, and `systemd-detect-virt`.
+- `snapshots.py`: `SnapshotStore` backed by `sqlite3` (`snapshots.db`), field-by-field diff engine (`compute_records_diff`), and neutral distribution aggregator (`compute_fleet_analytics`).
+- `reporting.py`: Report exporter for `.xlsx`, `.csv`, and `.html`, plus `.xlsx` target template generator (`create_template_workbook`).
+- `paths.py`: OS-appropriate user directories for configuration, logs, known hosts, SQLite snapshots, and exported reports.
+- `i18n.py`: Message catalog for `pt-br` and `en`.
+- `build.py`: Native `PyInstaller` packaging script.
 
-## Record contract
+## Security Boundaries
 
-Each row keeps the endpoint (`ip`), arbitrary input metadata (`metadata`), outcome (`status`), hardware fields, optional error detail, and collection timestamp. Extra asset columns survive the scan even if the collector does not understand their semantics.
-
-The UI should not own collection rules. Keep normalization and scan orchestration in `core.py`; keep format rendering in `reporting.py`.
-
-## Large input lists
-
-Only at most `max_workers` tasks are in flight. The engine fills its worker window as futures complete instead of scheduling every machine at once. Cancellation stops submitting new targets and cancels tasks that have not started; active SSH calls follow their connection and command timeouts.
-
-The input list and final records remain in memory. For exceptionally large fleets, streaming/chunked input and incremental persistence are future work, not a claim of unbounded scale.
-
-## Security boundaries
-
-- Host-key verification is strict by default against the local SSH known-hosts database.
-- `trust_unknown_hosts` is an explicit, lower-assurance compatibility choice.
-- CSV/XLSX values that could be interpreted as spreadsheet formulas are prefixed before writing.
-- HTML output escapes user-controlled fields.
-- No target-side service or database is required.
-- Reports are local sensitive outputs; users decide where to store and share them.
-
-## Hardware collection contract
-
-One bounded read-only SSH command returns named sections. A section parser separates command output from hardware-specific parsers, so collection is not tied to a single Linux distribution or exact utility output order. Primary sources are `/etc/os-release`, `uname`, `lscpu`/`/proc/cpuinfo`, `/proc/meminfo`, `lsblk` JSON (with a quoted key/value fallback), sysfs DMI, optional `dmidecode`/`lspci`, network sysfs and `/proc/uptime`.
-
-Core-field coverage counts required facts actually detected. Optional facts such as module speed, GPU model or NIC driver are listed as unavailable rather than inferred. Storage labels expose their classification basis: the kernel rotational flag can classify virtual or flash media as non-rotating, so it does not prove a physical SSD.
+- Local API endpoints require the per-process `X-Invent-Token` header.
+- SSH passwords exist only in process memory and are stripped from `public_config()` and `config.json`.
+- Host keys are checked against system `known_hosts` and `~/.local/share/invent-ssh/known_hosts`. When `trust_unknown_hosts` (TOFU) is enabled, newly discovered host keys are persisted so subsequent key changes trigger `BadHostKeyException`.
+- Spreadsheet exports prefix values starting with `=`, `+`, `-`, or `@` with `'` to prevent formula execution.
+- HTML exports escape all collected and user-supplied strings.

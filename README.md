@@ -1,142 +1,71 @@
-<div align="center">
-
-<img src="brand/invent-ssh-mark-128.png" alt="Invent-SSH penguin mark" width="88">
-
 # Invent-SSH
 
-**Linux hardware inventory at scale.**
+Agentless Linux hardware inventory over SSH with a local desktop/web workspace, SQLite snapshot history, and `.xlsx`, `.csv`, and `.html` exports.
 
-Collect hardware facts from Linux machines over SSH, then turn the results into useful reports — without an agent, a database, or a vendor-specific inventory system.
+Idioma: [Português (Brasil)](README.pt-BR.md)
 
-[Getting started](#getting-started) · [Reports](#reports) · [Security](#security) · [Roadmap](docs/PRODUCT_VISION.md)
+## Requirements
 
-[Português (Brasil)](README.pt-BR.md)
+- Python `3.11` or newer
+- Target systems running Linux with SSH enabled (port `22`)
+- Runtime Python packages (`requirements.txt`):
+  - `openpyxl>=3.1.0,<4.0.0`
+  - `paramiko>=3.3.0,<5.0.0`
+- Optional desktop window backends: `pywebview` or `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); falls back to the system web browser when neither is installed.
 
-</div>
-
----
-
-## Why Invent-SSH?
-
-Infrastructure teams often inherit hundreds or thousands of machines with incomplete hardware records. Invent-SSH helps answer practical questions: which devices are online, what CPU and memory do they have, which systems still use HDDs, and where is an upgrade likely to have the most impact?
-
-Its public contract is intentionally simple: **provide a list of authorized targets and receive a report you can inspect, filter, share, or process elsewhere.**
-
-## What it collects
-
-| Area | Examples |
-| --- | --- |
-| Operating system | Linux distribution and kernel |
-| Processor | Model, physical cores / logical threads where available |
-| Memory | Total capacity and memory type when available |
-| Storage | Device type (NVMe, SSD, HDD) and capacity |
-| Mainboard | Manufacturer and model when available |
-| Reachability | Online, offline, authentication or SSH errors |
-| Your asset context | Hostname, asset tag, location, owner, department, notes, and any extra input columns |
-
-Actual fields depend on the target OS, installed utilities, and SSH account permissions. Missing data is reported as unavailable instead of being fabricated.
-
-## Getting started
-
-### 1. Prepare the target list
-
-Create an Excel (.xlsx/.xlsm) or CSV (.csv) file with one column identifying the machine. Accepted column names:
-
-`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT`, or `TARGET`.
-
-Other columns are preserved as asset metadata and added to the report. For example:
-
-| IP | HOSTNAME | ASSET_TAG | LOCATION | OWNER |
-| --- | --- | --- | --- | --- |
-| 192.0.2.10 | lab-node-01 | ASSET-001 | Test Lab | Infrastructure |
-| 192.0.2.11 | lab-node-02 | ASSET-002 | Remote Office | Operations |
-
-The sample IPs above are documentation-only addresses. Use your own authorized targets.
-
-### 2. Connect over SSH
-
-- Use an account with the minimum permissions necessary to read the required hardware information.
-- Prefer SSH keys to passwords.
-- By default, Invent-SSH checks host keys against your local SSH known-hosts database. Unknown hosts are rejected. Enroll expected keys before a scan whenever practical.
-- A compatibility option can trust unknown host keys. It is **less secure** and should only be enabled intentionally on a trusted network; it weakens protection against machine-in-the-middle attacks.
-
-### 3. Run the inventory
-
-**Windows:** use a compatible package from [GitHub Releases](https://github.com/lucaswotta/invent-ssh/releases) when one is published, or build natively from source.
-
-**Linux / macOS:** Python 3.11+ is recommended. The desktop interface requires Tcl/Tk support in the selected Python installation.
-
-On Debian/Ubuntu, install the matching system Tk module before creating the virtual environment:
-
-```bash
-sudo apt install python3-tk
-```
-
-On Fedora, use `sudo dnf install python3-tkinter`. On macOS, use a Python distribution that includes Tcl/Tk.
+## Installation
 
 ```bash
 git clone https://github.com/lucaswotta/invent-ssh.git
 cd invent-ssh
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
-python app.py
+python3 -m pip install -r requirements.txt
 ```
 
-On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1` instead of the Unix `source` command.
+## Usage
 
-## Reports
-
-Choose the format that suits the next step:
-
-- **Excel (.xlsx)** — executive overview and inventory sheet with filters, frozen headings, readable widths, status styling, and print-friendly page setup.
-- **HTML (.html)** — one self-contained report with summary metrics, a searchable and filterable inventory table, responsive styling, and no server or external assets required.
-- **CSV (.csv)** — UTF-8 with BOM and semicolon-delimited fields for spreadsheet compatibility and data exchange.
-
-Reports are saved locally in your Documents folder under `Invent-SSH Reports`. The path is independent of the working directory. Treat them as infrastructure data: they can include hostnames, addresses, device identifiers, and ownership/location metadata.
-
-## Scale and operating model
-
-- Concurrent SSH connections are bounded by the configured worker count. The engine does not create one pending task per target up front, reducing memory overhead for large input lists.
-- Each endpoint produces an individual status, so one unreachable host does not erase the rest of the inventory.
-- Tune concurrency and timeouts for your workstation, network, and targets. More workers are not always faster.
-- The collector is designed for Linux targets and read-only inspection. It does not install an agent or configure the target.
-
-## Security
-
-- Run inventories only against systems you own or are explicitly authorized to assess.
-- SSH credentials are supplied for the session. The application does not persist the SSH password; it may remember the username and private-key **path** in the local UI configuration. The key file itself is never copied into the application configuration.
-- Keep reports and logs out of public issue attachments unless sanitized. They may contain infrastructure identifiers and error messages.
-- Unknown-host trust is disabled by default; the opt-in compatibility setting weakens SSH host identity verification.
-- This tool is an inventory aid, not a guarantee of hardware attestation or a security scanner.
-
-See [SECURITY.md](SECURITY.md) for security reporting and current limitations.
-
-## Visual identity and responsive desktop
-
-The interface uses a custom penguin mark, midnight navy surfaces and signal-yellow primary actions. The main window opens maximized and remains resizable; content panels reflow where needed and long inventory views stay scrollable. Exported reports use the same identity, with an embedded logo in offline HTML and Excel reports.
-
-The first launch inherits a supported operating-system locale (Brazilian Portuguese or English). A language preference explicitly saved in the application takes precedence on later launches.
-
-## Build from source
-
-Builds are native to the operating system being used; PyInstaller does not cross-compile Windows, macOS and Linux packages from a single host.
+### Desktop / Web Interface
 
 ```bash
-python -m pip install -r requirements-build.txt
-python build.py
+python3 app.py
 ```
 
-The package is placed under `dist/`; intermediate files are isolated under `build/`. Use `python build.py --console` for diagnostic builds.
+Run only the local HTTP server without opening a window:
 
-## Project quality
+```bash
+python3 app.py --no-window --port 8765
+```
 
-The test suite covers Linux hardware parsers, SSH policy, bounded collection, path/config migration, locale resolution, report escaping and responsive-card layout. GitHub Actions runs tests across Windows, macOS and Linux and builds a native package on each OS.
+The interface provides three views occupying `100vw` by `100vh`:
 
-- [Product vision and roadmap](docs/PRODUCT_VISION.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Changelog](CHANGELOG.md)
-- [Contributing](CONTRIBUTING.md)
+- `Coleta`: target file selection, SSH credentials popover, segmented status filter (`Todas`, `Online`, `Offline`, `Falha SSH`), live inventory table, and hardware inspector panel.
+- `Parque`: neutral hardware distribution charts (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) and location breakdown (`Unidade / Local`).
+- `Snapshots`: local SQLite history of completed runs and field-by-field hardware comparison between snapshots.
+
+### Command Line
+
+```bash
+python3 app.py --input targets.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --output-format XLSX
+```
+
+## Configuration
+
+Target files accept `.xlsx`, `.xlsm`, or `.csv` containing one address column (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT`, or `TARGET`). Additional columns (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) are preserved in the workspace and in exported reports.
+
+User paths follow platform conventions via `paths.py`:
+
+- Configuration: `~/.config/invent-ssh/config.json` on Linux (`%APPDATA%\Invent-SSH` on Windows, `~/Library/Application Support/Invent-SSH` on macOS).
+- Snapshots and TOFU host keys: `~/.local/share/invent-ssh/snapshots.db` and `~/.local/share/invent-ssh/known_hosts`.
+- Exported reports: `~/Documents/Invent-SSH Reports/`.
+
+SSH passwords are kept only in memory for the active session and are never written to `config.json`.
+
+## Limitations
+
+- Targets must be Linux systems accessible over SSH; Windows and macOS endpoints are not collected.
+- Hardware collection is read-only and executes a single POSIX shell probe per target (`inspector.py`). Fields that require root privileges (`dmidecode`, serial numbers) or optional utilities (`lscpu`, `lsblk`, `lspci`) are reported as `N/A` when unavailable or unpermitted.
+- Storage classification (`NVMe`, `SSD / flash`, `HDD`) relies on transport names and the Linux kernel rotational flag (`ROTA`), which can report virtual disks as non-rotating media.
 
 ## License
 

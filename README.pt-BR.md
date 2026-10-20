@@ -1,142 +1,71 @@
-<div align="center">
-
-<img src="brand/invent-ssh-mark-128.png" alt="Símbolo pinguim do Invent-SSH" width="88">
-
 # Invent-SSH
 
-**Inventário de hardware Linux em escala.**
+Coletor de inventário de hardware Linux via SSH sem agente, com interface desktop/web local, histórico de snapshots em SQLite e exportação em `.xlsx`, `.csv` e `.html`.
 
-Colete informações de hardware de máquinas Linux via SSH e transforme os resultados em relatórios úteis — sem agente, banco de dados ou sistema de inventário de um fornecedor específico.
+Language: [English](README.md)
 
-[Início rápido](#início-rápido) · [Relatórios](#relatórios) · [Segurança](#segurança) · [Visão do produto](docs/PRODUCT_VISION.md)
+## Requisitos
 
-[English](README.md)
+- Python `3.11` ou superior
+- Sistemas de destino Linux com SSH ativo (porta `22`)
+- Pacotes Python de execução (`requirements.txt`):
+  - `openpyxl>=3.1.0,<4.0.0`
+  - `paramiko>=3.3.0,<5.0.0`
+- Backends opcionais para janela nativa: `pywebview` ou `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); na ausência de ambos, abre no navegador padrão do sistema.
 
-</div>
-
----
-
-## Por que Invent-SSH?
-
-Equipes de infraestrutura frequentemente recebem centenas ou milhares de máquinas com registros incompletos de hardware. O Invent-SSH ajuda a responder perguntas práticas: quais dispositivos estão acessíveis, quais processadores e memórias possuem, quais ainda usam HDD e onde uma atualização pode fazer mais diferença?
-
-O contrato público é simples: **forneça uma lista de destinos autorizados e receba um relatório para inspecionar, filtrar, compartilhar ou processar em outras ferramentas.**
-
-## O que ele coleta
-
-| Área | Exemplos |
-| --- | --- |
-| Sistema operacional | Distribuição Linux e kernel |
-| Processador | Modelo, núcleos físicos / threads lógicas quando disponíveis |
-| Memória | Capacidade total e tipo quando disponível |
-| Armazenamento | Tipo (NVMe, SSD, HDD) e capacidade |
-| Placa-mãe | Fabricante e modelo quando disponíveis |
-| Conectividade | Online, offline, falha de autenticação ou erro SSH |
-| Contexto dos ativos | Hostname, etiqueta, local, responsável, departamento, observações e demais colunas do arquivo de entrada |
-
-Os campos disponíveis dependem do sistema-alvo, das ferramentas instaladas e das permissões da conta SSH. Dados indisponíveis são identificados como tal, sem inventar valores.
-
-## Início rápido
-
-### 1. Prepare a lista de destinos
-
-Crie um arquivo Excel (.xlsx/.xlsm) ou CSV (.csv) com uma coluna que identifique a máquina. Nomes de coluna aceitos:
-
-`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`.
-
-As demais colunas são preservadas como metadados e incluídas no relatório. Por exemplo:
-
-| IP | HOSTNAME | ASSET_TAG | LOCATION | OWNER |
-| --- | --- | --- | --- | --- |
-| 192.0.2.10 | lab-node-01 | ASSET-001 | Laboratório | Infraestrutura |
-| 192.0.2.11 | lab-node-02 | ASSET-002 | Filial | Operações |
-
-Os IPs do exemplo são reservados para documentação; use os endereços da sua própria rede no arquivo de entrada.
-
-### 2. Conecte via SSH
-
-- Use uma conta com o menor privilégio necessário para ler as informações de hardware.
-- Prefira chaves SSH a senhas.
-- Por padrão, o Invent-SSH valida as chaves de host usando a base local do SSH de hosts conhecidos. Hosts desconhecidos são rejeitados. Sempre que possível, cadastre as chaves esperadas antes da coleta.
-- Existe uma opção de compatibilidade que confia em chaves desconhecidas. Ela é **menos segura** e só deve ser habilitada conscientemente em uma rede confiável; reduz a proteção contra ataques de intermediário (machine-in-the-middle).
-
-### 3. Execute o inventário
-
-**Windows:** use um pacote compatível publicado em [GitHub Releases](https://github.com/lucaswotta/invent-ssh/releases) quando estiver disponível, ou gere um pacote nativo a partir do código.
-
-**Linux / macOS:** recomendamos Python 3.11 ou superior. A interface gráfica exige suporte a Tcl/Tk na instalação do Python escolhida.
-
-No Debian/Ubuntu, instale o módulo Tk correspondente antes de criar o ambiente virtual:
-
-```bash
-sudo apt install python3-tk
-```
-
-No Fedora, use `sudo dnf install python3-tkinter`. No macOS, use uma distribuição Python que inclua Tcl/Tk.
+## Instalação
 
 ```bash
 git clone https://github.com/lucaswotta/invent-ssh.git
 cd invent-ssh
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
-python app.py
+python3 -m pip install -r requirements.txt
 ```
 
-No Windows PowerShell, use `.venv\Scripts\Activate.ps1` no lugar do comando `source`.
+## Uso
 
-## Relatórios
-
-Escolha o formato adequado:
-
-- **Excel (.xlsx)** — resumo executivo e aba de inventário com filtros, cabeçalhos congelados, larguras legíveis, status destacados e configuração para impressão.
-- **HTML (.html)** — relatório independente, com métricas, tabela pesquisável e filtrável, layout responsivo e sem servidor nem recursos externos.
-- **CSV (.csv)** — UTF-8 com BOM e delimitador ponto e vírgula para compatibilidade com planilhas e outras ferramentas.
-
-Os relatórios são salvos localmente na pasta Documentos, em `Invent-SSH Reports`. O caminho não depende do diretório em que o programa foi iniciado. Trate-os como dados de infraestrutura: podem conter nomes de host, endereços, identificadores de ativos e metadados de localização/responsabilidade.
-
-## Escala e modo de operação
-
-- A quantidade de conexões SSH simultâneas é limitada pela configuração de workers. O motor não cria uma tarefa pendente para cada destino de uma só vez, reduzindo o uso de memória em listas grandes.
-- Cada máquina recebe um status individual. Uma máquina inacessível não invalida os resultados das demais.
-- Ajuste concorrência e timeouts à capacidade do computador, rede e alvos; mais workers nem sempre significam mais velocidade.
-- O coletor é voltado a máquinas Linux e à inspeção de leitura. Não instala agente nem altera a configuração dos destinos.
-
-## Segurança
-
-- Execute inventários somente em sistemas que você administra ou para os quais tenha autorização explícita.
-- As credenciais SSH são fornecidas para a sessão. A senha não é persistida; o programa pode lembrar o usuário e o **caminho** da chave privada na configuração local. O arquivo da chave não é copiado para a configuração.
-- Evite publicar logs ou relatórios sem sanitização: eles podem conter identificadores da infraestrutura e mensagens de erro.
-- A confiança em chaves desconhecidas fica desabilitada por padrão; habilitar essa opção reduz a verificação da identidade do host.
-- O Invent-SSH é uma ferramenta de inventário, não um atestado de integridade de hardware nem um scanner de segurança.
-
-Veja [SECURITY.md](SECURITY.md) para reportar vulnerabilidades e consultar limitações atuais.
-
-## Identidade visual e interface redimensionável
-
-A interface usa um pinguim criado para o produto, superfícies azul-marinho e amarelo como cor de ação principal. A janela abre maximizada, continua redimensionável e reorganiza os cartões quando a largura diminui; telas com muitos campos permanecem roláveis. HTML e Excel seguem a mesma identidade visual, e o HTML incorpora o logo para funcionar offline.
-
-Na primeira execução, o aplicativo herda o idioma do sistema quando ele é português brasileiro ou inglês. Uma preferência de idioma escolhida e salva no aplicativo tem prioridade nos usos seguintes.
-
-## Gerar um pacote nativo
-
-O build deve ser feito no sistema operacional de destino; PyInstaller não compila pacotes Windows, macOS e Linux de forma cruzada a partir de uma única máquina.
+### Interface Desktop / Web
 
 ```bash
-python -m pip install -r requirements-build.txt
-python build.py
+python3 app.py
 ```
 
-O pacote é salvo em `dist/`, enquanto arquivos intermediários ficam isolados em `build/`. Use `python build.py --console` para builds de diagnóstico.
+Para executar apenas o servidor HTTP local sem abrir janela:
 
-## Qualidade e documentação
+```bash
+python3 app.py --no-window --port 8765
+```
 
-A suíte cobre parsers de hardware Linux, política SSH, coleta concorrente limitada, migração de configuração/caminhos, idioma, segurança dos relatórios e layout responsivo. O GitHub Actions testa Windows, macOS e Linux e gera um pacote nativo em cada sistema.
+A interface opera em três visões (`100vw` por `100vh`):
 
-- [Visão do produto e roadmap](docs/PRODUCT_VISION.md)
-- [Arquitetura](docs/ARCHITECTURE.md)
-- [Histórico de alterações](CHANGELOG.md)
-- [Como contribuir](CONTRIBUTING.md)
+- `Coleta`: seleção de planilha de alvos, popover de credenciais SSH, filtro segmentado (`Todas`, `Online`, `Offline`, `Falha SSH`), tabela em tempo real e painel lateral de inspeção de hardware.
+- `Parque`: gráficos neutros de distribuição (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) e tabela consolidada por `Unidade / Local`.
+- `Snapshots`: histórico local em SQLite das coletas concluídas e comparação campo a campo entre execuções.
+
+### Linha de Comando
+
+```bash
+python3 app.py --input alvos.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --output-format XLSX
+```
+
+## Configuração
+
+A lista de alvos aceita arquivos `.xlsx`, `.xlsm` ou `.csv` com uma coluna de endereço (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`). Colunas adicionais (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) são preservadas na interface e nos relatórios exportados.
+
+Os caminhos de dados seguem as convenções do sistema operacional em `paths.py`:
+
+- Configuração: `~/.config/invent-ssh/config.json` no Linux (`%APPDATA%\Invent-SSH` no Windows, `~/Library/Application Support/Invent-SSH` no macOS).
+- Snapshots e chaves TOFU: `~/.local/share/invent-ssh/snapshots.db` e `~/.local/share/invent-ssh/known_hosts`.
+- Relatórios exportados: `~/Documents/Invent-SSH Reports/`.
+
+Senhas SSH permanecem apenas em memória durante a sessão ativa e nunca são gravadas em `config.json`.
+
+## Limitações
+
+- Os alvos devem ser máquinas Linux acessíveis por SSH; destinos Windows e macOS não são suportados pelo coletor.
+- A coleta é somente de leitura e executa um único script POSIX por host (`inspector.py`). Campos que exigem privilégios elevados (`dmidecode`, número de série) ou utilitários ausentes (`lscpu`, `lsblk`, `lspci`) retornam `N/A`.
+- A classificação de armazenamento (`NVMe`, `SSD / flash`, `HDD`) utiliza o barramento e o indicador de rotação do kernel Linux (`ROTA`), que pode classificar discos virtuais como mídia não rotativa.
 
 ## Licença
 
