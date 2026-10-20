@@ -2,6 +2,25 @@
 
 Notable changes to Invent-SSH are recorded here.
 
+## [Unreleased]
+
+### Added
+
+- First-run guide in three steps, a `Como usar` sheet with the spreadsheet format, collected data, status meanings and folders, and `Abrir pasta`/`Abrir` buttons after exports.
+- Drag and drop of the target spreadsheet onto the window.
+- After loading targets, the app lists rows without an address and repeated addresses, and opens the SSH panel when access is missing.
+
+### Changed
+
+- Reports and the template go to `Invent-SSH` in the localized Documents folder (`~/Documentos/Invent-SSH` on pt-BR Linux).
+- Offline hosts state the cause: connection refused, no answer on the network, time limit, or DNS failure, instead of "Timeout" for all.
+- The inspector shows only the diagnosis for hosts that were not collected.
+
+### Fixed
+
+- A repeated address in the spreadsheet left one row in `PENDING` after the scan.
+- The log claimed a report was saved after each scan and recorded every host's full record.
+
 ## [0.5.0] — 2026-10-20
 
 ### Changed

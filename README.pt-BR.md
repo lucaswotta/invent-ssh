@@ -37,7 +37,9 @@ Para executar apenas o servidor HTTP local sem abrir janela:
 python3 app.py --no-window --port 8765
 ```
 
-A interface opera em três visões (`100vw` por `100vh`):
+A primeira tela guia três passos: escolher a planilha de alvos (ou arrastar o arquivo para a janela, ou criar o modelo), informar o acesso SSH e iniciar a coleta. O botão `Como usar` explica o formato da planilha, o que é coletado e o significado de cada status, e abre as pastas de relatórios, histórico e logs.
+
+A interface opera em três visões:
 
 - `Coleta`: seleção de planilha de alvos, popover de credenciais SSH, filtro segmentado (`Todas`, `Online`, `Offline`, `Falha SSH`), tabela em tempo real e painel lateral de inspeção de hardware.
 - `Parque`: gráficos neutros de distribuição (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) e tabela consolidada por `Unidade / Local`.
@@ -51,13 +53,13 @@ python3 app.py --input alvos.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --ou
 
 ## Configuração
 
-A lista de alvos aceita arquivos `.xlsx`, `.xlsm` ou `.csv` com uma coluna de endereço (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`). Colunas adicionais (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) são preservadas na interface e nos relatórios exportados.
+A lista de alvos aceita arquivos `.xlsx`, `.xlsm` ou `.csv` com uma coluna de endereço (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`). Colunas adicionais (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) são preservadas na interface e nos relatórios exportados. Linhas sem endereço e endereços repetidos são ignorados e listados depois do carregamento.
 
 Os caminhos de dados seguem as convenções do sistema operacional em `paths.py`:
 
 - Configuração: `~/.config/invent-ssh/config.json` no Linux (`%APPDATA%\Invent-SSH` no Windows, `~/Library/Application Support/Invent-SSH` no macOS).
 - Snapshots e chaves TOFU: `~/.local/share/invent-ssh/snapshots.db` e `~/.local/share/invent-ssh/known_hosts`.
-- Relatórios exportados: `~/Documents/Invent-SSH Reports/`.
+- Relatórios exportados e a planilha modelo: pasta `Invent-SSH` dentro da pasta Documentos do usuário (`~/Documentos/Invent-SSH` no Linux em português, lida de `user-dirs.dirs`; `~/Documents/Invent-SSH` nos demais).
 
 Relatórios só são gravados ao usar `Exportar` ou a linha de comando. As chaves de host SSH usam confiança no primeiro uso (TOFU) por padrão; veja [SECURITY.md](SECURITY.md).
 
