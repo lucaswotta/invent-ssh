@@ -18,22 +18,20 @@ class DesktopUtilityUITests(unittest.TestCase):
         self.assertEqual(app.COLORS["bg_card"], "#262629")
         self.assertEqual(app.COLORS["accent_blue"], "#0A84FF")
         self.assertEqual(app.COLORS["status_online"], "#30D158")
-        self.assertEqual(app.APP_BRAND, "Invent-SSH")
+        self.assertEqual(app.APP_BRAND, "Invenux")
 
         theme_path = Path(__file__).resolve().parents[1] / "brand" / "theme.json"
         theme = json.loads(theme_path.read_text(encoding="utf-8"))
         self.assertEqual(theme["palette"]["bg_window"], "#1C1C1E")
         self.assertEqual(theme["palette"]["accent_blue"], "#0A84FF")
 
-    def test_brand_assets_use_geometric_mark_without_mascot(self):
+    def test_brand_assets_exist_for_every_platform(self):
         root = Path(__file__).resolve().parents[1]
-        svg = (root / "brand" / "logo-mark.svg").read_text(encoding="utf-8")
-        self.assertIn("Invent-SSH geometric mark", svg)
-        self.assertIn("#0A84FF", svg)
-        self.assertNotIn("penguin", svg.lower())
-        self.assertTrue((root / "brand" / "invent-ssh-mark-64.png").is_file())
-        self.assertTrue((root / "brand" / "invent-ssh-mark-128.png").is_file())
-        self.assertTrue((root / "app.ico").is_file())
+        for size in (16, 32, 64, 128, 256, 512, 1024):
+            self.assertTrue((root / "brand" / "icons" / f"invenux-{size}.png").is_file(), size)
+        self.assertTrue((root / "brand" / "invenux.ico").is_file())
+        self.assertTrue((root / "brand" / "invenux.icns").is_file())
+        self.assertIn('rel="icon"', (root / "ui" / "index.html").read_text(encoding="utf-8"))
 
     def test_ui_html_contains_three_views_popovers_and_100vh_100vw(self):
         root = Path(__file__).resolve().parents[1]
@@ -119,7 +117,7 @@ class DesktopUtilityUITests(unittest.TestCase):
                     "max_workers": 24,
                     "ssh_timeout": 12,
                 }).encode("utf-8"),
-                headers={"X-Invent-Token": token, "Content-Type": "application/json"},
+                headers={"X-Invenux-Token": token, "Content-Type": "application/json"},
                 method="POST",
             )
             with urllib.request.urlopen(req_cfg) as response:
@@ -134,7 +132,7 @@ class DesktopUtilityUITests(unittest.TestCase):
             req_open = urllib.request.Request(
                 url + "api/open",
                 data=json.dumps({"path": str(csv_path)}).encode("utf-8"),
-                headers={"X-Invent-Token": token, "Content-Type": "application/json"},
+                headers={"X-Invenux-Token": token, "Content-Type": "application/json"},
                 method="POST",
             )
             with self.assertRaises(urllib.error.HTTPError) as ctx:
@@ -145,7 +143,7 @@ class DesktopUtilityUITests(unittest.TestCase):
             req_load = urllib.request.Request(
                 url + "api/targets/load",
                 data=json.dumps({"filepath": str(csv_path)}).encode("utf-8"),
-                headers={"X-Invent-Token": token, "Content-Type": "application/json"},
+                headers={"X-Invenux-Token": token, "Content-Type": "application/json"},
                 method="POST",
             )
             with urllib.request.urlopen(req_load) as response:

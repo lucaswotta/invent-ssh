@@ -1,4 +1,4 @@
-# Diretrizes Visuais — Invent-SSH
+# Diretrizes Visuais — Invenux
 
 ## Conceito
 

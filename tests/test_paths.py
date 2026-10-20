@@ -26,9 +26,9 @@ class UserPathTests(unittest.TestCase):
                 data = paths.get_user_data_dir()
                 logs = paths.get_logs_dir()
 
-            self.assertEqual(config, root / "config" / "invent-ssh")
-            self.assertEqual(data, root / "data" / "invent-ssh")
-            self.assertEqual(logs, root / "data" / "invent-ssh" / "logs")
+            self.assertEqual(config, root / "config" / "invenux")
+            self.assertEqual(data, root / "data" / "invenux")
+            self.assertEqual(logs, root / "data" / "invenux" / "logs")
             self.assertTrue(config.is_dir())
             self.assertTrue(logs.is_dir())
 
@@ -63,7 +63,21 @@ class UserPathTests(unittest.TestCase):
             self.assertNotIn("ssh_pass", migrated)
             self.assertNotIn("legacy_private_secret", migrated)
             self.assertNotIn("customer_inventory", migrated)
-            self.assertEqual(config_path.parent, root / "new-config" / "invent-ssh")
+            self.assertEqual(config_path.parent, root / "new-config" / "invenux")
+
+    def test_data_from_the_old_invent_ssh_folders_is_carried_over(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            legacy = root / "data" / "invent-ssh"
+            legacy.mkdir(parents=True)
+            (legacy / "snapshots.db").write_bytes(b"history")
+            with (
+                patch.dict(os.environ, {"XDG_DATA_HOME": str(root / "data")}),
+                patch.object(paths.platform, "system", return_value="Linux"),
+            ):
+                data_dir = paths.get_user_data_dir()
+            self.assertEqual(data_dir, root / "data" / "invenux")
+            self.assertEqual((data_dir / "snapshots.db").read_bytes(), b"history")
 
     def test_reports_live_in_the_localized_documents_folder(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -74,11 +88,11 @@ class UserPathTests(unittest.TestCase):
                 patch.dict(os.environ, {"XDG_CONFIG_HOME": str(config)}),
                 patch.object(paths.platform, "system", return_value="Linux"),
             ):
-                self.assertEqual(paths.get_reports_dir(), root / "Documents" / "Invent-SSH")
+                self.assertEqual(paths.get_reports_dir(), root / "Documents" / "Invenux")
                 config.mkdir()
                 (config / "user-dirs.dirs").write_text('XDG_DOCUMENTS_DIR="$HOME/Documentos"\n', encoding="utf-8")
                 reports = paths.get_reports_dir()
-            self.assertEqual(reports, root / "Documentos" / "Invent-SSH")
+            self.assertEqual(reports, root / "Documentos" / "Invenux")
             self.assertTrue(reports.is_dir())
 
 

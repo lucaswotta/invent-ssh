@@ -153,7 +153,7 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("máquinas inventariadas", document)
         self.assertIn("Todos os status", document)
         self.assertIn("Não coletado (opcional)", document)
-        self.assertIn("Gerado localmente pelo Invent-SSH", document)
+        self.assertIn("Gerado localmente pelo Invenux", document)
         self.assertIn("Acessível</span>", document)
 
     def test_metadata_names_colliding_with_hardware_columns_are_preserved(self):

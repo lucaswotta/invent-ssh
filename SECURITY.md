@@ -18,4 +18,4 @@ For a suspected vulnerability, contact the maintainer privately through the cont
 
 ## Limitations
 
-Invent-SSH is not a vulnerability scanner or hardware-attestation mechanism. Results depend on the target OS, available tools, and permissions. A successful SSH connection is not proof of asset identity beyond the SSH key trust model.
+Invenux is not a vulnerability scanner or hardware-attestation mechanism. Results depend on the target OS, available tools, and permissions. A successful SSH connection is not proof of asset identity beyond the SSH key trust model.

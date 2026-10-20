@@ -1,4 +1,4 @@
-# Invent-SSH
+# Invenux
 
 Coletor de inventário de hardware Linux via SSH sem agente, com interface desktop/web local, histórico de snapshots em SQLite e exportação em `.xlsx`, `.csv` e `.html`.
 
@@ -17,8 +17,8 @@ Language: [English](README.md)
 ## Instalação
 
 ```bash
-git clone https://github.com/lucaswotta/invent-ssh.git
-cd invent-ssh
+git clone https://github.com/lucaswotta/invenux.git
+cd invenux
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
@@ -58,9 +58,9 @@ A lista de alvos aceita arquivos `.xlsx`, `.xlsm` ou `.csv` com uma coluna de en
 
 Os caminhos de dados seguem as convenções do sistema operacional em `paths.py`:
 
-- Configuração: `~/.config/invent-ssh/config.json` no Linux (`%APPDATA%\Invent-SSH` no Windows, `~/Library/Application Support/Invent-SSH` no macOS).
-- Snapshots e chaves TOFU: `~/.local/share/invent-ssh/snapshots.db` e `~/.local/share/invent-ssh/known_hosts`.
-- Relatórios exportados e a planilha modelo: pasta `Invent-SSH` dentro da pasta Documentos do usuário (`~/Documentos/Invent-SSH` no Linux em português, lida de `user-dirs.dirs`; `~/Documents/Invent-SSH` nos demais).
+- Configuração: `~/.config/invenux/config.json` no Linux (`%APPDATA%\Invenux` no Windows, `~/Library/Application Support/Invenux` no macOS).
+- Snapshots e chaves TOFU: `~/.local/share/invenux/snapshots.db` e `~/.local/share/invenux/known_hosts`.
+- Relatórios exportados e a planilha modelo: pasta `Invenux` dentro da pasta Documentos do usuário (`~/Documentos/Invenux` no Linux em português, lida de `user-dirs.dirs`; `~/Documents/Invenux` nos demais).
 
 Relatórios só são gravados ao usar `Exportar` ou a linha de comando. As chaves de host SSH usam confiança no primeiro uso (TOFU) por padrão; veja [SECURITY.md](SECURITY.md).
 

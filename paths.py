@@ -8,13 +8,26 @@ from __future__ import annotations
 import json
 import os
 import platform
+import shutil
 from pathlib import Path
 from typing import Any
 
 
-APP_SLUG = "invent-ssh"
-APP_DISPLAY_NAME = "Invent-SSH"
+APP_SLUG = "invenux"
+APP_DISPLAY_NAME = "Invenux"
 LEGACY_CONFIG_NAMES = ("config.json",)
+# The project was called Invent-SSH; its folders are copied once on first run.
+LEGACY_SLUG = "invent-ssh"
+LEGACY_DISPLAY_NAME = "Invent-SSH"
+
+
+def _with_legacy_data(path: Path) -> Path:
+    if not path.exists():
+        legacy = path.with_name(LEGACY_DISPLAY_NAME if path.name == APP_DISPLAY_NAME else LEGACY_SLUG)
+        if legacy.is_dir():
+            shutil.copytree(legacy, path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def get_user_data_dir() -> Path:
@@ -27,8 +40,7 @@ def get_user_data_dir() -> Path:
         path = home / "Library" / "Application Support" / APP_DISPLAY_NAME
     else:
         path = Path(os.environ.get("XDG_DATA_HOME") or home / ".local" / "share") / APP_SLUG
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return _with_legacy_data(path)
 
 
 def get_config_dir() -> Path:
@@ -41,8 +53,7 @@ def get_config_dir() -> Path:
         path = home / "Library" / "Application Support" / APP_DISPLAY_NAME
     else:
         path = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config") / APP_SLUG
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return _with_legacy_data(path)
 
 
 def get_config_path() -> Path:

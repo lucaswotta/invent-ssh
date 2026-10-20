@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Invenux
+GenericName=Hardware inventory
+GenericName[pt_BR]=Inventário de hardware
+GenericName[es]=Inventario de hardware
+Comment=Linux hardware inventory over SSH
+Comment[pt_BR]=Inventário de hardware Linux via SSH
+Comment[es]=Inventario de hardware Linux por SSH
+Exec=invenux
+Icon=invenux
+Terminal=false
+Categories=System;Monitor;Network;
+Keywords=inventory;hardware;ssh;linux;inventario;
+StartupWMClass=Invenux

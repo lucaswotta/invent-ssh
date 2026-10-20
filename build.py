@@ -1,4 +1,4 @@
-"""Build a native Invent-SSH bundle with PyInstaller on the current OS.
+"""Build a native Invenux bundle with PyInstaller on the current OS.
 
 This script deliberately does not install packages, remove old distributions, or
 write binaries into the source tree. Install requirements-build.txt explicitly
@@ -20,8 +20,9 @@ ROOT = Path(__file__).resolve().parent
 ENTRY_POINT = ROOT / "app.py"
 BRAND_DIR = ROOT / "brand"
 UI_DIR = ROOT / "ui"
-ICON_ICO = ROOT / "app.ico"
-APP_SLUG = "invent-ssh"
+ICON_ICO = BRAND_DIR / "invenux.ico"
+ICON_ICNS = BRAND_DIR / "invenux.icns"
+APP_SLUG = "invenux"
 REQUIREMENTS_BUILD = ROOT / "requirements-build.txt"
 
 
@@ -84,10 +85,8 @@ def build_command(console: bool = False) -> list[str]:
     if system == "Windows" and ICON_ICO.is_file():
         command.extend(["--icon", str(ICON_ICO)])
     elif system == "Darwin":
-        # PyInstaller converts a PNG icon to a native .icns resource on macOS.
-        icon_png = BRAND_DIR / "invent-ssh-mark.png"
-        if icon_png.is_file():
-            command.extend(["--icon", str(icon_png), "--osx-bundle-identifier", "io.lucasmotta.inventssh"])
+        if ICON_ICNS.is_file():
+            command.extend(["--icon", str(ICON_ICNS), "--osx-bundle-identifier", "io.lucasmotta.invenux"])
 
     command.append(str(ENTRY_POINT))
     return command
@@ -95,7 +94,7 @@ def build_command(console: bool = False) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Build Invent-SSH for the current operating system (Windows, macOS, or Linux)."
+        description="Build Invenux for the current operating system (Windows, macOS, or Linux)."
     )
     parser.add_argument(
         "--console",
