@@ -1,78 +1,219 @@
-# Invenux
+<div align="center">
 
-Coletor de inventário de hardware Linux via SSH sem agente, com interface desktop/web local, histórico de snapshots em SQLite e exportação em `.xlsx`, `.csv` e `.html`.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/wordmark-dark.png">
+  <img src="docs/media/wordmark-light.png" alt="Invenux" height="84">
+</picture>
 
-Language: [English](README.md)
+<br>
+<br>
 
-## Requisitos
+**Inventário de hardware Linux via SSH, a partir de uma planilha de máquinas.**
 
-- Python `3.11` ou superior
-- Sistemas de destino Linux com SSH ativo (porta `22`)
-- Pacotes Python de execução (`requirements.txt`):
-  - `openpyxl>=3.1.0,<4.0.0`
-  - `paramiko>=3.3.0,<5.0.0`
-  - `pillow>=10.0,<14.0` (logo nas planilhas Excel)
-- Backends opcionais para janela nativa: `pywebview` ou `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); na ausência de ambos, abre no navegador padrão do sistema. No modo navegador, o processo encerra cerca de 3 minutos depois que a aba é fechada. Os executáveis empacotados não incluem nenhum dos dois e sempre usam o navegador.
+Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
+
+<br>
+
+<a href="https://github.com/lucaswotta/invenux/stargazers"><img src="https://img.shields.io/github/stars/lucaswotta/invenux?style=flat-square&logo=github&labelColor=1C1C1E&color=0A84FF" alt="Estrelas no GitHub"></a>
+<a href="https://github.com/lucaswotta/invenux/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/lucaswotta/invenux/quality.yml?branch=main&style=flat-square&label=CI&labelColor=1C1C1E&color=0A84FF" alt="CI"></a>
+<a href="https://github.com/lucaswotta/invenux/commits/main"><img src="https://img.shields.io/github/last-commit/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Último commit"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Licença MIT"></a>
+<img src="https://img.shields.io/badge/python-3.11%2B-0A84FF?style=flat-square&labelColor=1C1C1E&logo=python&logoColor=white" alt="Python 3.11+">
+<img src="https://img.shields.io/badge/roda%20em-Linux%20%C2%B7%20Windows%20%C2%B7%20macOS-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Roda em Linux, Windows e macOS">
+<img src="https://img.shields.io/badge/interface-PT--BR%20%C2%B7%20EN%20%C2%B7%20ES-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Interface em português, inglês e espanhol">
+<img src="https://img.shields.io/badge/telemetria-nenhuma-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Sem telemetria">
+<a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-bem--vindos-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Pull requests bem-vindos"></a>
+
+<br>
+
+[Recursos](#recursos) ·
+[Instalação](#instalação) ·
+[Como usar](#como-usar) ·
+[A planilha](#a-planilha) ·
+[Perguntas](#perguntas-frequentes) ·
+[Contribuir](CONTRIBUTING.md) ·
+[English](README.md) ·
+[Español](README.es.md)
+
+<br>
+
+<img src="docs/media/demo-pt-br.gif" width="900" alt="Carregando uma planilha de 24 máquinas, informando o acesso SSH, coletando, abrindo os detalhes de uma máquina, a visão Parque e a exportação para Excel">
+
+</div>
+
+## Por que o Invenux
+
+- **Entra uma planilha, sai um inventário.** Liste as máquinas com o IP, informe o acesso SSH e inicie. Cada máquina aparece com processador, slots de memória, discos, placa-mãe, BIOS, vídeo, rede e sistema operacional.
+- **Nada para instalar nas máquinas.** Uma conexão SSH executa um único script de leitura por máquina. Sem agente, sem serviço e sem arquivo gravado no destino.
+- **Diz por que uma máquina falhou.** Desligada, porta 22 fechada, tempo esgotado, nome inexistente, senha errada ou chave do host trocada, cada caso com sua mensagem.
+- **Relatórios que as pessoas abrem.** Excel com aba de resumo e colunas agrupadas, página HTML pesquisável que funciona offline, e CSV.
+- **Histórico sem servidor de banco.** Cada coleta fica salva no computador e é comparada campo a campo com a anterior, então um disco trocado ou uma memória a mais aparece na hora.
+
+## Recursos
+
+| Área | O que você tem |
+| --- | --- |
+| **Coleta** | Até 128 conexões SSH em paralelo, senha ou chave privada, confiança no primeiro acesso para chaves de host, cancelamento a qualquer momento. |
+| **Sistema** | Distribuição, versão e codinome, kernel, arquitetura, hostname, ambiente gráfico e servidor de vídeo, telas, quantidade de pacotes, init, fuso horário, tempo ligado, uso do disco `/`. |
+| **Hardware** | Fabricante e modelo, placa-mãe, BIOS, processador com núcleos, threads e frequência, cada slot de memória (tamanho, tipo, velocidade, modelo do pente) e o máximo da placa, cada disco e partição, vídeo, adaptadores de rede com IPv4 e MAC. |
+| **Parque** | Tipos de armazenamento, capacidade de memória e distribuições Linux das máquinas acessíveis, e a divisão por local. |
+| **Snapshots** | Histórico local de cada coleta com comparação campo a campo, exportável em CSV. |
+| **Exportação** | Excel (resumo com barras de proporção, inventário agrupado por assunto), HTML interativo que funciona offline, CSV com proteção contra fórmulas. |
+| **Interface** | Português, inglês e espanhol, seguindo o idioma do sistema; guia embutido com tutorial animado; redimensionável até 720 × 520. |
+| **Desktop** | Janela nativa no Linux, Windows e macOS (pywebview ou GTK), ou o navegador; pacotes prontos para os três sistemas. |
+
+<div align="center">
+
+<img src="docs/media/hero-pt-br.png" width="900" alt="Visão Coleta: 24 máquinas com status, endereço, hostname, local, processador, memória, armazenamento, sistema e horário da coleta, e os detalhes de uma máquina à direita">
+
+</div>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/fleet-pt-br.png" alt="Visão Parque com armazenamento, memória, distribuições e a tabela por local"></td>
+    <td width="50%"><img src="docs/media/excel-pt-br.png" alt="Aba de resumo do Excel com cartões de indicadores e tabelas com barras"></td>
+  </tr>
+  <tr>
+    <td align="center">Visão Parque</td>
+    <td align="center">Exportação para Excel</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/onboarding-pt-br.png" alt="Primeiro uso: três passos e o tutorial animado mostrando como a planilha é lida"></td>
+    <td width="50%"><img src="docs/media/help-pt-br.png" alt="Tela Como usar com o tutorial, o passo a passo, as pastas e as colunas da planilha"></td>
+  </tr>
+  <tr>
+    <td align="center">Primeiro uso</td>
+    <td align="center">Guia embutido</td>
+  </tr>
+</table>
 
 ## Instalação
 
-```bash
+**Requisitos:** Python 3.11 ou mais recente e máquinas Linux acessíveis por SSH na porta 22.
+
+```sh
 git clone https://github.com/lucaswotta/invenux.git
 cd invenux
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
 python3 -m pip install -r requirements.txt
-```
-
-## Uso
-
-### Interface Desktop / Web
-
-```bash
 python3 app.py
 ```
 
-Para executar apenas o servidor HTTP local sem abrir janela:
+A janela usa o [pywebview](https://pywebview.flowrl.com/) quando ele está instalado, depois o GTK WebKit2 no Linux (`python3-gi` e `gir1.2-webkit2-4.1` no Debian e Ubuntu, visíveis num venv criado com `--system-site-packages`) e, sem nenhum dos dois, abre a interface no navegador padrão. No navegador, o programa encerra cerca de 3 minutos depois que a aba é fechada.
 
-```bash
-python3 app.py --no-window --port 8765
+**Pacote nativo.** `python build.py` gera um executável único para o sistema em que roda (o PyInstaller não faz compilação cruzada). O CI gera pacotes para Linux, Windows e macOS a cada push; baixe nos artefatos da execução.
+
+```sh
+python3 -m pip install -r requirements-build.txt
+python3 build.py                   # dist/invenux-v0.6.0
 ```
 
-A primeira tela guia três passos: escolher a planilha de alvos (ou arrastar o arquivo para a janela, ou criar o modelo), informar o acesso SSH e iniciar a coleta. O botão `Como usar` explica o formato da planilha, o que é coletado e o significado de cada status, e abre as pastas de relatórios, histórico e logs.
+No Linux, para aparecer no menu de aplicativos:
 
-A interface opera em três visões:
-
-- `Coleta`: seleção de planilha de alvos, popover de credenciais SSH, filtro segmentado (`Todas`, `Online`, `Offline`, `Falha SSH`), tabela em tempo real e painel lateral de inspeção de hardware.
-- `Parque`: gráficos neutros de distribuição (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) e tabela consolidada por `Unidade / Local`.
-- `Snapshots`: histórico local em SQLite das coletas concluídas e comparação campo a campo entre execuções.
-
-### Linha de Comando
-
-```bash
-python3 app.py --input alvos.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --output-format XLSX
+```sh
+install -Dm755 dist/invenux-v0.6.0 ~/.local/bin/invenux
+install -Dm644 brand/icons/invenux-256.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
+install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/invenux.desktop
 ```
 
-## Configuração
+## Como usar
 
-A lista de alvos aceita arquivos `.xlsx`, `.xlsm` ou `.csv` com uma coluna de endereço (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`). Colunas adicionais (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) são preservadas na interface e nos relatórios exportados. Linhas sem endereço e endereços repetidos são ignorados e listados depois do carregamento.
+1. **Alvos:** escolha a planilha de máquinas, arraste o arquivo para a janela ou cole o caminho. Ainda não tem planilha? Use **Baixar planilha modelo**.
+2. **SSH:** informe o usuário e uma senha ou chave privada. A senha fica só na memória.
+3. **Iniciar coleta:** acompanhe cada máquina na tabela e clique numa linha para ver os detalhes.
+4. **Exportar:** Excel, HTML ou CSV, salvos na pasta `Invenux` dentro de Documentos, com **Abrir** e **Abrir pasta** logo em seguida.
 
-Os caminhos de dados seguem as convenções do sistema operacional em `paths.py`:
+O botão `Como usar` tem o tutorial animado, o formato da planilha, o significado de cada status e botões para abrir as pastas de relatórios, histórico e logs.
 
-- Configuração: `~/.config/invenux/config.json` no Linux (`%APPDATA%\Invenux` no Windows, `~/Library/Application Support/Invenux` no macOS).
-- Snapshots e chaves TOFU: `~/.local/share/invenux/snapshots.db` e `~/.local/share/invenux/known_hosts`.
-- Relatórios exportados e a planilha modelo: pasta `Invenux` dentro da pasta Documentos do usuário (`~/Documentos/Invenux` no Linux em português, lida de `user-dirs.dirs`; `~/Documents/Invenux` nos demais).
+**Linha de comando.** Coleta e exporta sem interface (só com chave privada):
 
-Relatórios só são gravados ao usar `Exportar` ou a linha de comando. As chaves de host SSH usam confiança no primeiro uso (TOFU) por padrão; veja [SECURITY.md](SECURITY.md).
+```sh
+python3 app.py --input maquinas.xlsx --user inventario --key ~/.ssh/id_ed25519 --output-format XLSX
+```
 
-Senhas SSH permanecem apenas em memória durante a sessão ativa e nunca são gravadas em `config.json`.
+## A planilha
+
+`.xlsx`, `.xlsm` ou `.csv` (vírgula ou ponto e vírgula). A primeira linha é o cabeçalho e cada linha seguinte é uma máquina.
+
+| Coluna | Obrigatória | Uso |
+| --- | --- | --- |
+| `IP` | Sim | Endereço ou nome da máquina. Também vale `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`. |
+| `LOCATION` | Não | Unidade ou sala; agrupa o Parque e os relatórios. Também vale `LOCAL`, `UNIDADE`, `FILIAL`, `SETOR`, `SITE`, `UBICACION`, `SEDE` ou `SUCURSAL`. |
+| Qualquer outra | Não | Copiada como está para a tabela e para todos os relatórios, por exemplo `ASSET_TAG`, `OWNER` ou `NOTES`. |
+
+Linhas sem IP e IPs repetidos são ignorados e listados depois de carregar. A planilha modelo (**Baixar planilha modelo**) vem com duas linhas de exemplo e uma aba explicando cada coluna, no idioma da interface.
+
+## O que é coletado
+
+Uma conexão SSH por máquina executa um único script de shell POSIX que lê:
+
+| Fonte | Campos |
+| --- | --- |
+| `/etc/os-release`, `uname`, `/proc/1/comm`, `ps` | Distribuição, versão, kernel, arquitetura, hostname, init, ambiente gráfico e servidor de vídeo |
+| `lscpu`, `/proc/cpuinfo` | Modelo do processador, soquetes, núcleos, threads, frequência máxima, extensão de virtualização |
+| `/proc/meminfo`, `dmidecode -t memory` | Memória total, em uso e disponível; cada slot com tamanho, tipo, velocidade e modelo do pente |
+| `lsblk`, `df` | Cada disco e partição, tipo (NVMe, SSD ou HDD), capacidade, uso do `/` |
+| `/sys/class/dmi/id` | Fabricante, modelo, placa-mãe, BIOS |
+| `lspci`, `/sys/class/drm` | Placas de vídeo e telas conectadas |
+| `/sys/class/net`, `ip` | Adaptadores de rede, velocidade, driver, IPv4, MAC |
+| `dpkg`, `rpm`, `pacman`, `apk`, `/etc/timezone` | Pacotes instalados, fuso horário |
+
+Os slots de memória exigem root (`dmidecode`); sem root, esses campos aparecem como indisponíveis e o resto é coletado normalmente. O número de série só é coletado com `include_sensitive_identifiers` ativado no arquivo de configuração.
+
+## Onde ficam os arquivos
+
+| | Linux | Windows | macOS |
+| --- | --- | --- | --- |
+| Relatórios e planilha modelo | `~/Documentos/Invenux` (pasta Documentos do sistema) | `Documents\Invenux` | `~/Documents/Invenux` |
+| Histórico (`snapshots.db`), chaves de host (`known_hosts`), logs | `~/.local/share/invenux` | `%LOCALAPPDATA%\Invenux` | `~/Library/Application Support/Invenux` |
+| Configuração (`config.json`) | `~/.config/invenux` | `%APPDATA%\Invenux` | `~/Library/Application Support/Invenux` |
+
+As pastas do nome antigo (`invent-ssh`) são copiadas na primeira execução.
+
+## Segurança e privacidade
+
+- A interface só escuta em `127.0.0.1`, com um token por execução e verificação do cabeçalho `Host` contra DNS rebinding.
+- A senha SSH nunca é gravada em disco.
+- As chaves de host usam confiança no primeiro acesso por padrão: chave nova é guardada, chave trocada é recusada. Desligue no painel SSH para aceitar só chaves já conhecidas.
+- As exportações em planilha neutralizam valores que começam como fórmula; o relatório HTML escapa cada valor coletado.
+- Sem telemetria e sem acesso à rede além do SSH para as máquinas da sua lista.
+
+Vulnerabilidades devem ser reportadas em privado, veja [SECURITY.md](SECURITY.md).
+
+## Perguntas frequentes
+
+**Ele altera alguma coisa nas máquinas?**
+Não. O script só lê arquivos e executa comandos de leitura. Nada é gravado, nem em `/tmp`.
+
+**Por que todas as minhas máquinas mostram um único pente de memória?**
+Veja a linha **Slots** nos detalhes da máquina: ela mostra quantos slots estão ocupados do total da placa, com cada pente listado. Se aparecer indisponível, o usuário SSH não é root e o `dmidecode` não rodou.
+
+**Uma máquina aparece Offline, mas está ligada.**
+A linha diz o motivo. "Não respondeu na rede" significa nenhuma resposta em cerca de 3 segundos (em geral desligada ou endereço errado); "Conexão recusada na porta 22" significa que está ligada, mas o SSH está parado ou bloqueado; "Sem resposta em N s" indica firewall ou rede lenta, então aumente o timeout no painel SSH.
+
+**Dá para inventariar máquinas Windows ou macOS?**
+Não. Os alvos precisam ser Linux com SSH. O programa em si roda em Linux, Windows e macOS.
+
+**Qual porta ele usa?**
+A porta 22. Outras portas ainda não são suportadas.
+
+**Dá para rodar sem a interface?**
+Sim, veja a linha de comando acima. Ela exige chave privada.
 
 ## Limitações
 
-- Os alvos devem ser máquinas Linux acessíveis por SSH na porta `22`; destinos Windows e macOS não são suportados pelo coletor.
-- A interface é em português; relatórios exportados e mensagens de log seguem o idioma do sistema (`pt-br` ou `en`).
-- A coleta é somente de leitura e executa um único script POSIX por host (`inspector.py`). Campos que exigem privilégios elevados (`dmidecode`, número de série) ou utilitários ausentes (`lscpu`, `lsblk`, `lspci`) retornam `N/A`.
-- A classificação de armazenamento (`NVMe`, `SSD / flash`, `HDD`) utiliza o barramento e o indicador de rotação do kernel Linux (`ROTA`), que pode classificar discos virtuais como mídia não rotativa.
+- Os alvos precisam ser Linux com SSH na porta 22.
+- Os detalhes dos slots de memória exigem root no alvo.
+- O tipo de armazenamento usa o nome do barramento e a flag de rotação do kernel, então discos virtuais podem aparecer como SSD.
+- A linha de comando aceita só chave privada, não senha.
+
+## Contribuir
+
+Pull requests são bem-vindos. O [CONTRIBUTING.md](CONTRIBUTING.md) explica o ambiente, os testes, como adicionar um idioma e como os prints e GIFs deste README são gerados a partir de um parque fictício (`scripts/demo_server.py`, `scripts/capture_media.mjs`).
+
+Se o Invenux te poupa uma volta por todas as máquinas, uma estrela no repositório ajuda outras pessoas a encontrá-lo.
 
 ## Licença
 
-MIT. Consulte [LICENSE](LICENSE).
+[MIT](LICENSE) © Lucas Motta

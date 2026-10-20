@@ -1,78 +1,219 @@
-# Invenux
+<div align="center">
 
-Agentless Linux hardware inventory over SSH with a local desktop/web workspace, SQLite snapshot history, and `.xlsx`, `.csv`, and `.html` exports.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/wordmark-dark.png">
+  <img src="docs/media/wordmark-light.png" alt="Invenux" height="84">
+</picture>
 
-Idioma: [Português (Brasil)](README.pt-BR.md)
+<br>
+<br>
 
-## Requirements
+**Linux hardware inventory over SSH, from a spreadsheet of machines.**
 
-- Python `3.11` or newer
-- Target systems running Linux with SSH enabled (port `22`)
-- Runtime Python packages (`requirements.txt`):
-  - `openpyxl>=3.1.0,<4.0.0`
-  - `paramiko>=3.3.0,<5.0.0`
-  - `pillow>=10.0,<14.0` (logo in Excel exports)
-- Optional desktop window backends: `pywebview` or `PyGObject` (`Gtk 3.0` + `WebKit2 4.1`); falls back to the system web browser when neither is installed. In browser mode the process exits about 3 minutes after the tab is closed. Packaged builds include neither backend and always use the browser.
+Agentless and read-only: nothing is installed or written on the machines.
 
-## Installation
+<br>
 
-```bash
+<a href="https://github.com/lucaswotta/invenux/stargazers"><img src="https://img.shields.io/github/stars/lucaswotta/invenux?style=flat-square&logo=github&labelColor=1C1C1E&color=0A84FF" alt="GitHub stars"></a>
+<a href="https://github.com/lucaswotta/invenux/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/lucaswotta/invenux/quality.yml?branch=main&style=flat-square&label=CI&labelColor=1C1C1E&color=0A84FF" alt="CI"></a>
+<a href="https://github.com/lucaswotta/invenux/commits/main"><img src="https://img.shields.io/github/last-commit/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="Last commit"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/lucaswotta/invenux?style=flat-square&labelColor=1C1C1E&color=0A84FF" alt="MIT license"></a>
+<img src="https://img.shields.io/badge/python-3.11%2B-0A84FF?style=flat-square&labelColor=1C1C1E&logo=python&logoColor=white" alt="Python 3.11+">
+<img src="https://img.shields.io/badge/runs%20on-Linux%20%C2%B7%20Windows%20%C2%B7%20macOS-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Runs on Linux, Windows and macOS">
+<img src="https://img.shields.io/badge/UI-EN%20%C2%B7%20PT--BR%20%C2%B7%20ES-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Interface in English, Portuguese and Spanish">
+<img src="https://img.shields.io/badge/telemetry-none-0A84FF?style=flat-square&labelColor=1C1C1E" alt="No telemetry">
+<a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-0A84FF?style=flat-square&labelColor=1C1C1E" alt="Pull requests welcome"></a>
+
+<br>
+
+[Features](#features) ·
+[Install](#install) ·
+[How to use](#how-to-use) ·
+[The spreadsheet](#the-spreadsheet) ·
+[FAQ](#faq) ·
+[Contribute](CONTRIBUTING.md) ·
+[Português](README.pt-BR.md) ·
+[Español](README.es.md)
+
+<br>
+
+<img src="docs/media/demo-en.gif" width="900" alt="Loading a spreadsheet of 24 machines, entering SSH access, collecting, opening one machine's details, the fleet view and the Excel export">
+
+</div>
+
+## Why Invenux
+
+- **One spreadsheet in, one inventory out.** List the machines with their IP addresses, enter SSH access, press start. Each machine shows up with processor, memory slots, disks, motherboard, BIOS, graphics, network and operating system.
+- **Nothing to install on the machines.** One SSH connection runs one read-only script per machine. No agent, no daemon, no file written on the target.
+- **It tells you why a machine failed.** Powered off, port 22 closed, time limit, unknown name, wrong password or a changed host key, each with its own message.
+- **Reports people actually open.** Excel with a summary sheet and grouped columns, a searchable offline HTML page, and CSV.
+- **History without a database server.** Every collection is saved locally and compared field by field with the previous one, so a swapped disk or a memory upgrade stands out.
+
+## Features
+
+| Area | What you get |
+| --- | --- |
+| **Collection** | Up to 128 parallel SSH connections, password or private key, trust on first use for host keys, cancel at any time. |
+| **System** | Distribution, version and codename, kernel, architecture, hostname, desktop and display server, displays, package count, init, time zone, uptime, root disk usage. |
+| **Hardware** | Manufacturer and model, motherboard, BIOS, processor with cores, threads and frequency, every memory slot (size, type, speed, part number) and the board's maximum, every disk and partition, graphics, network adapters with IPv4 and MAC. |
+| **Fleet view** | Storage types, memory capacity and Linux distributions across the online machines, and a breakdown by location. |
+| **Snapshots** | Local history of every collection with a field-by-field comparison, exportable to CSV. |
+| **Exports** | Excel (summary with data bars, inventory grouped by subject), interactive HTML that works offline, CSV with formula injection neutralized. |
+| **Interface** | English, Portuguese (Brazil) and Spanish, following the system language; built-in guide with an animated tutorial; resizable down to 720 × 520. |
+| **Desktop** | Native window on Linux, Windows and macOS (pywebview or GTK), or your browser; packaged builds for the three systems. |
+
+<div align="center">
+
+<img src="docs/media/hero-en.png" width="900" alt="Collection view: 24 machines with status, address, hostname, location, processor, memory, storage, system and collection time, and the details of one machine on the right">
+
+</div>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/fleet-en.png" alt="Fleet view with storage, memory and distribution breakdowns and a table by location"></td>
+    <td width="50%"><img src="docs/media/excel-en.png" alt="Excel export summary sheet with indicator cards and tables with data bars"></td>
+  </tr>
+  <tr>
+    <td align="center">Fleet view</td>
+    <td align="center">Excel export</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/onboarding-en.png" alt="First run: three steps and an animated tutorial showing how the spreadsheet is read"></td>
+    <td width="50%"><img src="docs/media/help-en.png" alt="How to use sheet with the tutorial, steps, folders and spreadsheet columns"></td>
+  </tr>
+  <tr>
+    <td align="center">First run</td>
+    <td align="center">Built-in guide</td>
+  </tr>
+</table>
+
+## Install
+
+**Requirements:** Python 3.11 or newer, and Linux machines reachable over SSH on port 22.
+
+```sh
 git clone https://github.com/lucaswotta/invenux.git
 cd invenux
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
 python3 -m pip install -r requirements.txt
-```
-
-## Usage
-
-### Desktop / Web Interface
-
-```bash
 python3 app.py
 ```
 
-Run only the local HTTP server without opening a window:
+The window uses [pywebview](https://pywebview.flowrl.com/) when it is installed, then GTK WebKit2 on Linux (`python3-gi` and `gir1.2-webkit2-4.1` on Debian and Ubuntu, available to a venv created with `--system-site-packages`), and otherwise opens the interface in your default browser. In the browser the program stops about 3 minutes after the tab is closed.
 
-```bash
-python3 app.py --no-window --port 8765
+**Native package.** `python build.py` creates a single executable for the system you run it on (PyInstaller is not a cross-compiler). CI builds Linux, Windows and macOS packages on every push; download them from the run's artifacts.
+
+```sh
+python3 -m pip install -r requirements-build.txt
+python3 build.py                   # dist/invenux-v0.6.0
 ```
 
-The first screen walks through three steps: choose the target spreadsheet (or drag it onto the window, or create the template), enter SSH access, start the collection. `Como usar` in the toolbar explains the spreadsheet format, what is collected, the status meanings, and opens the report, history, and log folders.
+On Linux, add it to the application menu:
 
-The interface provides three views:
-
-- `Coleta`: target file selection, SSH credentials popover, segmented status filter (`Todas`, `Online`, `Offline`, `Falha SSH`), live inventory table, and hardware inspector panel.
-- `Parque`: neutral hardware distribution charts (`Armazenamento por Tipo`, `Capacidade de Memória RAM`, `Distribuições Linux`) and location breakdown (`Unidade / Local`).
-- `Snapshots`: local SQLite history of completed runs and field-by-field hardware comparison between snapshots.
-
-### Command Line
-
-```bash
-python3 app.py --input targets.xlsx --user inv-reader --key ~/.ssh/id_ed25519 --output-format XLSX
+```sh
+install -Dm755 dist/invenux-v0.6.0 ~/.local/bin/invenux
+install -Dm644 brand/icons/invenux-256.png ~/.local/share/icons/hicolor/256x256/apps/invenux.png
+install -Dm644 packaging/linux/invenux.desktop ~/.local/share/applications/invenux.desktop
 ```
 
-## Configuration
+## How to use
 
-Target files accept `.xlsx`, `.xlsm`, or `.csv` containing one address column (`IP`, `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT`, or `TARGET`). Additional columns (`LOCATION`, `ASSET_TAG`, `OWNER`, `NOTES`) are preserved in the workspace and in exported reports. Rows without an address and repeated addresses are skipped and listed after loading.
+1. **Targets:** choose the machine spreadsheet, drag it onto the window, or paste its path. No spreadsheet yet? **Get the template**.
+2. **SSH:** enter the user and a password or a private key. The password stays in memory only.
+3. **Start collection:** follow each machine in the table and click a row for its details.
+4. **Export:** Excel, HTML or CSV, saved in the `Invenux` folder inside your Documents folder, with **Open** and **Open folder** right after.
 
-User paths follow platform conventions via `paths.py`:
+`How to use` in the toolbar has the animated tutorial, the spreadsheet format, what each status means and buttons to open the report, history and log folders.
 
-- Configuration: `~/.config/invenux/config.json` on Linux (`%APPDATA%\Invenux` on Windows, `~/Library/Application Support/Invenux` on macOS).
-- Snapshots and TOFU host keys: `~/.local/share/invenux/snapshots.db` and `~/.local/share/invenux/known_hosts`.
-- Exported reports and the target template: `Invenux` inside the user's Documents folder (`~/Documentos/Invenux` on a Portuguese Linux desktop, read from `user-dirs.dirs`; `~/Documents/Invenux` elsewhere).
+**Command line.** Collect and export without the interface (private key only):
 
-Reports are written only when you choose `Exportar` or run the command line. SSH host keys use trust on first use by default; see [SECURITY.md](SECURITY.md).
+```sh
+python3 app.py --input machines.xlsx --user inventory --key ~/.ssh/id_ed25519 --output-format XLSX
+```
 
-SSH passwords are kept only in memory for the active session and are never written to `config.json`.
+## The spreadsheet
+
+`.xlsx`, `.xlsm` or `.csv` (comma or semicolon). The first row is the header and every following row is a machine.
+
+| Column | Required | Use |
+| --- | --- | --- |
+| `IP` | Yes | Address or name of the machine. `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` or `TARGET` also work. |
+| `LOCATION` | No | Site or room; groups the fleet view and the reports. `SITE`, `LOCAL`, `UNIDADE`, `FILIAL`, `SETOR`, `UBICACION`, `SEDE` and `SUCURSAL` also work. |
+| Any other | No | Copied as is to the table and every report, for example `ASSET_TAG`, `OWNER` or `NOTES`. |
+
+Rows without an address and repeated addresses are skipped and listed after loading. The template (**Get the template**) comes with two example rows and a sheet explaining each column, in the interface language.
+
+## What is collected
+
+One SSH connection per machine runs a single POSIX shell script that reads:
+
+| Source | Fields |
+| --- | --- |
+| `/etc/os-release`, `uname`, `/proc/1/comm`, `ps` | Distribution, version, kernel, architecture, hostname, init, desktop and display server |
+| `lscpu`, `/proc/cpuinfo` | Processor model, sockets, cores, threads, maximum frequency, virtualization extension |
+| `/proc/meminfo`, `dmidecode -t memory` | Total, used and available memory; every slot with size, type, speed and part number |
+| `lsblk`, `df` | Every disk and partition, type (NVMe, SSD or HDD), capacity, root usage |
+| `/sys/class/dmi/id` | Manufacturer, model, motherboard, BIOS |
+| `lspci`, `/sys/class/drm` | Graphics adapters and connected displays |
+| `/sys/class/net`, `ip` | Network adapters, link speed, driver, IPv4, MAC |
+| `dpkg`, `rpm`, `pacman`, `apk`, `/etc/timezone` | Installed packages, time zone |
+
+Memory slots need root (`dmidecode`); without it the slot fields show as unavailable and everything else is still collected. The serial number is not collected unless `include_sensitive_identifiers` is enabled in the configuration file.
+
+## Where files are kept
+
+| | Linux | Windows | macOS |
+| --- | --- | --- | --- |
+| Reports and template | `~/Documents/Invenux` (localized, for example `~/Documentos/Invenux`) | `Documents\Invenux` | `~/Documents/Invenux` |
+| History (`snapshots.db`), host keys (`known_hosts`), logs | `~/.local/share/invenux` | `%LOCALAPPDATA%\Invenux` | `~/Library/Application Support/Invenux` |
+| Settings (`config.json`) | `~/.config/invenux` | `%APPDATA%\Invenux` | `~/Library/Application Support/Invenux` |
+
+Folders from the old name (`invent-ssh`) are copied over on the first run.
+
+## Security and privacy
+
+- The interface is served on `127.0.0.1` only, with a per-run token and a check of the `Host` header against DNS rebinding.
+- The SSH password is never written to disk.
+- Host keys use trust on first use by default: a new key is stored, a changed key is rejected. Turn it off in the SSH panel to accept only keys already known.
+- Spreadsheet exports neutralize values that start like a formula; the HTML report escapes every collected value.
+- No telemetry and no network request besides SSH to the machines you list.
+
+Report vulnerabilities privately, see [SECURITY.md](SECURITY.md).
+
+## FAQ
+
+**Does it change anything on the machines?**
+No. The script only reads files and runs read-only commands. It writes nothing, not even to `/tmp`.
+
+**Why do all my machines show a single memory module?**
+Check the **Slots** line in the machine details: it shows how many slots are populated out of how many the board has, with each module listed. If it says unavailable, the SSH user is not root and `dmidecode` could not run.
+
+**A machine shows as Offline, but it is on.**
+The row says why. "Did not answer on the network" means no reply at all within about 3 seconds (often powered off or a wrong address); "Connection refused on port 22" means it is on but SSH is stopped or blocked; "No answer within N s" means a firewall or a slow link, so raise the timeout in the SSH panel.
+
+**Can it inventory Windows or macOS machines?**
+No. The targets must be Linux with SSH. The program itself runs on Linux, Windows and macOS.
+
+**Which port does it use?**
+Port 22. Other ports are not supported yet.
+
+**Can I run it without the interface?**
+Yes, see the command line above. It needs a private key.
 
 ## Limitations
 
-- Targets must be Linux systems accessible over SSH on port `22`; Windows and macOS endpoints are not collected.
-- The interface is in Portuguese; exported reports and log messages follow the system language (`pt-br` or `en`).
-- Hardware collection is read-only and executes a single POSIX shell probe per target (`inspector.py`). Fields that require root privileges (`dmidecode`, serial numbers) or optional utilities (`lscpu`, `lsblk`, `lspci`) are reported as `N/A` when unavailable or unpermitted.
-- Storage classification (`NVMe`, `SSD / flash`, `HDD`) relies on transport names and the Linux kernel rotational flag (`ROTA`), which can report virtual disks as non-rotating media.
+- Targets must be Linux with SSH on port 22.
+- Memory slot details need root on the target.
+- Storage type uses the transport name and the kernel's rotational flag, so virtual disks can appear as SSD.
+- The command line accepts a private key only, not a password.
+
+## Contributing
+
+Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, tests, how to add a language and how the screenshots and GIFs in this README are regenerated from a fictional fleet (`scripts/demo_server.py`, `scripts/capture_media.mjs`).
+
+If Invenux saves you a walk to every machine, starring the repository helps other people find it.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE) © Lucas Motta

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`invenux` collects hardware inventory from Linux machines over SSH without installing endpoint agents or requiring an external database server.
+Invenux collects hardware inventory from Linux machines over SSH without installing endpoint agents or requiring an external database server.
 
 ## Design Principles
 
