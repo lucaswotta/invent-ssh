@@ -65,12 +65,20 @@ class UserPathTests(unittest.TestCase):
             self.assertNotIn("customer_inventory", migrated)
             self.assertEqual(config_path.parent, root / "new-config" / "invent-ssh")
 
-    def test_reports_live_in_documents_not_the_working_directory(self):
+    def test_reports_live_in_the_localized_documents_folder(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch("pathlib.Path.home", return_value=root):
+            config = root / "config"
+            with (
+                patch("pathlib.Path.home", return_value=root),
+                patch.dict(os.environ, {"XDG_CONFIG_HOME": str(config)}),
+                patch.object(paths.platform, "system", return_value="Linux"),
+            ):
+                self.assertEqual(paths.get_reports_dir(), root / "Documents" / "Invent-SSH")
+                config.mkdir()
+                (config / "user-dirs.dirs").write_text('XDG_DOCUMENTS_DIR="$HOME/Documentos"\n', encoding="utf-8")
                 reports = paths.get_reports_dir()
-            self.assertEqual(reports, root / "Documents" / "Invent-SSH Reports")
+            self.assertEqual(reports, root / "Documentos" / "Invent-SSH")
             self.assertTrue(reports.is_dir())
 
 
