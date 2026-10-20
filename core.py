@@ -63,6 +63,7 @@ class InventoryEngine:
         self.config = config
         self.log_queue = log_queue
         self.terminals: List[Terminal] = []
+        self.load_summary: Dict[str, Any] = {}
         self.logger = logging.getLogger(__name__)
         self.cancel_event = threading.Event()
 
@@ -72,7 +73,11 @@ class InventoryEngine:
 
     def log(self, level: str, message: str, value: Any = None) -> None:
         self.log_queue.put((level, message, value))
-        log_level = getattr(logging, level.upper(), logging.INFO)
+        # Per-host records and progress are UI events; they would flood the log file.
+        if level in {"HOST_RESULT", "PROGRESS"}:
+            log_level = logging.DEBUG
+        else:
+            log_level = getattr(logging, level.upper(), logging.INFO)
         self.logger.log(log_level, "%s | value=%s", message, value if value is not None else "N/A")
 
     def run_inventory(self) -> None:
@@ -196,11 +201,16 @@ class InventoryEngine:
         endpoint_index = columns.index(endpoint_column)
 
         terminals: List[Terminal] = []
+        seen: set[str] = set()
+        rows_without_target: List[int] = []
+        duplicate_rows: List[int] = []
         for row_number, source_values in enumerate(rows, start=2):
             values = list(source_values)
             # Spreadsheet rows may be shorter than their header; pad missing cells.
             while values and _cell_value(values[-1]) in (None, ""):
                 values.pop()
+            if not values:
+                continue
             if len(values) > len(columns):
                 raise ValueError(
                     f"Row {row_number} has data beyond the last named column. Check the header row."
@@ -209,11 +219,15 @@ class InventoryEngine:
                 values.extend([None] * (len(columns) - len(values)))
 
             endpoint = _cell_value(values[endpoint_index])
-            if endpoint is None:
-                continue
-            endpoint = str(endpoint).strip()
+            endpoint = "" if endpoint is None else str(endpoint).strip()
             if not endpoint or endpoint.casefold() in {"nan", "none"}:
+                rows_without_target.append(row_number)
                 continue
+            # Results are matched by address; a repeated one would never leave PENDING.
+            if endpoint in seen:
+                duplicate_rows.append(row_number)
+                continue
+            seen.add(endpoint)
 
             metadata: Dict[str, Any] = {}
             for index, column in enumerate(columns):
@@ -224,6 +238,12 @@ class InventoryEngine:
                     metadata[column] = value
             terminals.append(Terminal(ip=endpoint, metadata=metadata))
 
+        self.load_summary = {
+            "target_column": endpoint_column,
+            "extra_columns": [name for name in columns if name != endpoint_column],
+            "rows_without_target": rows_without_target,
+            "duplicate_rows": duplicate_rows,
+        }
         return terminals
 
     def _execute_collection(self) -> List[Terminal]:

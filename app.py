@@ -28,6 +28,7 @@ from core import InventoryEngine
 from i18n import get_language, set_language
 from paths import (
     get_config_path,
+    get_documents_dir,
     get_logs_dir,
     get_reports_dir,
     get_snapshots_db_path,
@@ -100,6 +101,7 @@ class InventoryController:
         self.records: list[dict[str, Any]] = []
         self.scanning: bool = False
         self.status_text: str = "Pronto para coleta"
+        self.targets_info: dict[str, Any] = {}
         self.active_engine: InventoryEngine | None = None
         self._bootstrap_initial_records()
 
@@ -216,6 +218,13 @@ class InventoryController:
             "snapshots": self.snapshot_store.list_snapshots(limit=50),
             "scanning": scanning,
             "status_text": status_text,
+            "targets_info": dict(self.targets_info),
+            "paths": {
+                "reports": str(get_reports_dir()),
+                "documents": str(get_documents_dir()),
+                "data": str(get_user_data_dir()),
+                "logs": str(get_logs_dir()),
+            },
         }
 
     def load_targets(self, filepath: str) -> dict[str, Any]:
@@ -234,11 +243,20 @@ class InventoryController:
                     errors.append(msg)
             raise ValueError(errors[-1] if errors else "Nenhum alvo válido encontrado na planilha.")
 
+        summary = engine.load_summary
+        notes = []
+        if summary["rows_without_target"]:
+            notes.append(f"linhas sem IP ignoradas: {_row_list(summary['rows_without_target'])}")
+        if summary["duplicate_rows"]:
+            notes.append(f"IPs repetidos ignorados: {_row_list(summary['duplicate_rows'])}")
         with self.lock:
             self.config["filepath"] = str(resolved)
             self._persist_non_secret_config()
             self.records = [_serialize_record(asdict(term)) for term in terminals]
+            self.targets_info = {"filename": resolved.name, "count": len(terminals), **summary}
             self.status_text = f"{len(self.records)} máquinas carregadas de {resolved.name}"
+            if notes:
+                self.status_text += " · " + " · ".join(notes)
         return self.get_state()
 
     def upload_targets(self, filename: str, content_base64: str) -> dict[str, Any]:
@@ -271,6 +289,18 @@ class InventoryController:
         with self.lock:
             self.status_text = f"Relatório exportado: {path.name}"
         return path
+
+    def open_location(self, target: str = "", path: str = "") -> None:
+        folders = {"reports": get_reports_dir(), "data": get_user_data_dir(), "logs": get_logs_dir()}
+        if path:
+            chosen = Path(path).resolve()
+            if chosen.parent != folders["reports"].resolve() or not chosen.is_file():
+                raise ValueError("Só é possível abrir arquivos da pasta de relatórios.")
+        elif target in folders:
+            chosen = folders[target]
+        else:
+            raise ValueError("Local desconhecido.")
+        _open_in_file_manager(chosen)
 
     def export_snapshot_diff(self, snapshot_id: int) -> Path:
         changes = self.snapshot_store.compute_diff(snapshot_id)["changes"]
@@ -393,6 +423,20 @@ class InventoryController:
                 )
             except Exception:
                 logging.getLogger(__name__).warning("Failed to save local snapshot", exc_info=True)
+
+
+def _row_list(rows: list[int], limit: int = 5) -> str:
+    shown = ", ".join(str(row) for row in rows[:limit])
+    return shown + (f" e mais {len(rows) - limit}" if len(rows) > limit else "")
+
+
+def _open_in_file_manager(path: Path) -> None:
+    if sys.platform.startswith("win"):
+        os.startfile(path)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", str(path)])
+    else:
+        subprocess.Popen(["xdg-open", str(path)])
 
 
 def _pick_local_file(title: str, patterns: list[str] | None = None) -> str | None:
@@ -533,6 +577,11 @@ def create_http_server(
                         str(payload.get("content_base64", "")),
                     )
                     self._send_json(state)
+                    return
+
+                if path == "/api/open":
+                    controller.open_location(str(payload.get("target", "")), str(payload.get("path", "")))
+                    self._send_json({})
                     return
 
                 if path == "/api/targets/template":
