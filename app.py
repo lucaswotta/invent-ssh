@@ -39,7 +39,7 @@ from reporting import create_template_workbook, save_report, save_snapshot_diff,
 from snapshots import SnapshotStore, compute_fleet_analytics
 
 APP_BRAND = "Invenux"
-APP_VERSION = "0.8.1"
+APP_VERSION = "0.8.2"
 # Browsers throttle timers in hidden tabs to about one per minute.
 BROWSER_IDLE_TIMEOUT_SECONDS = 180
 

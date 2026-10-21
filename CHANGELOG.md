@@ -2,7 +2,13 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
-## [0.8.1] — 2026-10-20
+## [0.8.2] — 2026-10-20
+
+### Fixed
+
+- The Linux package aborted at start on systems newer than its Ubuntu 22.04 build machine (seen on Debian 13): the bundled `libstdc++`, `libgcc_s` and `libgbm` kept Mesa's EGL from loading, and the bundled GLib could not load the system's GIO modules. The package now uses the system copies of these libraries. CI opens the Linux package built on 22.04 on an Ubuntu 24.04 runner.
+
+ — 2026-10-20
 
 ### Fixed
 
