@@ -2147,6 +2147,8 @@
         <tbody>
           <tr><td><code>IP</code></td><td data-i18n="hp.yes">Sim</td><td data-i18n-html="hp.row_ip"></td></tr>
           <tr><td><code>LOCATION</code></td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_location"></td></tr>
+          <tr><td><code>USER</code></td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_user"></td></tr>
+          <tr><td><code>PASSWORD</code></td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_password"></td></tr>
           <tr><td data-i18n="hp.row_other_name">Qualquer outra</td><td data-i18n="hp.no">Não</td><td data-i18n-html="hp.row_other"></td></tr>
         </tbody>
       </table>
@@ -2212,6 +2214,7 @@
   "ts.other_columns": "Outras colunas",
   "ts.rows_skipped": "Linhas sem IP ignoradas",
   "ts.duplicates": "IPs repetidos ignorados (linhas)",
+  "ts.access": "Acesso por máquina ({columns}): usuário em {users} e senha em {passwords}; as demais usam o painel SSH. Senhas ficam só na memória e não vão para relatórios nem snapshots.",
   "sp.title": "Credenciais e conexão SSH",
   "sp.user": "Usuário SSH",
   "sp.user_ph": "ex.: root, admin",
@@ -2400,6 +2403,8 @@
   "hp.row_location": "Unidade ou local; agrupa a visão Parque. Também vale <code>LOCAL</code>, <code>UNIDADE</code>, <code>FILIAL</code> ou <code>SETOR</code>.",
   "hp.row_other_name": "Qualquer outra",
   "hp.row_other": "Copiada como está para a tabela e os relatórios, por exemplo <code>ASSET_TAG</code>, <code>OWNER</code> ou <code>NOTES</code>.",
+  "hp.row_user": "Usuário SSH desta máquina, quando ela não usa o do painel SSH. Também vale <code>USERNAME</code>, <code>LOGIN</code> ou <code>USUARIO</code>.",
+  "hp.row_password": "Senha SSH desta máquina, só para quem tem senhas diferentes por máquina; o normal é deixar a senha no painel SSH. Também vale <code>SENHA</code>. Fica só na memória e não vai para a tabela, relatórios nem snapshots, mas continua em texto puro no arquivo: guarde a planilha com cuidado.",
   "hp.sheet_p2": "Linhas sem IP e IPs repetidos são ignorados e aparecem no aviso depois de carregar. A porta SSH é 22 por padrão e pode ser trocada no painel SSH.",
   "hp.collected": "O que é coletado",
   "hp.collected_p": "Uma conexão SSH por máquina executa um único script de leitura: sistema e kernel, processador, memória e módulos, discos e partições, placa-mãe e BIOS, vídeo, rede e tempo ligado. Nada é instalado, alterado ou gravado na máquina. Campos que exigem root ou ferramentas ausentes aparecem como \"—\".",
@@ -2449,6 +2454,7 @@
   "ts.other_columns": "Other columns",
   "ts.rows_skipped": "Rows without an address skipped",
   "ts.duplicates": "Repeated addresses skipped (rows)",
+  "ts.access": "Per-machine access ({columns}): user for {users} and password for {passwords}; the rest use the SSH panel. Passwords stay in memory and never reach reports or snapshots.",
   "sp.title": "SSH credentials and connection",
   "sp.user": "SSH user",
   "sp.user_ph": "e.g. root, admin",
@@ -2637,6 +2643,8 @@
   "hp.row_location": "Site or room; groups the Fleet view. <code>SITE</code> and <code>DEPARTMENT</code> also work.",
   "hp.row_other_name": "Any other",
   "hp.row_other": "Copied as is to the table and the reports, for example <code>ASSET_TAG</code>, <code>OWNER</code> or <code>NOTES</code>.",
+  "hp.row_user": "SSH user for this machine when it does not use the one in the SSH panel. <code>USERNAME</code>, <code>LOGIN</code> or <code>USUARIO</code> also work.",
+  "hp.row_password": "SSH password for this machine, only when machines have different passwords; normally the password goes in the SSH panel. <code>SENHA</code> also works. It stays in memory and never reaches the table, reports or snapshots, but it is plain text in the file: keep the spreadsheet safe.",
   "hp.sheet_p2": "Rows without an address and repeated addresses are skipped and listed after loading. The SSH port is 22 by default and can be changed in the SSH panel.",
   "hp.collected": "What is collected",
   "hp.collected_p": "One SSH connection per machine runs a single read-only script: system and kernel, processor, memory and modules, disks and partitions, motherboard and BIOS, graphics, network and uptime. Nothing is installed, changed or written on the machine. Fields that need root or missing tools show as \"—\".",
@@ -2686,6 +2694,7 @@
   "ts.other_columns": "Otras columnas",
   "ts.rows_skipped": "Filas sin dirección omitidas",
   "ts.duplicates": "Direcciones repetidas omitidas (filas)",
+  "ts.access": "Acceso por equipo ({columns}): usuario en {users} y contraseña en {passwords}; los demás usan el panel SSH. Las contraseñas solo quedan en memoria y no llegan a informes ni instantáneas.",
   "sp.title": "Credenciales y conexión SSH",
   "sp.user": "Usuario SSH",
   "sp.user_ph": "p. ej., root, admin",
@@ -2874,6 +2883,8 @@
   "hp.row_location": "Sede o sala; agrupa la vista Parque. También valen <code>UBICACION</code>, <code>SEDE</code> o <code>SUCURSAL</code>.",
   "hp.row_other_name": "Cualquier otra",
   "hp.row_other": "Se copia tal cual a la tabla y los informes, por ejemplo <code>ASSET_TAG</code>, <code>OWNER</code> o <code>NOTES</code>.",
+  "hp.row_user": "Usuario SSH de este equipo cuando no usa el del panel SSH. También sirven <code>USERNAME</code>, <code>LOGIN</code> o <code>USUARIO</code>.",
+  "hp.row_password": "Contraseña SSH de este equipo, solo cuando los equipos tienen contraseñas distintas; lo normal es dejarla en el panel SSH. También sirve <code>CONTRASENA</code>. Solo queda en memoria y no llega a la tabla, los informes ni las instantáneas, pero es texto plano en el archivo: guarde la hoja con cuidado.",
   "hp.sheet_p2": "Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar. El puerto SSH es 22 por defecto y se puede cambiar en el panel SSH.",
   "hp.collected": "Qué se recopila",
   "hp.collected_p": "Una conexión SSH por equipo ejecuta un único script de lectura: sistema y kernel, procesador, memoria y módulos, discos y particiones, placa base y BIOS, vídeo, red y tiempo encendido. No se instala, cambia ni escribe nada en el equipo. Los campos que requieren root o herramientas ausentes aparecen como \"—\".",
@@ -3088,7 +3099,11 @@
     const user = (document.getElementById("input-ssh-user").value || cfg.ssh_user || "").trim();
     const key = (document.getElementById("input-ssh-key").value || cfg.ssh_key_path || "").trim();
     const pass = document.getElementById("input-ssh-pass").value || cfg.has_password;
-    return Boolean(user && (key || pass));
+    // USER/PASSWORD columns can cover every machine and leave the panel empty.
+    const info = appState.targetsInfo || {};
+    const sheetUser = Boolean(info.count) && info.hosts_with_user === info.count;
+    const sheetPass = Boolean(info.count) && info.hosts_with_password === info.count;
+    return Boolean((user || sheetUser) && (key || pass || sheetPass));
   }
 
   function renderOnboarding() {
@@ -3119,6 +3134,13 @@
     }
     if (info.duplicate_rows && info.duplicate_rows.length) {
       lines.push(`${tr("ts.duplicates")}: ${info.duplicate_rows.join(", ")}`);
+    }
+    if (info.credential_columns && info.credential_columns.length) {
+      lines.push(tr("ts.access", {
+        columns: info.credential_columns.map(c => `<code>${escapeHtml(c)}</code>`).join(" "),
+        users: info.hosts_with_user,
+        passwords: info.hosts_with_password
+      }));
     }
     el.innerHTML = lines.join("<br>");
   }
