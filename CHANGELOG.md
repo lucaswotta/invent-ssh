@@ -8,6 +8,7 @@ Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
 - Release packages open their own window instead of a browser tab: WebView2 on Windows, WebKit on macOS and a bundled Qt WebEngine on Linux. Closing the window stops the program.
 - `install.sh` in the Linux package installs the program, menu entry and icon for the current user; `--uninstall` removes them.
+- Optional `USER` and `PASSWORD` columns in the target spreadsheet for machines whose SSH access differs from the SSH panel; empty cells use the panel. Passwords stay in the collector's memory and never reach the table, reports, snapshots or logs, and dropped spreadsheets are copied with owner-only permissions.
 - CI opens each package and checks it shows its own window instead of falling back to the browser; on Linux it also checks that the interface loads.
 
 ### Changed

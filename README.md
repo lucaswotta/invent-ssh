@@ -150,6 +150,8 @@ python3 app.py --input machines.xlsx --user inventory --key ~/.ssh/id_ed25519 --
 | --- | --- | --- |
 | `IP` | Yes | Address or name of the machine. `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` or `TARGET` also work. |
 | `LOCATION` | No | Site or room; groups the fleet view and the reports. `SITE`, `LOCAL`, `UNIDADE`, `FILIAL`, `SETOR`, `UBICACION`, `SEDE` and `SUCURSAL` also work. |
+| `USER` | No | SSH user for that machine when it differs from the SSH panel. `USERNAME`, `SSH_USER`, `LOGIN` and `USUARIO` also work. |
+| `PASSWORD` | No | SSH password for that machine, for fleets where passwords differ; normally the password goes in the SSH panel. `PASS`, `SENHA` and `CONTRASENA` also work. Empty cells use the panel. Invenux keeps it in memory only and never writes it to the table, reports, snapshots or logs, but the file holds it as plain text. |
 | Any other | No | Copied as is to the table and every report, for example `ASSET_TAG`, `OWNER` or `NOTES`. |
 
 Rows without an address and repeated addresses are skipped and listed after loading. The template (**Get the template**) comes with two example rows and a sheet explaining each column, in the interface language.
@@ -223,7 +225,7 @@ Yes, see the command line above. It needs a private key.
 
 ## Roadmap
 
-Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): signed installers, SSH agent and jump host, per-machine port and user, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
+Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): signed installers, SSH agent and jump host, per-machine SSH port, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
 
 ## Contributing
 

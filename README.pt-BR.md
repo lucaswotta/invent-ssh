@@ -150,6 +150,8 @@ python3 app.py --input maquinas.xlsx --user inventario --key ~/.ssh/id_ed25519 -
 | --- | --- | --- |
 | `IP` | Sim | Endereço ou nome da máquina. Também vale `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` ou `TARGET`. |
 | `LOCATION` | Não | Unidade ou sala; agrupa o Parque e os relatórios. Também vale `LOCAL`, `UNIDADE`, `FILIAL`, `SETOR`, `SITE`, `UBICACION`, `SEDE` ou `SUCURSAL`. |
+| `USER` | Não | Usuário SSH daquela máquina, quando difere do painel SSH. Também vale `USERNAME`, `SSH_USER`, `LOGIN` ou `USUARIO`. |
+| `PASSWORD` | Não | Senha SSH daquela máquina, para parques com senhas diferentes; o normal é deixar a senha no painel SSH. Também vale `PASS`, `SENHA` ou `CONTRASENA`. Células vazias usam o painel. O Invenux a mantém só na memória e nunca a grava na tabela, relatórios, snapshots ou logs, mas o arquivo a guarda em texto puro. |
 | Qualquer outra | Não | Copiada como está para a tabela e para todos os relatórios, por exemplo `ASSET_TAG`, `OWNER` ou `NOTES`. |
 
 Linhas sem IP e IPs repetidos são ignorados e listados depois de carregar. A planilha modelo (**Baixar planilha modelo**) vem com duas linhas de exemplo e uma aba explicando cada coluna, no idioma da interface.
@@ -223,7 +225,7 @@ Sim, veja a linha de comando acima. Ela exige chave privada.
 
 ## Próximos passos
 
-O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): instaladores assinados, agente SSH e jump host, porta e usuário por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
+O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): instaladores assinados, agente SSH e jump host, porta SSH por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
 
 ## Contribuir
 
