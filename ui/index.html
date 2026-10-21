@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Invenux</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 role=%22img%22 aria-label=%22Invenux%22%3E %3Crect x=%221%22 y=%221%22 width=%2230%22 height=%2230%22 rx=%227%22 fill=%22#1E1E22%22/%3E %3Crect x=%221.5%22 y=%221.5%22 width=%2229%22 height=%2229%22 rx=%226.5%22 fill=%22none%22 stroke=%22#FFFFFF%22 stroke-opacity=%220.16%22/%3E %3Crect x=%225%22 y=%225%22 width=%2222%22 height=%228%22 rx=%222.5%22 fill=%22#0A84FF%22/%3E %3Cpath d=%22M8 7.2 L10.8 9 L8 10.8%22 fill=%22none%22 stroke=%22#FFFFFF%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E %3Crect x=%225%22 y=%2215%22 width=%2222%22 height=%225%22 rx=%222%22 fill=%22#38383E%22/%3E %3Ccircle cx=%228%22 cy=%2217.5%22 r=%221.4%22 fill=%22#30D158%22/%3E %3Crect x=%225%22 y=%2222%22 width=%2222%22 height=%225%22 rx=%222%22 fill=%22#38383E%22/%3E %3Ccircle cx=%228%22 cy=%2224.5%22 r=%221.4%22 fill=%22#30D158%22/%3E %3C/svg%3E">
+<script>
+  // Runs before the stylesheet so a light theme never flashes dark.
+  document.documentElement.dataset.theme = (() => {
+    const choice = window.__INVENUX_THEME__ || "system";
+    if (choice === "light" || choice === "dark") return choice;
+    return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  })();
+</script>
 <style>
   :root {
     --bg-window: #1C1C1E;
@@ -16,9 +24,9 @@
     --bg-control-hover: #404045;
     --bg-selected-row: #0A84FF;
 
-    --sep-strong: rgba(255, 255, 255, 0.09);
-    --sep-subtle: rgba(255, 255, 255, 0.055);
-    --specular: rgba(255, 255, 255, 0.12);
+    --sep-strong: rgba(var(--overlay), 0.09);
+    --sep-subtle: rgba(var(--overlay), 0.055);
+    --specular: rgba(var(--overlay), 0.12);
 
     --text-primary: #F5F5F7;
     --text-secondary: #98989D;
@@ -32,7 +40,54 @@
     --sys-teal: #64D2FF;
     --sys-purple: #BF5AF2;
 
+    /* RGB of the tint used for hover fills, scrollbars and hairlines; it flips with the theme. */
+    --overlay: 255, 255, 255;
+    --bg-popover: #2C2C2E;
+    --bg-input: #1C1C1E;
+    --bg-seg-active: #636366;
+    --shadow-popover: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+
     --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+
+  :root[data-theme="light"] {
+    --bg-window: #F5F5F7;
+    --bg-sidebar: #EBEBEE;
+    --bg-toolbar: #F0F0F2;
+    --bg-card: #FFFFFF;
+    --bg-card-inner: #F5F5F7;
+    --bg-control: #FFFFFF;
+    --bg-control-hover: #F2F2F4;
+    --bg-selected-row: #007AFF;
+
+    --sep-strong: rgba(0, 0, 0, 0.12);
+    --sep-subtle: rgba(0, 0, 0, 0.07);
+    --specular: rgba(var(--overlay), 0.7);
+
+    --text-primary: #1D1D1F;
+    --text-secondary: #5E5E63;
+    --text-tertiary: #86868B;
+
+    --sys-blue: #007AFF;
+    --sys-blue-hover: #0062CC;
+    --sys-green: #28A745;
+    --sys-orange: #E08600;
+    --sys-red: #E5352B;
+    --sys-teal: #1A9FD6;
+    --sys-purple: #A24ED6;
+
+    --overlay: 0, 0, 0;
+    --bg-popover: #FFFFFF;
+    --bg-input: #FFFFFF;
+    --bg-seg-active: #FFFFFF;
+    --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+    color-scheme: light;
+  }
+
+  /* Component display rules (.btn is inline-flex) would otherwise override hidden. */
+  [hidden] {
+    display: none !important;
   }
 
   * {
@@ -41,7 +96,7 @@
     padding: 0;
     user-select: none;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.20) transparent;
+    scrollbar-color: rgba(var(--overlay), 0.20) transparent;
   }
 
   /* macOS Overlay Scrollbars */
@@ -56,20 +111,20 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.20);
+    background-color: rgba(var(--overlay), 0.20);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.38);
+    background-color: rgba(var(--overlay), 0.38);
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:active {
-    background-color: rgba(255, 255, 255, 0.52);
+    background-color: rgba(var(--overlay), 0.52);
     border: 2px solid transparent;
     background-clip: padding-box;
   }
@@ -177,11 +232,11 @@
   }
 
   .nav-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--overlay), 0.05);
   }
 
   .nav-btn.active {
-    background: rgba(255, 255, 255, 0.11);
+    background: rgba(var(--overlay), 0.11);
     font-weight: 500;
   }
 
@@ -225,6 +280,35 @@
 
   .sidebar-footer-row span:first-child {
     color: var(--text-tertiary);
+  }
+
+  .update-pill {
+    margin-top: 2px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: var(--sys-blue);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .update-pill:hover {
+    background: var(--sys-blue-hover);
+  }
+
+  .update-pill:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .update-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   /* Main Area */
@@ -365,10 +449,10 @@
     position: absolute;
     top: 48px;
     width: 340px;
-    background: #2C2C2E;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: var(--bg-popover);
+    border: 1px solid rgba(var(--overlay), 0.16);
     border-radius: 11px;
-    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-popover);
     padding: 14px;
     z-index: 100;
     display: none;
@@ -413,8 +497,8 @@
     min-width: 0;
     height: 28px;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: #1C1C1E;
+    border: 1px solid rgba(var(--overlay), 0.12);
+    background: var(--bg-input);
     color: var(--text-primary);
     padding: 0 9px;
     font-family: inherit;
@@ -534,7 +618,7 @@
   }
 
   .seg-btn.active {
-    background: #636366;
+    background: var(--bg-seg-active);
     color: var(--text-primary);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
@@ -545,7 +629,7 @@
   }
 
   .seg-btn.active span {
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-secondary);
   }
 
   .subbar-right {
@@ -658,7 +742,7 @@
   }
 
   tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(var(--overlay), 0.03);
   }
 
   tbody tr.selected {
@@ -792,7 +876,7 @@
     font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: 11px;
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(var(--overlay), 0.07);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -861,10 +945,10 @@
     width: min(720px, calc(100vw - 48px));
     max-height: calc(100vh - 64px);
     overflow-y: auto;
-    background: #2C2C2E;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: var(--bg-popover);
+    border: 1px solid rgba(var(--overlay), 0.16);
     border-radius: 12px;
-    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-popover);
     padding: 20px 22px;
     display: flex;
     flex-direction: column;
@@ -1192,7 +1276,7 @@
   .tut-head {
     color: var(--text-secondary);
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(var(--overlay), 0.03);
   }
 
   .tut-row {
@@ -1389,7 +1473,7 @@
   }
 
   .lang-select option {
-    background: #2C2C2E;
+    background: var(--bg-popover);
     color: var(--text-primary);
   }
 
@@ -1595,7 +1679,7 @@
   .dist-bar-bg {
     height: 6px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(var(--overlay), 0.07);
     overflow: hidden;
   }
 
@@ -1662,11 +1746,11 @@
   }
 
   .snap-card:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(var(--overlay), 0.04);
   }
 
   .snap-card.active {
-    background: rgba(255, 255, 255, 0.10);
+    background: rgba(var(--overlay), 0.10);
   }
 
   .snap-card-top {
@@ -1760,6 +1844,19 @@
           <option value="es">Español</option>
         </select>
       </div>
+      <div class="sidebar-footer-row">
+        <span data-i18n="footer.theme">Tema</span>
+        <select class="lang-select theme-select" aria-label="Tema" data-i18n-title="footer.theme" onchange="changeTheme(this.value)">
+          <option value="system" data-i18n="theme.system">Do sistema</option>
+          <option value="light" data-i18n="theme.light">Claro</option>
+          <option value="dark" data-i18n="theme.dark">Escuro</option>
+        </select>
+      </div>
+      <div class="sidebar-footer-row">
+        <span data-i18n="footer.version">Versão</span>
+        <span id="footer-version"></span>
+      </div>
+      <button id="update-button" class="update-pill" hidden onclick="installUpdate()"></button>
     </div>
   </aside>
 
@@ -2166,6 +2263,18 @@
         <li data-i18n-html="hp.st_error"></li>
       </ul>
     </section>
+    <section class="sheet-section">
+      <h4 data-i18n="hp.version">Versão e atualizações</h4>
+      <p id="help-version-line"></p>
+      <div class="update-row">
+        <button class="btn btn-small" onclick="checkUpdates(true)" data-i18n="up.check_now">Procurar agora</button>
+        <button id="help-update-button" class="btn btn-small btn-primary" hidden onclick="installUpdate()"></button>
+      </div>
+      <label class="checkbox-row">
+        <input id="input-check-updates" type="checkbox" checked onchange="toggleUpdateChecks(this.checked)">
+        <span data-i18n="up.auto">Procurar versão nova ao abrir (consulta a página de releases no GitHub)</span>
+      </label>
+    </section>
   </div>
 </div>
 
@@ -2183,6 +2292,19 @@
   "footer.timeout": "Timeout SSH",
   "footer.verify": "Verificação",
   "footer.language": "Idioma",
+  "footer.theme": "Tema",
+  "footer.version": "Versão",
+  "theme.system": "Do sistema",
+  "theme.light": "Claro",
+  "theme.dark": "Escuro",
+  "hp.version": "Versão e atualizações",
+  "up.current": "Você está no Invenux {v}.",
+  "up.available": "A versão {v} está disponível.",
+  "up.latest": "É a versão mais recente.",
+  "up.button": "Atualizar para {v}",
+  "up.check_now": "Procurar agora",
+  "up.auto": "Procurar versão nova ao abrir (consulta a página de releases no GitHub)",
+  "up.downloading": "Baixando o Invenux {v} e conferindo o SHA256SUMS...",
   "footer.workers_value": "{n} conexões",
   "footer.timeout_value": "{n} segundos",
   "footer.tofu_on": "TOFU ativo",
@@ -2423,6 +2545,19 @@
   "footer.timeout": "SSH timeout",
   "footer.verify": "Verification",
   "footer.language": "Language",
+  "footer.theme": "Theme",
+  "footer.version": "Version",
+  "theme.system": "System",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+  "hp.version": "Version and updates",
+  "up.current": "You are on Invenux {v}.",
+  "up.available": "Version {v} is available.",
+  "up.latest": "This is the latest version.",
+  "up.button": "Update to {v}",
+  "up.check_now": "Check now",
+  "up.auto": "Check for a new version on startup (reads the GitHub releases page)",
+  "up.downloading": "Downloading Invenux {v} and checking SHA256SUMS...",
   "footer.workers_value": "{n} connections",
   "footer.timeout_value": "{n} seconds",
   "footer.tofu_on": "TOFU on",
@@ -2663,6 +2798,19 @@
   "footer.timeout": "Límite SSH",
   "footer.verify": "Verificación",
   "footer.language": "Idioma",
+  "footer.theme": "Tema",
+  "footer.version": "Versión",
+  "theme.system": "Del sistema",
+  "theme.light": "Claro",
+  "theme.dark": "Oscuro",
+  "hp.version": "Versión y actualizaciones",
+  "up.current": "Está en Invenux {v}.",
+  "up.available": "La versión {v} está disponible.",
+  "up.latest": "Es la versión más reciente.",
+  "up.button": "Actualizar a {v}",
+  "up.check_now": "Buscar ahora",
+  "up.auto": "Buscar una versión nueva al abrir (consulta la página de versiones en GitHub)",
+  "up.downloading": "Descargando Invenux {v} y verificando SHA256SUMS...",
   "footer.workers_value": "{n} conexiones",
   "footer.timeout_value": "{n} segundos",
   "footer.tofu_on": "TOFU activo",
@@ -2921,11 +3069,87 @@
 
   function syncLanguageSelects(cfg) {
     const autoTitle = tr("lang.auto_title", { lang: LANGUAGE_NAMES[cfg.system_language] || "English" });
-    document.querySelectorAll(".lang-select").forEach(select => {
+    document.querySelectorAll(".lang-select:not(.theme-select)").forEach(select => {
       select.querySelector(".lang-auto").textContent = tr("lang.auto");
       select.title = autoTitle;
       select.value = cfg.language_choice || "auto";
     });
+  }
+
+  const lightQuery = matchMedia("(prefers-color-scheme: light)");
+  function applyTheme(choice) {
+    const resolved = choice === "light" || choice === "dark" ? choice : (lightQuery.matches ? "light" : "dark");
+    document.documentElement.dataset.theme = resolved;
+  }
+  lightQuery.addEventListener("change", () => applyTheme((appState.config || {}).theme_choice || "system"));
+
+  async function changeTheme(choice) {
+    applyTheme(choice);
+    document.querySelectorAll(".theme-select").forEach(select => { select.value = choice; });
+    try {
+      const res = await api("/api/config", "POST", { theme: choice });
+      appState.config = res.config;
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
+
+  function renderVersion() {
+    const update = appState.update || {};
+    const available = update.state === "available";
+    document.getElementById("footer-version").textContent = appState.version || "";
+    const label = tr("up.button", { v: update.version || "" });
+    for (const id of ["update-button", "help-update-button"]) {
+      const button = document.getElementById(id);
+      button.hidden = !available;
+      button.textContent = label;
+    }
+    let line = tr("up.current", { v: appState.version || "" });
+    if (available) line += " " + tr("up.available", { v: update.version });
+    else if (update.state === "latest") line += " " + tr("up.latest");
+    else if (update.message) line += " " + update.message;
+    document.getElementById("help-version-line").textContent = line;
+    const cfg = appState.config || {};
+    document.getElementById("input-check-updates").checked = cfg.check_updates !== false;
+    document.querySelectorAll(".theme-select").forEach(select => { select.value = cfg.theme_choice || "system"; });
+  }
+
+  async function checkUpdates(manual) {
+    try {
+      const data = await api("/api/update/check", "POST");
+      appState.update = data.update || {};
+      renderVersion();
+      if (manual && appState.update.state !== "available") {
+        setBanner(appState.update.message || tr("up.latest"));
+      }
+    } catch (err) {
+      if (manual) setBanner(err.message);
+    }
+  }
+
+  async function installUpdate() {
+    const buttons = ["update-button", "help-update-button"].map(id => document.getElementById(id));
+    buttons.forEach(button => { button.disabled = true; });
+    setBanner(tr("up.downloading", { v: (appState.update || {}).version || "" }));
+    try {
+      const data = await api("/api/update/install", "POST");
+      appState.update = data.update || {};
+      renderVersion();
+      setBanner(data.status_text);
+    } catch (err) {
+      setBanner(err.message);
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  async function toggleUpdateChecks(enabled) {
+    try {
+      const res = await api("/api/config", "POST", { check_updates: enabled });
+      appState.config = res.config;
+    } catch (err) {
+      setBanner(err.message);
+    }
   }
 
   async function changeLanguage(choice) {
@@ -3768,6 +3992,11 @@
       appState.paths = data.paths;
       renderPaths();
     }
+    if (data.version) {
+      appState.version = data.version;
+      appState.update = data.update || {};
+      renderVersion();
+    }
     if (data.targets_info) {
       appState.targetsInfo = data.targets_info;
     }
@@ -3805,6 +4034,9 @@
       }
       if (data.scanning) {
         startPolling();
+      }
+      if (data.config && data.config.check_updates !== false) {
+        checkUpdates(false);
       }
     } catch (err) {
       setBanner(tr("bn.offline"));

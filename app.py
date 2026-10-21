@@ -29,6 +29,7 @@ from i18n import SUPPORTED_LANGUAGES, format_decimal, get_language, set_language
 from paths import (
     get_config_path,
     get_documents_dir,
+    get_downloads_dir,
     get_logs_dir,
     get_reports_dir,
     get_snapshots_db_path,
@@ -37,9 +38,11 @@ from paths import (
 )
 from reporting import create_template_workbook, save_report, save_snapshot_diff, template_filename
 from snapshots import SnapshotStore, compute_fleet_analytics
+import updates as release_updates
 
 APP_BRAND = "Invenux"
 APP_VERSION = "0.8.2"
+THEME_CHOICES = ("light", "dark")
 # Browsers throttle timers in hidden tabs to about one per minute.
 BROWSER_IDLE_TIMEOUT_SECONDS = 180
 
@@ -102,6 +105,7 @@ class InventoryController:
         self.scanning: bool = False
         self.status_text: str = t("app_ready")
         self.targets_info: dict[str, Any] = {}
+        self.update_info: dict[str, Any] = {"state": "idle"}
         self.active_engine: InventoryEngine | None = None
         self._bootstrap_initial_records()
 
@@ -120,6 +124,8 @@ class InventoryController:
             "language": get_language(),
             "language_choice": "auto",
             "system_language": system_language(),
+            "theme_choice": "system",
+            "check_updates": True,
         }
         try:
             if self.config_path.is_file():
@@ -139,6 +145,9 @@ class InventoryController:
                         set_language(str(saved["language_choice"]))
                         defaults["language"] = get_language()
                         defaults["language_choice"] = get_language()
+                    if saved.get("theme_choice") in THEME_CHOICES:
+                        defaults["theme_choice"] = saved["theme_choice"]
+                    defaults["check_updates"] = bool(saved.get("check_updates", True))
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             pass
         return defaults
@@ -154,7 +163,10 @@ class InventoryController:
             "trust_unknown_hosts": bool(self.config.get("trust_unknown_hosts", True)),
             "include_sensitive_identifiers": bool(self.config.get("include_sensitive_identifiers", False)),
             "report_format": str(self.config.get("output_format", "XLSX")).upper(),
+            "check_updates": bool(self.config.get("check_updates", True)),
         }
+        if self.config.get("theme_choice") in THEME_CHOICES:
+            persisted["theme_choice"] = self.config["theme_choice"]
         if self.config.get("language_choice") in SUPPORTED_LANGUAGES:
             persisted["language_choice"] = self.config["language_choice"]
         try:
@@ -210,6 +222,11 @@ class InventoryController:
                 self.config["language_choice"] = choice if choice in SUPPORTED_LANGUAGES else "auto"
                 set_language(choice if choice in SUPPORTED_LANGUAGES else system_language())
                 self.config["language"] = get_language()
+            if "theme" in updates:
+                choice = str(updates["theme"])
+                self.config["theme_choice"] = choice if choice in THEME_CHOICES else "system"
+            if "check_updates" in updates:
+                self.config["check_updates"] = bool(updates["check_updates"])
             self._persist_non_secret_config()
             return self.public_config()
 
@@ -225,7 +242,10 @@ class InventoryController:
             scanning = self.scanning
             status_text = self.status_text
             cfg = self.public_config()
+            update_info = dict(self.update_info)
         return {
+            "version": APP_VERSION,
+            "update": update_info,
             "config": cfg,
             "records": records_copy,
             "analytics": compute_fleet_analytics(records_copy),
@@ -241,6 +261,46 @@ class InventoryController:
                 "logs": str(get_logs_dir()),
             },
         }
+
+    def check_for_update(self) -> dict[str, Any]:
+        try:
+            release = release_updates.check(APP_VERSION)
+        except (OSError, ValueError) as exc:
+            logging.getLogger(__name__).warning("Update check failed: %s", exc)
+            info = {"state": "error", "message": t("update_check_failed", error=exc)}
+        else:
+            info = {"state": "available", **release} if release else {"state": "latest"}
+        with self.lock:
+            self.update_info = info
+        return self.get_state()
+
+    def install_update(self) -> dict[str, Any]:
+        """Fetch the newer package; on Linux installs from install.sh it is installed in place."""
+        with self.lock:
+            info = dict(self.update_info)
+        if info.get("state") != "available":
+            raise ValueError(t("update_none_available"))
+        if not getattr(sys, "frozen", False):
+            # A source checkout updates with git; show the release notes instead.
+            webbrowser.open(info["page"])
+            result = {"state": "page", "message": t("update_page_opened", version=info["version"])}
+        else:
+            package = release_updates.download(info, get_downloads_dir())
+            executable = Path(sys.executable)
+            if sys.platform.startswith("linux") and release_updates.installed_with_install_sh(executable):
+                release_updates.install_linux_package(package)
+                package.unlink()
+                result = {"state": "installed", "message": t("update_installed", version=info["version"])}
+            elif sys.platform == "win32":
+                subprocess.Popen([str(package)])
+                result = {"state": "launched", "message": t("update_launched", version=info["version"])}
+            else:
+                _open_in_file_manager(package.parent)
+                result = {"state": "downloaded", "message": t("update_downloaded", path=package)}
+        with self.lock:
+            self.update_info = {**info, **result}
+            self.status_text = result["message"]
+        return self.get_state()
 
     def load_targets(self, filepath: str) -> dict[str, Any]:
         resolved = Path(filepath).expanduser()
@@ -562,7 +622,8 @@ def create_http_server(
                 injected = html_text.replace(
                     "<head>",
                     f'<head>\n<script>window.__INVENUX_TOKEN__ = {json.dumps(session_token)};'
-                    f'window.__INVENUX_LANG__ = {json.dumps(get_language())};</script>',
+                    f'window.__INVENUX_LANG__ = {json.dumps(get_language())};'
+                    f'window.__INVENUX_THEME__ = {json.dumps(controller.config.get("theme_choice", "system"))};</script>',
                     1,
                 )
                 body = injected.encode("utf-8")
@@ -615,6 +676,14 @@ def create_http_server(
                 if path == "/api/targets/load":
                     state = controller.load_targets(str(payload.get("filepath", "")))
                     self._send_json(state)
+                    return
+
+                if path == "/api/update/check":
+                    self._send_json(controller.check_for_update())
+                    return
+
+                if path == "/api/update/install":
+                    self._send_json(controller.install_update())
                     return
 
                 if path == "/api/targets/upload":
