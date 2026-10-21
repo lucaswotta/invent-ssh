@@ -2,6 +2,13 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
+## [0.9.2] — 2026-10-20
+
+### Fixed
+
+- Storage capacity read "128 GB total (1 physical block devices)" in every language. It is now the capacity alone; the disks stay listed in the machine details. Snapshot comparisons ignore the old wording, so the first collection after updating does not mark every machine as changed.
+- The log no longer ends each line with " | value=N/A" or records two paramiko lines per connection.
+
 ## [0.9.1] — 2026-10-20
 
 ### Fixed
