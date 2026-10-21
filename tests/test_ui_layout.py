@@ -3,6 +3,7 @@ import json
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -138,6 +139,21 @@ class DesktopUtilityUITests(unittest.TestCase):
             )
             with self.assertRaises(urllib.error.HTTPError) as ctx:
                 urllib.request.urlopen(req_open)
+            self.assertEqual(ctx.exception.code, 400)
+
+            # /api/open-link opens only the About sheet's own pages
+            def open_link(name):
+                return urllib.request.Request(
+                    url + "api/open-link",
+                    data=json.dumps({"name": name}).encode("utf-8"),
+                    headers={"X-Invenux-Token": token, "Content-Type": "application/json"},
+                    method="POST",
+                )
+            with patch("app._open_externally") as opener:
+                urllib.request.urlopen(open_link("repo")).read()
+                with self.assertRaises(urllib.error.HTTPError) as ctx:
+                    urllib.request.urlopen(open_link("https://example.test"))
+            opener.assert_called_once_with("https://github.com/lucaswotta/invenux")
             self.assertEqual(ctx.exception.code, 400)
 
             # Load targets CSV via API

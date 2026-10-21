@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import getpass
 import json
 import logging
 import os
@@ -46,6 +47,13 @@ APP_VERSION = "0.9.2"
 THEME_CHOICES = ("light", "dark")
 # Browsers throttle timers in hidden tabs to about one per minute.
 BROWSER_IDLE_TIMEOUT_SECONDS = 180
+PASSWORD_ENV = "INVENUX_SSH_PASSWORD"
+# The About sheet may open only these pages.
+ABOUT_LINKS = {
+    "repo": "https://github.com/lucaswotta/invenux",
+    "issues": "https://github.com/lucaswotta/invenux/issues",
+    "author": "https://github.com/lucaswotta",
+}
 
 COLORS = {
     "bg_window": "#1C1C1E",
@@ -298,7 +306,7 @@ class InventoryController:
                 subprocess.Popen([str(package)], env=external_program_env())
                 result = {"state": "launched", "message": t("update_launched", version=info["version"])}
             else:
-                _open_in_file_manager(package.parent)
+                _open_externally(package.parent)
                 result = {"state": "downloaded", "message": t("update_downloaded", path=package)}
         with self.lock:
             self.update_info = {**info, **result}
@@ -388,7 +396,7 @@ class InventoryController:
             chosen = folders[target]
         else:
             raise ValueError(t("app_unknown_location"))
-        _open_in_file_manager(chosen)
+        _open_externally(chosen)
 
     def export_snapshot_diff(self, snapshot_id: int) -> Path:
         changes = self.snapshot_store.compute_diff(snapshot_id)["changes"]
@@ -538,7 +546,8 @@ def _row_list(rows: list[int], limit: int = 5) -> str:
     return t("app_more_rows", rows=shown, count=len(rows) - limit) if len(rows) > limit else shown
 
 
-def _open_in_file_manager(path: Path) -> None:
+def _open_externally(path: Path | str) -> None:
+    """Open a folder, file or URL with the system's default application."""
     if sys.platform.startswith("win"):
         os.startfile(path)  # type: ignore[attr-defined]
     elif sys.platform == "darwin":
@@ -679,6 +688,14 @@ def create_http_server(
                 if path == "/api/targets/load":
                     state = controller.load_targets(str(payload.get("filepath", "")))
                     self._send_json(state)
+                    return
+
+                if path == "/api/open-link":
+                    url = ABOUT_LINKS.get(str(payload.get("name", "")))
+                    if url is None:
+                        raise ValueError(t("app_unknown_location"))
+                    _open_externally(url)
+                    self._send_json({"ok": True})
                     return
 
                 if path == "/api/update/check":
@@ -859,11 +876,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--input", type=str, help="Collect from this spreadsheet on the command line.")
     parser.add_argument("--user", type=str, help="SSH user for a command-line collection.")
     parser.add_argument("--key", type=str, help="SSH private key for a command-line collection.")
+    parser.add_argument(
+        "--ask-password",
+        action="store_true",
+        help=f"Prompt for the SSH password without echo (or set {PASSWORD_ENV}). "
+        "There is no password option: it would show in the process list and shell history.",
+    )
     parser.add_argument("--ssh-port", type=int, default=22, help="SSH port of the machines (default: 22).")
     parser.add_argument("--output-format", type=str, default="XLSX", choices=["XLSX", "CSV", "HTML"])
     args = parser.parse_args(argv)
 
     setup_logging()
+    # Read once and drop it, so zenity, xdg-open and install.sh never inherit the password.
+    password = os.environ.pop(PASSWORD_ENV, "")
     controller = InventoryController()
 
     if args.input:
@@ -873,6 +898,10 @@ def main(argv: list[str] | None = None) -> int:
                 controller.update_config({"ssh_user": args.user})
             if args.key:
                 controller.update_config({"ssh_key_path": args.key})
+            if args.ask_password:
+                password = getpass.getpass(t("cli_password_prompt", user=args.user or ""))
+            if password:
+                controller.update_config({"ssh_pass": password})
             controller.update_config({"ssh_port": args.ssh_port})
             controller.start_scan()
             while controller.get_state()["scanning"]:
