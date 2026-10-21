@@ -62,11 +62,11 @@ Agentless and read-only: nothing is installed or written on the machines.
 | **Snapshots** | Local history of every collection with a field-by-field comparison, exportable to CSV. |
 | **Exports** | Excel (summary with data bars, inventory grouped by subject), interactive HTML that works offline, CSV with formula injection neutralized. |
 | **Interface** | English, Portuguese (Brazil) and Spanish, following the system language; built-in guide with an animated tutorial; resizable down to 720 × 520. |
-| **Desktop** | Native window on Linux, Windows and macOS (pywebview or GTK), or your browser; packaged builds for the three systems; light and dark themes; the version in the sidebar and a one-click update to a newer release. |
+| **Desktop** | Native window on Linux, Windows and macOS (pywebview or GTK), or your browser; packaged builds for the three systems; an About and settings sheet (sidebar footer or the app name) with language, light or dark theme, the version and a one-click update to a newer release. |
 
 <div align="center">
 
-<img src="docs/media/hero-en.png" width="900" alt="Collection view: 24 machines with status, address, hostname, location, processor, memory, storage, system and collection time, and the details of one machine on the right">
+<img src="docs/media/hero-en.png" width="900" alt="Collection view: 24 machines with status, address, hostname, location, processor, memory, storage and system, and the details of one machine on the right">
 
 </div>
 
@@ -144,10 +144,11 @@ On Linux, `./install.sh` in the extracted release folder copies the program to `
 
 `How to use` in the toolbar has the animated tutorial, the spreadsheet format, what each status means and buttons to open the report, history and log folders.
 
-**Command line.** Collect and export without the interface (private key only):
+**Command line.** Collect and export without the interface. Use `--key`, or a password from the `INVENUX_SSH_PASSWORD` environment variable or `--ask-password` (asked without echo); there is no password option, so it never shows in the process list or shell history:
 
 ```sh
 python3 app.py --input machines.xlsx --user inventory --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
+python3 app.py --input machines.xlsx --user inventory --ask-password
 ```
 
 ## The spreadsheet
@@ -197,7 +198,7 @@ Folders from the old name (`invent-ssh`) are copied over on the first run.
 - The SSH password is never written to disk.
 - Host keys use trust on first use by default: a new key is stored, a changed key is rejected. Turn it off in the SSH panel to accept only keys already known.
 - Spreadsheet exports neutralize values that start like a formula; the HTML report escapes every collected value.
-- No telemetry. Besides SSH to the machines you list, the only request is a read of the latest release from the GitHub API on startup (`api.github.com/repos/lucaswotta/invenux/releases/latest`); turn it off in the help sheet. Updates are checked against the release's `SHA256SUMS` before they are opened or installed.
+- No telemetry. Besides SSH to the machines you list, the only request is a read of the latest release from the GitHub API on startup (`api.github.com/repos/lucaswotta/invenux/releases/latest`); turn it off in About and settings. Updates are checked against the release's `SHA256SUMS` before they are opened or installed.
 
 Report vulnerabilities privately, see [SECURITY.md](SECURITY.md).
 

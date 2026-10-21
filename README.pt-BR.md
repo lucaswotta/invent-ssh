@@ -62,11 +62,11 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 | **Snapshots** | Histórico local de cada coleta com comparação campo a campo, exportável em CSV. |
 | **Exportação** | Excel (resumo com barras de proporção, inventário agrupado por assunto), HTML interativo que funciona offline, CSV com proteção contra fórmulas. |
 | **Interface** | Português, inglês e espanhol, seguindo o idioma do sistema; guia embutido com tutorial animado; redimensionável até 720 × 520. |
-| **Desktop** | Janela nativa no Linux, Windows e macOS (pywebview ou GTK), ou o navegador; pacotes prontos para os três sistemas; tema claro e escuro; versão na barra lateral e atualização com um clique quando sai versão nova. |
+| **Desktop** | Janela nativa no Linux, Windows e macOS (pywebview ou GTK), ou o navegador; pacotes prontos para os três sistemas; janela Sobre e ajustes (rodapé da barra lateral ou nome do app) com idioma, tema claro ou escuro, versão e atualização com um clique quando sai versão nova. |
 
 <div align="center">
 
-<img src="docs/media/hero-pt-br.png" width="900" alt="Visão Coleta: 24 máquinas com status, endereço, hostname, local, processador, memória, armazenamento, sistema e horário da coleta, e os detalhes de uma máquina à direita">
+<img src="docs/media/hero-pt-br.png" width="900" alt="Visão Coleta: 24 máquinas com status, endereço, hostname, local, processador, memória, armazenamento e sistema, e os detalhes de uma máquina à direita">
 
 </div>
 
@@ -144,10 +144,11 @@ No Linux, `./install.sh` na pasta extraída da release copia o programa para `~/
 
 O botão `Como usar` tem o tutorial animado, o formato da planilha, o significado de cada status e botões para abrir as pastas de relatórios, histórico e logs.
 
-**Linha de comando.** Coleta e exporta sem interface (só com chave privada):
+**Linha de comando.** Coleta e exporta sem interface. Use `--key`, ou a senha pela variável de ambiente `INVENUX_SSH_PASSWORD` ou por `--ask-password` (pergunta sem mostrar o que é digitado); não existe opção de senha, para ela nunca aparecer na lista de processos nem no histórico do shell:
 
 ```sh
 python3 app.py --input maquinas.xlsx --user inventario --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
+python3 app.py --input maquinas.xlsx --user inventario --ask-password
 ```
 
 ## A planilha
@@ -197,7 +198,7 @@ As pastas do nome antigo (`invent-ssh`) são copiadas na primeira execução.
 - A senha SSH nunca é gravada em disco.
 - As chaves de host usam confiança no primeiro acesso por padrão: chave nova é guardada, chave trocada é recusada. Desligue no painel SSH para aceitar só chaves já conhecidas.
 - As exportações em planilha neutralizam valores que começam como fórmula; o relatório HTML escapa cada valor coletado.
-- Sem telemetria. Além do SSH para as máquinas da sua lista, o único acesso é a leitura da última release na API do GitHub ao abrir (`api.github.com/repos/lucaswotta/invenux/releases/latest`); desligue na tela de ajuda. Atualizações são conferidas com o `SHA256SUMS` da release antes de abrir ou instalar.
+- Sem telemetria. Além do SSH para as máquinas da sua lista, o único acesso é a leitura da última release na API do GitHub ao abrir (`api.github.com/repos/lucaswotta/invenux/releases/latest`); desligue em Sobre e ajustes. Atualizações são conferidas com o `SHA256SUMS` da release antes de abrir ou instalar.
 
 Vulnerabilidades devem ser reportadas em privado, veja [SECURITY.md](SECURITY.md).
 
