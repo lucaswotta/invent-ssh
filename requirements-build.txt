@@ -4,3 +4,6 @@ pyinstaller>=6.10,<7.0
 # Linux distributions differ too much, so the package carries Qt WebEngine.
 pywebview>=6.2,<7.0; sys_platform != "linux"
 pywebview[pyside6]>=6.2,<7.0; sys_platform == "linux"
+# cryptography 49+ ships no macOS Intel wheel; a source build links Homebrew's
+# OpenSSL and fails to load next to the older libssl of the bundled Python.
+cryptography<49; sys_platform == "darwin" and platform_machine == "x86_64"
