@@ -47,7 +47,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
+        # ubuntu-22.04 as in release.yml: the oldest glibc the Linux package supports.
+        os: [ubuntu-22.04, windows-latest, macos-latest, macos-15-intel]
 
     steps:
       - name: Check out repository
@@ -98,3 +99,34 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  linux-on-newer-system:
+    name: Linux package on ubuntu-24.04
+    # A bundle built on 22.04 must still open where Mesa and GLib are newer.
+    needs: native-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install a virtual display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libegl1 libgl1
+
+      - name: Download the Linux package
+        uses: actions/download-artifact@v4
+        with:
+          name: invenux-Linux-X64
+          path: dist
+
+      - name: Open the window and check the UI loads
+        run: |
+          version=$(python -c "import build; print(build.read_app_version())")
+          app="dist/invenux-v${version}/invenux-v${version}"
+          # Artifacts drop the execute bit; the release .tar.xz keeps it.
+          chmod +x "$app" "dist/invenux-v${version}/_internal/PySide6/Qt/libexec/QtWebEngineProcess"
+          xvfb-run -a python scripts/smoke_window.py "$app"
