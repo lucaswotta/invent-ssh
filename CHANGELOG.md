@@ -2,34 +2,28 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
-## [0.8.2] — 2026-10-20
+## [0.9.0] — 2026-10-20
 
-### Fixed
-
-- The Linux package aborted at start on systems newer than its Ubuntu 22.04 build machine (seen on Debian 13): the bundled `libstdc++`, `libgcc_s` and `libgbm` kept Mesa's EGL from loading, and the bundled GLib could not load the system's GIO modules. The package now uses the system copies of these libraries. CI opens the Linux package built on 22.04 on an Ubuntu 24.04 runner.
-
- — 2026-10-20
-
-### Fixed
-
-- The macOS Intel package closed right after opening: `cryptography` 49 and later have no Intel wheel, so the build compiled it against Homebrew's OpenSSL, which does not load next to the OpenSSL bundled with Python. The Intel build pins `cryptography` below 49. The 0.7.0 Intel package has the same defect, and 0.8.0 shipped without one.
-
- — 2026-10-20
+Versions 0.8.0 to 0.8.2 were published for a few hours on 2026-10-20 and are folded into this release.
 
 ### Added
 
+- The version shows in the sidebar and in the help sheet. On startup Invenux asks the GitHub releases API whether a newer version exists; the help sheet turns this off. "Update to X" downloads the package for this system and checks it against `SHA256SUMS`: a Linux package installed with `install.sh` is replaced in place, Windows opens the new `.exe` and macOS shows the downloaded `.zip`.
+- Light theme. The sidebar offers System, Light and Dark; System follows the operating system.
 - Release packages open their own window instead of a browser tab: WebView2 on Windows, WebKit on macOS and a bundled Qt WebEngine on Linux. Closing the window stops the program.
 - `install.sh` in the Linux package installs the program, menu entry and icon for the current user; `--uninstall` removes them.
 - Optional `USER` and `PASSWORD` columns in the target spreadsheet for machines whose SSH access differs from the SSH panel; empty cells use the panel. Passwords stay in the collector's memory and never reach the table, reports, snapshots or logs, and dropped spreadsheets are copied with owner-only permissions.
-- CI opens each package and checks it shows its own window instead of falling back to the browser; on Linux it also checks that the interface loads.
+- CI opens every package and checks it shows its own window; the Linux package built on Ubuntu 22.04 is also opened on Ubuntu 24.04, and macOS Intel is built on every push.
 
 ### Changed
 
-- The Linux package is a folder compressed as `.tar.xz` (about 135 MB, because of Qt WebEngine) and the macOS app is no longer a single self-extracting executable, so both start without unpacking to a temporary folder.
+- The Linux package is a folder compressed as `.tar.xz` (about 140 MB, because of Qt WebEngine) and the macOS app is no longer a single self-extracting executable, so both start without unpacking to a temporary folder.
 - README screenshots and GIFs show the page clock at the same fixed time as the demo data.
 
 ### Fixed
 
+- The Linux package uses the system's `libstdc++`, `libgcc_s`, `libgbm` and GLib. Copies from the Ubuntu 22.04 build machine kept Mesa's EGL from loading on newer systems such as Debian 13, and the window aborted.
+- The macOS Intel package closed right after opening: `cryptography` 49 and later have no Intel wheel, and a source build linked Homebrew's OpenSSL. The Intel build pins `cryptography` below 49. The 0.7.0 Intel package had the same defect and was removed from that release.
 - The first-run screen, tutorial and help sheet still said "Invent-SSH".
 - The Linux menu entry matched the window class with the wrong case (`Invenux` instead of `invenux`) and declared two main categories.
 
