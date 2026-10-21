@@ -62,11 +62,11 @@ Sin agente y de solo lectura: no se instala ni se escribe nada en los equipos.
 | **Instantáneas** | Historial local de cada recopilación con comparación campo a campo, exportable a CSV. |
 | **Exportación** | Excel (resumen con barras de proporción, inventario agrupado por tema), HTML interactivo que funciona sin conexión, CSV protegido contra fórmulas. |
 | **Interfaz** | Español, inglés y portugués, según el idioma del sistema; guía integrada con tutorial animado; redimensionable hasta 720 × 520. |
-| **Escritorio** | Ventana nativa en Linux, Windows y macOS (pywebview o GTK), o el navegador; paquetes listos para los tres sistemas; tema claro y oscuro; la versión en la barra lateral y actualización con un clic cuando sale una versión nueva. |
+| **Escritorio** | Ventana nativa en Linux, Windows y macOS (pywebview o GTK), o el navegador; paquetes listos para los tres sistemas; ventana Acerca de y ajustes (pie de la barra lateral o el nombre de la app) con idioma, tema claro u oscuro, la versión y actualización con un clic cuando sale una versión nueva. |
 
 <div align="center">
 
-<img src="docs/media/hero-es.png" width="900" alt="Vista Recopilación: 24 equipos con estado, dirección, hostname, ubicación, procesador, memoria, almacenamiento, sistema y hora de la recopilación, y los detalles de un equipo a la derecha">
+<img src="docs/media/hero-es.png" width="900" alt="Vista Recopilación: 24 equipos con estado, dirección, hostname, ubicación, procesador, memoria, almacenamiento y sistema, y los detalles de un equipo a la derecha">
 
 </div>
 
@@ -144,10 +144,11 @@ En Linux, `./install.sh` en la carpeta extraída de la release copia el programa
 
 El botón `Cómo usar` tiene el tutorial animado, el formato de la hoja, el significado de cada estado y botones para abrir las carpetas de informes, historial y registros.
 
-**Línea de comandos.** Recopila y exporta sin interfaz (solo con clave privada):
+**Línea de comandos.** Recopila y exporta sin interfaz. Use `--key`, o la contraseña con la variable de entorno `INVENUX_SSH_PASSWORD` o con `--ask-password` (la pide sin mostrarla); no hay opción de contraseña, así nunca aparece en la lista de procesos ni en el historial del shell:
 
 ```sh
 python3 app.py --input equipos.xlsx --user inventario --key ~/.ssh/id_ed25519 --ssh-port 22 --output-format XLSX
+python3 app.py --input equipos.xlsx --user inventario --ask-password
 ```
 
 ## La hoja
@@ -197,7 +198,7 @@ Las carpetas del nombre anterior (`invent-ssh`) se copian en la primera ejecuci�
 - La contraseña SSH nunca se escribe en disco.
 - Las claves de host usan confianza en el primer acceso por defecto: una clave nueva se guarda, una clave cambiada se rechaza. Desactívelo en el panel SSH para aceptar solo claves ya conocidas.
 - Las exportaciones a hoja de cálculo neutralizan valores que empiezan como fórmula; el informe HTML escapa cada valor recopilado.
-- Sin telemetría. Aparte del SSH a los equipos de su lista, el único acceso es la lectura de la última versión en la API de GitHub al abrir (`api.github.com/repos/lucaswotta/invenux/releases/latest`); se desactiva en la pantalla de ayuda. Las actualizaciones se verifican con el `SHA256SUMS` de la versión antes de abrirlas o instalarlas.
+- Sin telemetría. Aparte del SSH a los equipos de su lista, el único acceso es la lectura de la última versión en la API de GitHub al abrir (`api.github.com/repos/lucaswotta/invenux/releases/latest`); se desactiva en Acerca de y ajustes. Las actualizaciones se verifican con el `SHA256SUMS` de la versión antes de abrirlas o instalarlas.
 
 Las vulnerabilidades se reportan en privado, vea [SECURITY.md](SECURITY.md).
 

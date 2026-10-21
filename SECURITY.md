@@ -16,7 +16,7 @@ For a suspected vulnerability, contact the maintainer privately through the cont
 - Reports and logs may contain infrastructure identifiers and should be protected appropriately.
 - Spreadsheet exports neutralize formula-like values; HTML exports escape target-provided and user-supplied fields.
 - `PASSWORD` cells in the target spreadsheet are kept in memory only and never written to records, reports, snapshots or logs; the spreadsheet itself holds them in plain text. Copies of dropped spreadsheets are written with owner-only permissions.
-- On startup the app reads the latest release from the GitHub API unless the check is turned off in the help sheet. An update package is verified against the release's `SHA256SUMS` before it is opened or installed; the packages are not code-signed, so this protects against corruption and partial downloads, not against a compromised release.
+- On startup the app reads the latest release from the GitHub API unless the check is turned off in About and settings. An update package is verified against the release's `SHA256SUMS` before it is opened or installed; the packages are not code-signed, so this protects against corruption and partial downloads, not against a compromised release.
 
 ## Limitations
 
