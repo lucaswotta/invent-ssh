@@ -62,7 +62,7 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
 | **Snapshots** | Histórico local de cada coleta com comparação campo a campo, exportável em CSV. |
 | **Exportação** | Excel (resumo com barras de proporção, inventário agrupado por assunto), HTML interativo que funciona offline, CSV com proteção contra fórmulas. |
 | **Interface** | Português, inglês e espanhol, seguindo o idioma do sistema; guia embutido com tutorial animado; redimensionável até 720 × 520. |
-| **Desktop** | Janela nativa no Linux, Windows e macOS (pywebview ou GTK), ou o navegador; pacotes prontos para os três sistemas. |
+| **Desktop** | Janela nativa no Linux, Windows e macOS (pywebview ou GTK), ou o navegador; pacotes prontos para os três sistemas; tema claro e escuro; versão na barra lateral e atualização com um clique quando sai versão nova. |
 
 <div align="center">
 
@@ -86,6 +86,14 @@ Sem agente e só leitura: nada é instalado ou gravado nas máquinas.
   <tr>
     <td align="center">Primeiro uso</td>
     <td align="center">Guia embutido</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/light-pt-br.png" alt="Visão Parque no tema claro"></td>
+    <td width="50%"><img src="docs/media/narrow-pt-br.png" alt="Visão Coleta numa janela de 760 px, com os detalhes abaixo da tabela"></td>
+  </tr>
+  <tr>
+    <td align="center">Tema claro</td>
+    <td align="center">Janela estreita</td>
   </tr>
 </table>
 
@@ -122,7 +130,7 @@ A janela usa o [pywebview](https://pywebview.flowrl.com/) quando ele está insta
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.8.2
+python3 build.py                   # dist/invenux-v0.9.0
 ```
 
 No Linux, `./install.sh` na pasta extraída da release copia o programa para `~/.local/lib/invenux`, cria o link `~/.local/bin/invenux` e adiciona o atalho e o ícone no menu, sem sudo. `./install.sh --uninstall` remove tudo e mantém histórico e relatórios.
@@ -189,7 +197,7 @@ As pastas do nome antigo (`invent-ssh`) são copiadas na primeira execução.
 - A senha SSH nunca é gravada em disco.
 - As chaves de host usam confiança no primeiro acesso por padrão: chave nova é guardada, chave trocada é recusada. Desligue no painel SSH para aceitar só chaves já conhecidas.
 - As exportações em planilha neutralizam valores que começam como fórmula; o relatório HTML escapa cada valor coletado.
-- Sem telemetria e sem acesso à rede além do SSH para as máquinas da sua lista.
+- Sem telemetria. Além do SSH para as máquinas da sua lista, o único acesso é a leitura da última release na API do GitHub ao abrir (`api.github.com/repos/lucaswotta/invenux/releases/latest`); desligue na tela de ajuda. Atualizações são conferidas com o `SHA256SUMS` da release antes de abrir ou instalar.
 
 Vulnerabilidades devem ser reportadas em privado, veja [SECURITY.md](SECURITY.md).
 
@@ -225,7 +233,7 @@ Sim, veja a linha de comando acima. Ela exige chave privada.
 
 ## Próximos passos
 
-O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): instaladores assinados, agente SSH e jump host, porta SSH por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots, tema claro e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
+O trabalho planejado e os problemas conhecidos estão nas [issues](https://github.com/lucaswotta/invenux/issues): instaladores assinados, agente SSH e jump host, porta SSH por máquina, coletas agendadas com relatório de mudanças, comparação entre quaisquer dois snapshots e acessibilidade. Comentários e pull requests em qualquer uma delas são bem-vindos.
 
 ## Contribuir
 

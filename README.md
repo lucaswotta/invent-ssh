@@ -62,7 +62,7 @@ Agentless and read-only: nothing is installed or written on the machines.
 | **Snapshots** | Local history of every collection with a field-by-field comparison, exportable to CSV. |
 | **Exports** | Excel (summary with data bars, inventory grouped by subject), interactive HTML that works offline, CSV with formula injection neutralized. |
 | **Interface** | English, Portuguese (Brazil) and Spanish, following the system language; built-in guide with an animated tutorial; resizable down to 720 × 520. |
-| **Desktop** | Native window on Linux, Windows and macOS (pywebview or GTK), or your browser; packaged builds for the three systems. |
+| **Desktop** | Native window on Linux, Windows and macOS (pywebview or GTK), or your browser; packaged builds for the three systems; light and dark themes; the version in the sidebar and a one-click update to a newer release. |
 
 <div align="center">
 
@@ -86,6 +86,14 @@ Agentless and read-only: nothing is installed or written on the machines.
   <tr>
     <td align="center">First run</td>
     <td align="center">Built-in guide</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/light-en.png" alt="Fleet view in the light theme"></td>
+    <td width="50%"><img src="docs/media/narrow-en.png" alt="Collection view in a 760 px wide window, with the details below the table"></td>
+  </tr>
+  <tr>
+    <td align="center">Light theme</td>
+    <td align="center">Narrow window</td>
   </tr>
 </table>
 
@@ -122,7 +130,7 @@ The window uses [pywebview](https://pywebview.flowrl.com/) when it is installed,
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.8.2
+python3 build.py                   # dist/invenux-v0.9.0
 ```
 
 On Linux, `./install.sh` in the extracted release folder copies the program to `~/.local/lib/invenux`, links `~/.local/bin/invenux` and adds the menu entry and icon, without sudo. `./install.sh --uninstall` removes them and keeps history and reports.
@@ -189,7 +197,7 @@ Folders from the old name (`invent-ssh`) are copied over on the first run.
 - The SSH password is never written to disk.
 - Host keys use trust on first use by default: a new key is stored, a changed key is rejected. Turn it off in the SSH panel to accept only keys already known.
 - Spreadsheet exports neutralize values that start like a formula; the HTML report escapes every collected value.
-- No telemetry and no network request besides SSH to the machines you list.
+- No telemetry. Besides SSH to the machines you list, the only request is a read of the latest release from the GitHub API on startup (`api.github.com/repos/lucaswotta/invenux/releases/latest`); turn it off in the help sheet. Updates are checked against the release's `SHA256SUMS` before they are opened or installed.
 
 Report vulnerabilities privately, see [SECURITY.md](SECURITY.md).
 
@@ -225,7 +233,7 @@ Yes, see the command line above. It needs a private key.
 
 ## Roadmap
 
-Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): signed installers, SSH agent and jump host, per-machine SSH port, scheduled collections with a change report, comparing any two snapshots, a light theme and accessibility. Comments and pull requests on any of them are welcome.
+Planned work and known problems are tracked as [issues](https://github.com/lucaswotta/invenux/issues): signed installers, SSH agent and jump host, per-machine SSH port, scheduled collections with a change report, comparing any two snapshots and accessibility. Comments and pull requests on any of them are welcome.
 
 ## Contributing
 

@@ -63,6 +63,8 @@ async function openBrowser(profile, port) {
     (await send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true })).result?.result?.value;
   await send("Emulation.setDeviceMetricsOverride", { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1.5, mobile: false });
   await send("Page.enable");
+  // The interface follows the system theme; README media use the dark brand look.
+  await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: "dark" }] });
   // demo_server.py pins the app clock at 10:42; shift the page clock the same way so
   // "collected N ago" stays in minutes instead of the gap to the real time of day.
   const pinned = new Date();
@@ -179,6 +181,10 @@ async function capture(language, index) {
   await evaluate(`switchView("dashboard", document.querySelectorAll("#main-nav .nav-btn")[1])`);
   await sleep(500);
   await shot("fleet");
+  await evaluate(`changeTheme("light")`);
+  await sleep(400);
+  await shot("light");
+  await evaluate(`changeTheme("system")`);
   await evaluate(`switchView("scan", document.querySelectorAll("#main-nav .nav-btn")[0]); openHelp()`);
   await sleep(3700);
   await shot("help");
