@@ -29,12 +29,12 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
 
       - name: Compile Python modules
-        run: python -m compileall -q app.py core.py inspector.py reporting.py snapshots.py i18n.py paths.py build.py scripts tests
+        run: python -m compileall -q app.py core.py inspector.py reporting.py snapshots.py i18n.py paths.py updates.py build.py scripts tests
 
       - name: Check Python lint (undefined and unused names)
         run: |
           python -m pip install ruff
-          ruff check --select F app.py core.py inspector.py reporting.py snapshots.py i18n.py paths.py build.py scripts tests
+          ruff check --select F app.py core.py inspector.py reporting.py snapshots.py i18n.py paths.py updates.py build.py scripts tests
 
       - name: Run regression tests
         run: python -m unittest discover -s tests -v

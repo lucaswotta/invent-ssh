@@ -102,21 +102,29 @@ def get_snapshots_db_path() -> Path:
     return get_user_data_dir() / "snapshots.db"
 
 
-def get_documents_dir() -> Path:
+def _user_dir(xdg_key: str, default_name: str) -> Path:
     home = Path.home()
     if platform.system() == "Linux":
-        # Localized desktops rename Documents (for example ~/Documentos);
-        # xdg-user-dirs records the real folder in user-dirs.dirs.
+        # Localized desktops rename these folders (for example ~/Documentos);
+        # xdg-user-dirs records the real ones in user-dirs.dirs.
         user_dirs = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config") / "user-dirs.dirs"
         try:
             for line in user_dirs.read_text(encoding="utf-8").splitlines():
-                if line.startswith("XDG_DOCUMENTS_DIR="):
+                if line.startswith(f"{xdg_key}="):
                     value = line.split("=", 1)[1].strip().strip('"').replace("$HOME", str(home))
                     if value and Path(value) != home:
                         return Path(value)
         except OSError:
             pass
-    return home / "Documents"
+    return home / default_name
+
+
+def get_documents_dir() -> Path:
+    return _user_dir("XDG_DOCUMENTS_DIR", "Documents")
+
+
+def get_downloads_dir() -> Path:
+    return _user_dir("XDG_DOWNLOAD_DIR", "Downloads")
 
 
 def get_reports_dir() -> Path:
