@@ -958,6 +958,7 @@ TEMPLATE_TEXT = {
             ("NOTES", False, "Free text."),
         ],
         "tips": "Save as .xlsx or .csv (comma or semicolon). Rows without an address and repeated addresses are skipped and listed after loading.",
+        "access": "Machines with a different SSH user or password: add a USER and/or PASSWORD column and fill only those rows; empty cells use the SSH panel. Passwords are plain text in this file, so keep it safe; Invenux keeps them in memory only and never writes them to reports or snapshots.",
         "samples": [
             ["192.0.2.10", "srv-app-01", "HQ · Rack B2", "ASSET-0104", "Infrastructure", "Main server"],
             ["192.0.2.21", "pos-01", "Branch 04 · Front", "ASSET-0419", "Operations", "Linux terminal"],
@@ -976,6 +977,7 @@ TEMPLATE_TEXT = {
             ("NOTES", False, "Texto livre."),
         ],
         "tips": "Salve em .xlsx ou .csv (vírgula ou ponto e vírgula). Linhas sem IP e IPs repetidos são ignorados e listados depois de carregar.",
+        "access": "Máquinas com usuário ou senha SSH diferentes: acrescente uma coluna USER e/ou PASSWORD e preencha só essas linhas; células vazias usam o painel SSH. A senha fica em texto puro neste arquivo, então guarde-o com cuidado; o Invenux a mantém só na memória e nunca a grava em relatórios ou snapshots.",
         "samples": [
             ["192.0.2.10", "srv-app-01", "Matriz · Rack B2", "PAT-0104", "Infraestrutura", "Servidor principal"],
             ["192.0.2.21", "pdv-01", "Filial 04 · Frente", "PAT-0419", "Operações", "Terminal Linux"],
@@ -994,6 +996,7 @@ TEMPLATE_TEXT = {
             ("NOTES", False, "Texto libre."),
         ],
         "tips": "Guarde en .xlsx o .csv (coma o punto y coma). Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar.",
+        "access": "Equipos con usuario o contraseña SSH distintos: agregue una columna USER y/o PASSWORD y complete solo esas filas; las celdas vacías usan el panel SSH. La contraseña queda en texto plano en este archivo, así que guárdelo con cuidado; Invenux solo la mantiene en memoria y nunca la escribe en informes ni instantáneas.",
         "samples": [
             ["192.0.2.10", "srv-app-01", "Sede central · Rack B2", "ACT-0104", "Infraestructura", "Servidor principal"],
             ["192.0.2.21", "tpv-01", "Sucursal 04 · Frente", "ACT-0419", "Operaciones", "Terminal Linux"],
@@ -1067,6 +1070,8 @@ def create_template_workbook(destination: str | Path, language: str = "pt-br") -
     tips_row = 7 + len(text["rows"])
     guide[f"B{tips_row}"] = text["tips"]
     guide[f"B{tips_row}"].font = Font(name=_FONT, size=10, color=_MUTED)
+    guide[f"B{tips_row + 1}"] = text["access"]
+    guide[f"B{tips_row + 1}"].font = Font(name=_FONT, size=10, color=_MUTED)
     wb.save(path)
     wb.close()
     return path

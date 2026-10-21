@@ -264,6 +264,12 @@ class InventoryController:
             notes.append(t("app_rows_without_target", rows=_row_list(summary["rows_without_target"])))
         if summary["duplicate_rows"]:
             notes.append(t("app_duplicate_rows", rows=_row_list(summary["duplicate_rows"])))
+        if summary["credential_columns"]:
+            notes.append(t(
+                "app_sheet_credentials",
+                users=summary["hosts_with_user"],
+                passwords=summary["hosts_with_password"],
+            ))
         with self.lock:
             self.config["filepath"] = str(resolved)
             self._persist_non_secret_config()
@@ -280,7 +286,11 @@ class InventoryController:
         upload_dir.mkdir(parents=True, exist_ok=True)
         dest = upload_dir / safe_name
         raw = base64.b64decode(content_base64)
-        dest.write_bytes(raw)
+        # The copy may hold PASSWORD cells, so only the current user can read it.
+        fd = os.open(dest, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(raw)
+        os.chmod(dest, 0o600)
         return self.load_targets(str(dest))
 
     def create_template(self, destination: Path | None = None) -> Path:
@@ -340,12 +350,8 @@ class InventoryController:
             if not filepath or not Path(filepath).expanduser().is_file():
                 raise ValueError(t("app_select_targets_first"))
             ssh_user = str(self.config.get("ssh_user", "")).strip()
-            if not ssh_user:
-                raise ValueError(t("app_ssh_user_required"))
             ssh_key = str(self.config.get("ssh_key_path", "")).strip()
             ssh_pass = str(self.config.get("ssh_pass", ""))
-            if not ssh_key and not ssh_pass:
-                raise ValueError(t("app_ssh_auth_required"))
             if ssh_key and not Path(ssh_key).expanduser().is_file():
                 raise ValueError(t("app_ssh_key_not_found", path=ssh_key))
 
@@ -359,6 +365,7 @@ class InventoryController:
             terminals = engine._load_from_spreadsheet()
             if not terminals:
                 raise ValueError(t("app_no_valid_targets"))
+            _check_access(terminals, engine.credentials, ssh_user, bool(ssh_key or ssh_pass))
 
             self.records = [_serialize_record(asdict(term)) for term in terminals]
             self.scanning = True
@@ -443,6 +450,24 @@ def _valid_port(value: Any) -> int:
     except (TypeError, ValueError):
         return 22
     return port if 1 <= port <= 65535 else 22
+
+
+def _check_access(
+    terminals: list[Any], credentials: dict[str, dict[str, str]], panel_user: str, panel_auth: bool
+) -> None:
+    """Every machine needs a user and a password or key, from the SSH panel or its own row."""
+    if not panel_user:
+        missing = [term.ip for term in terminals if not credentials.get(term.ip, {}).get("user")]
+        if len(missing) == len(terminals):
+            raise ValueError(t("app_ssh_user_required"))
+        if missing:
+            raise ValueError(t("app_ssh_user_missing_rows", count=len(missing), hosts=", ".join(missing[:3])))
+    if not panel_auth:
+        missing = [term.ip for term in terminals if not credentials.get(term.ip, {}).get("password")]
+        if len(missing) == len(terminals):
+            raise ValueError(t("app_ssh_auth_required"))
+        if missing:
+            raise ValueError(t("app_ssh_auth_missing_rows", count=len(missing), hosts=", ".join(missing[:3])))
 
 
 def _row_list(rows: list[int], limit: int = 5) -> str:

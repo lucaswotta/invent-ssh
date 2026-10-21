@@ -37,6 +37,9 @@ class Terminal:
 
 
 _ENDPOINT_ALIASES = ("IP", "HOST", "HOSTNAME", "ADDRESS", "IP_ADDRESS", "ENDPOINT", "TARGET")
+# Per-machine SSH access; these cells override the SSH panel and never reach records.
+_USER_ALIASES = ("USER", "USERNAME", "SSH_USER", "LOGIN", "USUARIO", "USUÁRIO")
+_PASSWORD_ALIASES = ("PASSWORD", "PASS", "SSH_PASSWORD", "SENHA", "CONTRASENA", "CONTRASEÑA")
 
 
 def _normalize_column_name(value: Any) -> str:
@@ -64,6 +67,9 @@ class InventoryEngine:
         self.log_queue = log_queue
         self.terminals: List[Terminal] = []
         self.load_summary: Dict[str, Any] = {}
+        # Address -> {"user": ..., "password": ...} from the spreadsheet. Kept apart from
+        # Terminal so records, reports, snapshots and UI events cannot carry passwords.
+        self.credentials: Dict[str, Dict[str, str]] = {}
         self.logger = logging.getLogger(__name__)
         self.cancel_event = threading.Event()
 
@@ -195,8 +201,16 @@ class InventoryEngine:
         if endpoint_column is None:
             raise ValueError(t("loader_no_target_column"))
         endpoint_index = columns.index(endpoint_column)
+        user_column = next((name for name in _USER_ALIASES if name in columns), None)
+        password_column = next((name for name in _PASSWORD_ALIASES if name in columns), None)
+        credential_indexes = {
+            columns.index(name): key
+            for name, key in ((user_column, "user"), (password_column, "password"))
+            if name is not None
+        }
 
         terminals: List[Terminal] = []
+        credentials: Dict[str, Dict[str, str]] = {}
         seen: set[str] = set()
         rows_without_target: List[int] = []
         duplicate_rows: List[int] = []
@@ -224,17 +238,33 @@ class InventoryEngine:
             seen.add(endpoint)
 
             metadata: Dict[str, Any] = {}
+            access: Dict[str, str] = {}
             for index, column in enumerate(columns):
                 if index == endpoint_index:
                     continue
                 value = _cell_value(values[index])
-                if value is not None and str(value).strip():
+                if value is None or not str(value).strip():
+                    continue
+                if index in credential_indexes:
+                    key = credential_indexes[index]
+                    # Passwords keep their spaces; user names do not.
+                    access[key] = str(value) if key == "password" else str(value).strip()
+                else:
                     metadata[column] = value
             terminals.append(Terminal(ip=endpoint, metadata=metadata))
+            if access:
+                credentials[endpoint] = access
 
+        credential_columns = [name for name in (user_column, password_column) if name is not None]
+        self.credentials = credentials
         self.load_summary = {
             "target_column": endpoint_column,
-            "extra_columns": [name for name in columns if name != endpoint_column],
+            "extra_columns": [
+                name for name in columns if name != endpoint_column and name not in credential_columns
+            ],
+            "credential_columns": credential_columns,
+            "hosts_with_user": sum(1 for access in credentials.values() if "user" in access),
+            "hosts_with_password": sum(1 for access in credentials.values() if "password" in access),
             "rows_without_target": rows_without_target,
             "duplicate_rows": duplicate_rows,
         }
@@ -337,10 +367,11 @@ class InventoryEngine:
             terminal.dta_atualizacao = datetime.now()
             return terminal
 
+        access = self.credentials.get(terminal.ip, {})
         hw_info = get_hardware_info(
             ip=terminal.ip,
-            username=self.config["ssh_user"],
-            password=self.config.get("ssh_pass"),
+            username=access.get("user") or self.config.get("ssh_user", ""),
+            password=access.get("password") or self.config.get("ssh_pass"),
             key_path=self.config.get("ssh_key_path"),
             timeout=timeout,
             port=int(self.config.get("ssh_port", 22)),

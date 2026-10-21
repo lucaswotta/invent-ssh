@@ -74,6 +74,37 @@ class InventoryEngineTests(unittest.TestCase):
         self.assertEqual(engine.load_summary["duplicate_rows"], [4])
         self.assertEqual(engine.load_summary["rows_without_target"], [])
 
+    def test_access_columns_stay_out_of_records_and_override_the_panel(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "assets.csv"
+            path.write_text(
+                "IP;Usuário;Senha;Location\n"
+                "10.0.0.1;pdv; s3cr3t-row ;Loja 1\n"
+                "10.0.0.2;;;Loja 2\n",
+                encoding="utf-8",
+            )
+            engine = self.make_engine(filepath=str(path))
+            calls = {}
+
+            def fake_get_hardware_info(**kwargs):
+                calls[kwargs["ip"]] = (kwargs["username"], kwargs["password"])
+                return {"status": "SUCESSO", "hardware_details": {}}
+
+            with patch.object(self.core, "get_hardware_info", side_effect=fake_get_hardware_info):
+                engine.run_inventory()
+
+        self.assertEqual(calls["10.0.0.1"], ("pdv", " s3cr3t-row "))
+        self.assertEqual(calls["10.0.0.2"], ("inventory-reader", "not-a-real-password"))
+        summary = engine.load_summary
+        self.assertEqual(summary["credential_columns"], ["USUÁRIO", "SENHA"])
+        self.assertEqual(summary["extra_columns"], ["LOCATION"])
+        self.assertEqual((summary["hosts_with_user"], summary["hosts_with_password"]), (1, 1))
+        events = []
+        while not engine.log_queue.empty():
+            events.append(engine.log_queue.get_nowait())
+        self.assertTrue(any(event[0] == "HOST_RESULT" for event in events))
+        self.assertNotIn("s3cr3t-row", repr(events))
+
     def test_loader_reads_xlsx_and_preserves_typed_metadata(self):
         from openpyxl import Workbook
 
