@@ -27,6 +27,7 @@ from urllib.parse import urlparse
 from core import InventoryEngine
 from i18n import SUPPORTED_LANGUAGES, format_decimal, get_language, set_language, system_language, t
 from paths import (
+    external_program_env,
     get_config_path,
     get_documents_dir,
     get_downloads_dir,
@@ -292,7 +293,7 @@ class InventoryController:
                 package.unlink()
                 result = {"state": "installed", "message": t("update_installed", version=info["version"])}
             elif sys.platform == "win32":
-                subprocess.Popen([str(package)])
+                subprocess.Popen([str(package)], env=external_program_env())
                 result = {"state": "launched", "message": t("update_launched", version=info["version"])}
             else:
                 _open_in_file_manager(package.parent)
@@ -539,9 +540,9 @@ def _open_in_file_manager(path: Path) -> None:
     if sys.platform.startswith("win"):
         os.startfile(path)  # type: ignore[attr-defined]
     elif sys.platform == "darwin":
-        subprocess.Popen(["open", str(path)])
+        subprocess.Popen(["open", str(path)], env=external_program_env())
     else:
-        subprocess.Popen(["xdg-open", str(path)])
+        subprocess.Popen(["xdg-open", str(path)], env=external_program_env())
 
 
 def _pick_local_file(title: str, patterns: list[str] | None = None) -> str | None:
@@ -550,7 +551,7 @@ def _pick_local_file(title: str, patterns: list[str] | None = None) -> str | Non
         cmd = ["zenity", "--file-selection", f"--title={title}"]
         if patterns:
             cmd.append(f"--file-filter={' '.join(patterns)}")
-        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True, env=external_program_env())
         if completed.returncode == 0 and completed.stdout.strip():
             return completed.stdout.strip()
         return None
@@ -558,7 +559,7 @@ def _pick_local_file(title: str, patterns: list[str] | None = None) -> str | Non
         cmd = ["kdialog", "--getopenfilename", str(Path.home())]
         if patterns:
             cmd.append(" ".join(patterns))
-        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True, env=external_program_env())
         if completed.returncode == 0 and completed.stdout.strip():
             return completed.stdout.strip()
         return None

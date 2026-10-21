@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from i18n import t
+from paths import external_program_env
 
 LATEST_RELEASE_API = "https://api.github.com/repos/lucaswotta/invenux/releases/latest"
 LINUX_INSTALL_DIR = Path.home() / ".local" / "lib" / "invenux"
@@ -110,7 +111,8 @@ def install_linux_package(archive: Path) -> None:
         if len(folders) != 1:
             raise ValueError(t("update_bad_package", name=archive.name))
         completed = subprocess.run(
-            ["sh", str(folders[0] / "install.sh")], capture_output=True, text=True, check=False
+            ["sh", str(folders[0] / "install.sh")],
+            capture_output=True, text=True, check=False, env=external_program_env(),
         )
         if completed.returncode:
             raise ValueError(t("update_install_failed", error=(completed.stderr or completed.stdout).strip()))
