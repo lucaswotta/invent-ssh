@@ -4,6 +4,17 @@ Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
 ## [0.9.2] — 2026-10-20
 
+### Added
+
+- About and settings, opened from the sidebar footer or the app name: language, theme, version and updates, and what Invenux is built with. Language and theme use segmented controls; the old selects lost their open menu whenever the screen refreshed.
+- Command-line collections take the SSH password from `INVENUX_SSH_PASSWORD` or `--ask-password` (prompted without echo). There is no password option, so it never shows in the process list or shell history; the variable is removed from the environment once read (#12).
+
+### Changed
+
+- Light theme buttons use a soft shadow instead of a dark edge, and an open toolbar menu no longer gets a blue ring.
+- The search field spans the width of the details column below it, with a gray fill in the light theme.
+- The Collected column left the table: every machine of a run shares the same minute. The details pane and the reports keep the date and time.
+
 ### Fixed
 
 - Storage capacity read "128 GB total (1 physical block devices)" in every language. It is now the capacity alone; the disks stay listed in the machine details. Snapshot comparisons ignore the old wording, so the first collection after updating does not mark every machine as changed.
