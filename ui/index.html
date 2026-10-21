@@ -46,6 +46,11 @@
     --bg-input: #1C1C1E;
     --bg-seg-active: #636366;
     --shadow-popover: 0 20px 44px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+    --shadow-control: inset 0 1px 0 var(--specular), 0 1px 1px rgba(0, 0, 0, 0.2);
+    --ring-open: 2px solid rgba(10, 132, 255, 0.45);
+    --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --field-bg: var(--bg-card);
+    --field-border: var(--sep-strong);
     color-scheme: dark;
 
     --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
@@ -58,7 +63,7 @@
     --bg-card: #FFFFFF;
     --bg-card-inner: #F5F5F7;
     --bg-control: #FFFFFF;
-    --bg-control-hover: #F2F2F4;
+    --bg-control-hover: #E9E9EC;
     --bg-selected-row: #007AFF;
 
     --sep-strong: rgba(0, 0, 0, 0.12);
@@ -82,6 +87,12 @@
     --bg-input: #FFFFFF;
     --bg-seg-active: #FFFFFF;
     --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* macOS light controls float on a soft shadow; a 1px dark edge reads as an outline. */
+    --shadow-control: 0 0.5px 2px rgba(0, 0, 0, 0.12), 0 0 0.5px rgba(0, 0, 0, 0.1);
+    --ring-open: none;
+    --shadow-seg: 0 0.5px 1.5px rgba(0, 0, 0, 0.16), 0 0 0.5px rgba(0, 0, 0, 0.1);
+    --field-bg: rgba(0, 0, 0, 0.055);
+    --field-border: transparent;
     color-scheme: light;
   }
 
@@ -169,6 +180,7 @@
     align-items: center;
     gap: 10px;
     padding: 4px 10px 16px;
+    cursor: pointer;
   }
 
   .app-icon {
@@ -344,7 +356,7 @@
     padding: 0 11px;
     border-radius: 7px;
     background: var(--bg-control);
-    box-shadow: inset 0 1px 0 var(--specular), 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-control);
     border: none;
     color: var(--text-primary);
     font-family: inherit;
@@ -361,7 +373,7 @@
 
   .popover-trigger.open {
     background: var(--bg-control-hover);
-    outline: 2px solid rgba(10, 132, 255, 0.45);
+    outline: var(--ring-open);
   }
 
   .popover-trigger .trigger-label {
@@ -396,7 +408,7 @@
     padding: 0 12px;
     border-radius: 7px;
     background: var(--bg-control);
-    box-shadow: inset 0 1px 0 var(--specular), 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-control);
     border: none;
     color: var(--text-primary);
     font-family: inherit;
@@ -620,7 +632,7 @@
   .seg-btn.active {
     background: var(--bg-seg-active);
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-seg);
   }
 
   .seg-btn span {
@@ -673,10 +685,11 @@
 
   .search-input {
     height: 28px;
-    width: 240px;
+    /* Same span as the details column below (340px minus its border and padding). */
+    width: 305px;
     border-radius: 7px;
-    border: 1px solid var(--sep-strong);
-    background: var(--bg-card);
+    border: 1px solid var(--field-border);
+    background: var(--field-bg);
     color: var(--text-primary);
     font-family: inherit;
     font-size: 12.5px;
@@ -1461,20 +1474,120 @@
     .tut-cap { position: static; }
   }
 
-  .lang-select {
-    background: transparent;
+  .about-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2px -6px 0;
+    padding: 4px 6px;
     border: none;
+    border-radius: 6px;
+    background: transparent;
     color: var(--text-secondary);
-    font: inherit;
+    font-family: inherit;
     font-size: 11.5px;
-    text-align: right;
-    max-width: 120px;
     cursor: pointer;
   }
 
-  .lang-select option {
-    background: var(--bg-popover);
+  .about-row:hover {
+    background: rgba(var(--overlay), 0.07);
     color: var(--text-primary);
+  }
+
+  .sheet-narrow {
+    width: min(560px, calc(100vw - 48px));
+  }
+
+  .about-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .about-heading > div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .about-icon,
+  .about-icon svg {
+    width: 44px;
+    height: 44px;
+  }
+
+  .sheet .mini-seg button {
+    height: 24px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .about-sub,
+  .about-license {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .about-license {
+    margin-top: 10px;
+  }
+
+  .pref-grid {
+    display: grid;
+    grid-template-columns: 90px auto;
+    justify-content: start;
+    align-items: center;
+    gap: 10px 12px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  .about-stack {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 4px 12px;
+    font-size: 12.5px;
+    margin: 4px 0 12px;
+  }
+
+  .about-stack dt {
+    color: var(--text-secondary);
+  }
+
+  .about-stack dd {
+    color: var(--text-primary);
+  }
+
+  /* Small macOS segmented control; a native <select> lost its open menu on every state refresh. */
+  .mini-seg {
+    display: inline-flex;
+    flex-shrink: 0;
+    background: rgba(118, 118, 128, 0.2);
+    padding: 1.5px;
+    border-radius: 6px;
+    gap: 1px;
+  }
+
+  .mini-seg button {
+    height: 19px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 4.5px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .mini-seg button:hover {
+    color: var(--text-primary);
+  }
+
+  .mini-seg button.active {
+    background: var(--bg-seg-active);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-seg);
   }
 
   .sheet-header-actions {
@@ -1779,7 +1892,7 @@
 <div class="app-shell">
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="app-brand">
+    <div class="app-brand" role="button" tabindex="0" data-i18n-title="ab.open" onclick="openAbout()" onkeydown="if (event.key === 'Enter') openAbout()">
       <div class="app-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
           <rect x="1" y="1" width="30" height="30" rx="7" fill="#1E1E22"/>
@@ -1835,27 +1948,10 @@
         <span data-i18n="footer.verify">Verificação</span>
         <span id="footer-tofu">TOFU</span>
       </div>
-      <div class="sidebar-footer-row">
-        <span data-i18n="footer.language">Idioma</span>
-        <select class="lang-select" aria-label="Idioma" data-i18n-title="footer.language" onchange="changeLanguage(this.value)">
-          <option value="auto" class="lang-auto">Automático</option>
-          <option value="pt-br">Português (Brasil)</option>
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
-      </div>
-      <div class="sidebar-footer-row">
-        <span data-i18n="footer.theme">Tema</span>
-        <select class="lang-select theme-select" aria-label="Tema" data-i18n-title="footer.theme" onchange="changeTheme(this.value)">
-          <option value="system" data-i18n="theme.system">Do sistema</option>
-          <option value="light" data-i18n="theme.light">Claro</option>
-          <option value="dark" data-i18n="theme.dark">Escuro</option>
-        </select>
-      </div>
-      <div class="sidebar-footer-row">
-        <span data-i18n="footer.version">Versão</span>
+      <button type="button" class="about-row" onclick="openAbout()">
+        <span data-i18n="ab.open">Sobre e ajustes</span>
         <span id="footer-version"></span>
-      </div>
+      </button>
       <button id="update-button" class="update-pill" hidden onclick="installUpdate()"></button>
     </div>
   </aside>
@@ -2048,12 +2144,11 @@
                 <th style="width: 10%;" data-i18n="col.status">Status</th>
                 <th style="width: 11%;" data-i18n="col.ip">Endereço IP</th>
                 <th style="width: 12%;" data-i18n="col.hostname">Hostname</th>
-                <th style="width: 9%;" data-i18n="col.location">Local</th>
-                <th style="width: 16%;" data-i18n="col.cpu">Processador</th>
+                <th style="width: 10%;" data-i18n="col.location">Local</th>
+                <th style="width: 21%;" data-i18n="col.cpu">Processador</th>
                 <th style="width: 9%;" data-i18n="col.memory">Memória</th>
-                <th style="width: 11%;" data-i18n="col.storage">Armazenamento</th>
-                <th style="width: 11%;" data-i18n="col.system">Sistema</th>
-                <th style="width: 11%;" data-i18n="col.collected" data-i18n-title="col.collected_title">Coletado</th>
+                <th style="width: 12%;" data-i18n="col.storage">Armazenamento</th>
+                <th style="width: 15%;" data-i18n="col.system">Sistema</th>
               </tr>
             </thead>
             <tbody id="hosts-tbody"></tbody>
@@ -2179,12 +2274,6 @@
     <div class="sheet-header">
       <span id="help-title" class="sheet-title" data-i18n="hp.title">Como usar o Invenux</span>
       <div class="sheet-header-actions">
-        <select class="lang-select" aria-label="Idioma" data-i18n-title="footer.language" onchange="changeLanguage(this.value)">
-          <option value="auto" class="lang-auto">Automático</option>
-          <option value="pt-br">Português (Brasil)</option>
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
         <button class="btn btn-small" onclick="closeHelp()" data-i18n="hp.close">Fechar</button>
       </div>
     </div>
@@ -2263,17 +2352,70 @@
         <li data-i18n-html="hp.st_error"></li>
       </ul>
     </section>
+  </div>
+</div>
+
+<div id="about-sheet" class="sheet-backdrop" onclick="if (event.target === this) closeAbout()">
+  <div class="sheet sheet-narrow" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div class="sheet-header">
+      <div class="about-heading">
+        <div class="about-icon" aria-hidden="true"></div>
+        <div>
+          <span id="about-title" class="sheet-title">Invenux</span>
+          <span id="about-version" class="about-sub"></span>
+        </div>
+      </div>
+      <div class="sheet-header-actions">
+        <button class="btn btn-small" onclick="closeAbout()" data-i18n="hp.close">Fechar</button>
+      </div>
+    </div>
+    <section class="sheet-section">
+      <h4 data-i18n="ab.prefs">Preferências</h4>
+      <div class="pref-grid">
+        <span data-i18n="footer.language">Idioma</span>
+        <div class="mini-seg" role="radiogroup" data-pref="language" data-i18n-title="footer.language">
+          <button type="button" data-value="auto" class="lang-auto" data-i18n="pref.auto">Auto</button>
+          <button type="button" data-value="pt-br" title="Português (Brasil)">PT</button>
+          <button type="button" data-value="en" title="English">EN</button>
+          <button type="button" data-value="es" title="Español">ES</button>
+        </div>
+        <span data-i18n="footer.theme">Tema</span>
+        <div class="mini-seg" role="radiogroup" data-pref="theme" data-i18n-title="footer.theme">
+          <button type="button" data-value="system" data-i18n="pref.auto">Auto</button>
+          <button type="button" data-value="light" data-i18n="theme.light">Claro</button>
+          <button type="button" data-value="dark" data-i18n="theme.dark">Escuro</button>
+        </div>
+      </div>
+    </section>
     <section class="sheet-section">
       <h4 data-i18n="hp.version">Versão e atualizações</h4>
-      <p id="help-version-line"></p>
+      <p id="about-version-line"></p>
       <div class="update-row">
         <button class="btn btn-small" onclick="checkUpdates(true)" data-i18n="up.check_now">Procurar agora</button>
-        <button id="help-update-button" class="btn btn-small btn-primary" hidden onclick="installUpdate()"></button>
+        <button id="about-update-button" class="btn btn-small btn-primary" hidden onclick="installUpdate()"></button>
       </div>
       <label class="checkbox-row">
         <input id="input-check-updates" type="checkbox" checked onchange="toggleUpdateChecks(this.checked)">
         <span data-i18n="up.auto">Procurar versão nova ao abrir (consulta a página de releases no GitHub)</span>
       </label>
+    </section>
+    <section class="sheet-section">
+      <h4 data-i18n="ab.about">Sobre</h4>
+      <p data-i18n="ab.what">Inventário de hardware de máquinas Linux por SSH, sem instalar nada nelas.</p>
+      <p data-i18n="ab.author">Criado por Lucas Motta, analista de sistemas e desenvolvedor.</p>
+      <dl class="about-stack">
+        <dt data-i18n="ab.stack_app">Programa</dt><dd>Python 3 · paramiko (SSH) · SQLite (snapshots)</dd>
+        <dt data-i18n="ab.stack_reports">Relatórios</dt><dd>openpyxl · Pillow · HTML e CSV</dd>
+        <dt data-i18n="ab.stack_ui">Interface</dt><dd data-i18n="ab.stack_ui_value">HTML, CSS e JavaScript, sem framework</dd>
+        <dt data-i18n="ab.stack_window">Janela</dt><dd>pywebview · WebView2 · WebKit · Qt WebEngine</dd>
+        <dt data-i18n="ab.stack_build">Pacotes</dt><dd>PyInstaller · GitHub Actions</dd>
+      </dl>
+      <div class="update-row">
+        <button class="btn btn-small" onclick="openLink('repo')" data-i18n="ab.repo">Repositório no GitHub</button>
+        <button class="btn btn-small" onclick="openLink('issues')" data-i18n="ab.issues">Reportar um problema</button>
+        <button class="btn btn-small" onclick="openLink('author')" data-i18n="ab.profile">Perfil do autor</button>
+      </div>
+      <p class="about-license" data-i18n="ab.license">Código aberto sob a licença MIT.</p>
     </section>
   </div>
 </div>
@@ -2292,9 +2434,23 @@
   "footer.timeout": "Timeout SSH",
   "footer.verify": "Verificação",
   "footer.language": "Idioma",
+  "ab.open": "Sobre e ajustes",
+  "ab.version": "Versão {v}",
+  "ab.prefs": "Preferências",
+  "ab.about": "Sobre",
+  "ab.what": "Inventário de hardware de máquinas Linux por SSH, sem instalar nada nelas.",
+  "ab.author": "Criado por Lucas Motta, analista de sistemas e desenvolvedor.",
+  "ab.stack_app": "Programa",
+  "ab.stack_reports": "Relatórios",
+  "ab.stack_ui": "Interface",
+  "ab.stack_ui_value": "HTML, CSS e JavaScript, sem framework",
+  "ab.stack_window": "Janela",
+  "ab.stack_build": "Pacotes",
+  "ab.repo": "Repositório no GitHub",
+  "ab.issues": "Reportar um problema",
+  "ab.profile": "Perfil do autor",
+  "ab.license": "Código aberto sob a licença MIT.",
   "footer.theme": "Tema",
-  "footer.version": "Versão",
-  "theme.system": "Do sistema",
   "theme.light": "Claro",
   "theme.dark": "Escuro",
   "hp.version": "Versão e atualizações",
@@ -2309,7 +2465,7 @@
   "footer.timeout_value": "{n} segundos",
   "footer.tofu_on": "TOFU ativo",
   "footer.strict": "Estrito",
-  "lang.auto": "Do sistema",
+  "pref.auto": "Auto",
   "lang.auto_title": "Segue o idioma do sistema ({lang})",
   "tb.targets": "Alvos:",
   "tb.targets_empty": "Selecionar lista...",
@@ -2366,8 +2522,6 @@
   "col.memory": "Memória",
   "col.storage": "Armazenamento",
   "col.system": "Sistema",
-  "col.collected": "Coletado",
-  "col.collected_title": "Data e hora da última coleta da máquina",
   "table.no_match": "Nenhuma máquina corresponde ao filtro atual.",
   "st.online": "Online",
   "st.offline": "Offline",
@@ -2545,9 +2699,23 @@
   "footer.timeout": "SSH timeout",
   "footer.verify": "Verification",
   "footer.language": "Language",
+  "ab.open": "About and settings",
+  "ab.version": "Version {v}",
+  "ab.prefs": "Preferences",
+  "ab.about": "About",
+  "ab.what": "Hardware inventory of Linux machines over SSH, without installing anything on them.",
+  "ab.author": "Created by Lucas Motta, systems analyst and developer.",
+  "ab.stack_app": "Program",
+  "ab.stack_reports": "Reports",
+  "ab.stack_ui": "Interface",
+  "ab.stack_ui_value": "HTML, CSS and JavaScript, no framework",
+  "ab.stack_window": "Window",
+  "ab.stack_build": "Packages",
+  "ab.repo": "Repository on GitHub",
+  "ab.issues": "Report a problem",
+  "ab.profile": "Author's profile",
+  "ab.license": "Open source under the MIT license.",
   "footer.theme": "Theme",
-  "footer.version": "Version",
-  "theme.system": "System",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "hp.version": "Version and updates",
@@ -2562,7 +2730,7 @@
   "footer.timeout_value": "{n} seconds",
   "footer.tofu_on": "TOFU on",
   "footer.strict": "Strict",
-  "lang.auto": "System",
+  "pref.auto": "Auto",
   "lang.auto_title": "Follows the system language ({lang})",
   "tb.targets": "Targets:",
   "tb.targets_empty": "Choose list...",
@@ -2619,8 +2787,6 @@
   "col.memory": "Memory",
   "col.storage": "Storage",
   "col.system": "System",
-  "col.collected": "Collected",
-  "col.collected_title": "Date and time of the machine's last collection",
   "table.no_match": "No machine matches the current filter.",
   "st.online": "Online",
   "st.offline": "Offline",
@@ -2798,9 +2964,23 @@
   "footer.timeout": "Límite SSH",
   "footer.verify": "Verificación",
   "footer.language": "Idioma",
+  "ab.open": "Acerca de y ajustes",
+  "ab.version": "Versión {v}",
+  "ab.prefs": "Preferencias",
+  "ab.about": "Acerca de",
+  "ab.what": "Inventario de hardware de equipos Linux por SSH, sin instalar nada en ellos.",
+  "ab.author": "Creado por Lucas Motta, analista de sistemas y desarrollador.",
+  "ab.stack_app": "Programa",
+  "ab.stack_reports": "Informes",
+  "ab.stack_ui": "Interfaz",
+  "ab.stack_ui_value": "HTML, CSS y JavaScript, sin framework",
+  "ab.stack_window": "Ventana",
+  "ab.stack_build": "Paquetes",
+  "ab.repo": "Repositorio en GitHub",
+  "ab.issues": "Reportar un problema",
+  "ab.profile": "Perfil del autor",
+  "ab.license": "Código abierto bajo la licencia MIT.",
   "footer.theme": "Tema",
-  "footer.version": "Versión",
-  "theme.system": "Del sistema",
   "theme.light": "Claro",
   "theme.dark": "Oscuro",
   "hp.version": "Versión y actualizaciones",
@@ -2815,7 +2995,7 @@
   "footer.timeout_value": "{n} segundos",
   "footer.tofu_on": "TOFU activo",
   "footer.strict": "Estricto",
-  "lang.auto": "Del sistema",
+  "pref.auto": "Auto",
   "lang.auto_title": "Sigue el idioma del sistema ({lang})",
   "tb.targets": "Destinos:",
   "tb.targets_empty": "Elegir lista...",
@@ -2872,8 +3052,6 @@
   "col.memory": "Memoria",
   "col.storage": "Almacenamiento",
   "col.system": "Sistema",
-  "col.collected": "Recopilado",
-  "col.collected_title": "Fecha y hora de la última recopilación del equipo",
   "table.no_match": "Ningún equipo coincide con el filtro actual.",
   "st.online": "En línea",
   "st.offline": "Sin conexión",
@@ -3067,14 +3245,25 @@
     document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = tr(el.dataset.i18nTitle); });
   }
 
-  function syncLanguageSelects(cfg) {
+  function syncPreferenceControls(cfg) {
+    markPreference("language", cfg.language_choice || "auto");
+    markPreference("theme", cfg.theme_choice || "system");
     const autoTitle = tr("lang.auto_title", { lang: LANGUAGE_NAMES[cfg.system_language] || "English" });
-    document.querySelectorAll(".lang-select:not(.theme-select)").forEach(select => {
-      select.querySelector(".lang-auto").textContent = tr("lang.auto");
-      select.title = autoTitle;
-      select.value = cfg.language_choice || "auto";
+    document.querySelectorAll(".mini-seg .lang-auto").forEach(button => { button.title = autoTitle; });
+  }
+
+  function markPreference(pref, value) {
+    document.querySelectorAll(`.mini-seg[data-pref="${pref}"] button`).forEach(button => {
+      button.classList.toggle("active", button.dataset.value === value);
     });
   }
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".mini-seg button");
+    if (!button) return;
+    if (button.closest(".mini-seg").dataset.pref === "language") changeLanguage(button.dataset.value);
+    else changeTheme(button.dataset.value);
+  });
 
   const lightQuery = matchMedia("(prefers-color-scheme: light)");
   function applyTheme(choice) {
@@ -3085,7 +3274,7 @@
 
   async function changeTheme(choice) {
     applyTheme(choice);
-    document.querySelectorAll(".theme-select").forEach(select => { select.value = choice; });
+    markPreference("theme", choice);
     try {
       const res = await api("/api/config", "POST", { theme: choice });
       appState.config = res.config;
@@ -3099,7 +3288,7 @@
     const available = update.state === "available";
     document.getElementById("footer-version").textContent = appState.version || "";
     const label = tr("up.button", { v: update.version || "" });
-    for (const id of ["update-button", "help-update-button"]) {
+    for (const id of ["update-button", "about-update-button"]) {
       const button = document.getElementById(id);
       button.hidden = !available;
       button.textContent = label;
@@ -3108,10 +3297,10 @@
     if (available) line += " " + tr("up.available", { v: update.version });
     else if (update.state === "latest") line += " " + tr("up.latest");
     else if (update.message) line += " " + update.message;
-    document.getElementById("help-version-line").textContent = line;
+    document.getElementById("about-version-line").textContent = line;
+    document.getElementById("about-version").textContent = tr("ab.version", { v: appState.version || "" });
     const cfg = appState.config || {};
     document.getElementById("input-check-updates").checked = cfg.check_updates !== false;
-    document.querySelectorAll(".theme-select").forEach(select => { select.value = cfg.theme_choice || "system"; });
   }
 
   async function checkUpdates(manual) {
@@ -3128,7 +3317,7 @@
   }
 
   async function installUpdate() {
-    const buttons = ["update-button", "help-update-button"].map(id => document.getElementById(id));
+    const buttons = ["update-button", "about-update-button"].map(id => document.getElementById(id));
     buttons.forEach(button => { button.disabled = true; });
     setBanner(tr("up.downloading", { v: (appState.update || {}).version || "" }));
     try {
@@ -3153,6 +3342,7 @@
   }
 
   async function changeLanguage(choice) {
+    markPreference("language", choice);
     try {
       const res = await api("/api/config", "POST", { language: choice });
       appState.config = res.config;
@@ -3266,9 +3456,30 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeHelp();
+      closeAbout();
       closePopovers();
     }
   });
+
+  function openAbout() {
+    closePopovers();
+    closeHelp();
+    const icon = document.querySelector("#about-sheet .about-icon");
+    if (!icon.firstChild) icon.innerHTML = document.querySelector(".app-icon svg").outerHTML;
+    document.getElementById("about-sheet").classList.add("open");
+  }
+
+  function closeAbout() {
+    document.getElementById("about-sheet").classList.remove("open");
+  }
+
+  async function openLink(name) {
+    try {
+      await api("/api/open-link", "POST", { name });
+    } catch (err) {
+      setBanner(err.message);
+    }
+  }
 
   function openHelp() {
     closePopovers();
@@ -3473,7 +3684,7 @@
     const tbody = document.getElementById("hosts-tbody");
     renderOnboarding();
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${tr("table.no_match")}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">${tr("table.no_match")}</td></tr>`;
       renderInspector(null);
       return;
     }
@@ -3494,7 +3705,6 @@
       const storage = cleanValue(r.disk_type)
         ? `${cleanValue(r.disk_type)}${cleanValue(r.disk_size) ? " · " + cleanValue(r.disk_size).split(" total")[0] : ""}`
         : "—";
-      const collected = formatCollected(r.dta_atualizacao);
       const osText = cleanValue(r.distro)
         ? `${cleanValue(r.distro)}${cleanValue(r.kernel) ? ` (${cleanValue(r.kernel).split("-")[0]})` : ""}`
         : "—";
@@ -3508,7 +3718,6 @@
         <td>${escapeHtml(ram)}</td>
         <td>${escapeHtml(storage)}</td>
         <td class="cell-secondary">${escapeHtml(osText)}</td>
-        <td class="cell-secondary" title="${escapeHtml(collected.full)}">${escapeHtml(collected.short)}</td>
       </tr>`;
     }).join("");
 
@@ -3522,13 +3731,10 @@
   }
 
   function formatCollected(value) {
-    if (!value) return { short: "—", full: tr("in.not_collected"), relative: "" };
+    if (!value) return { full: tr("in.not_collected"), relative: "" };
     const date = new Date(String(value).replace(" ", "T"));
-    if (isNaN(date)) return { short: String(value), full: String(value), relative: "" };
+    if (isNaN(date)) return { full: String(value), relative: "" };
     const locale = LOCALES[currentLang];
-    const time = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-    const day = date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
-    const today = new Date().toDateString() === date.toDateString();
     const minutes = Math.round((Date.now() - date.getTime()) / 60000);
     let relative = tr("rel.now");
     if (minutes >= 2880) relative = tr("rel.days", { n: Math.round(minutes / 1440) });
@@ -3536,7 +3742,6 @@
     else if (minutes >= 60) relative = tr("rel.hours", { n: Math.round(minutes / 60) });
     else if (minutes >= 1) relative = tr("rel.min", { n: minutes });
     return {
-      short: today ? time : `${day} ${time}`,
       full: date.toLocaleString(locale, { dateStyle: "short", timeStyle: "medium" }),
       relative
     };
@@ -3959,7 +4164,7 @@
         currentLang = data.config.language;
         applyTranslations();
       }
-      syncLanguageSelects(data.config);
+      syncPreferenceControls(data.config);
       if (!document.getElementById("input-ssh-user").value && data.config.ssh_user) {
         document.getElementById("input-ssh-user").value = data.config.ssh_user;
       }
