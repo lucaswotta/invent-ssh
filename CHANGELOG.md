@@ -2,7 +2,13 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
-## [0.8.0] — 2026-10-20
+## [0.8.1] — 2026-10-20
+
+### Fixed
+
+- The macOS Intel package closed right after opening: `cryptography` 49 and later have no Intel wheel, so the build compiled it against Homebrew's OpenSSL, which does not load next to the OpenSSL bundled with Python. The Intel build pins `cryptography` below 49. The 0.7.0 Intel package has the same defect, and 0.8.0 shipped without one.
+
+ — 2026-10-20
 
 ### Added
 
