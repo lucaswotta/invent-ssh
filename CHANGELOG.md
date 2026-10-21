@@ -2,6 +2,12 @@
 
 Notable changes to Invenux (called Invent-SSH up to 0.5.0) are recorded here.
 
+## [0.9.1] — 2026-10-20
+
+### Fixed
+
+- Programs started by the Linux package inherited its library path: the in-app update stopped in `install.sh` (`gtk-update-icon-cache`: `libmount.so.1: version MOUNT_2_40 not found`), and the file picker (`zenity`, `kdialog`) and Open folder (`xdg-open`) could fail the same way. They now run with the system libraries. On Windows, the new `.exe` started by an update runs as a program of its own.
+
 ## [0.9.0] — 2026-10-20
 
 Versions 0.8.0 to 0.8.2 were published for a few hours on 2026-10-20 and are folded into this release.
