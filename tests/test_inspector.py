@@ -235,7 +235,7 @@ class HardwareParserTests(unittest.TestCase):
         self.assertEqual(details["processador"], "Example Processor")
         self.assertEqual(details["cores_threads"], "4/8")
         self.assertEqual(details["disk_type"], "NVMe + HDD")
-        self.assertIn("2 physical block devices", details["disk_size"])
+        self.assertNotIn("physical block devices", details["disk_size"])
         self.assertEqual(details["hardware_details"]["manufacturer"], "Example Systems")
         self.assertEqual(details["hardware_details"]["model"], "Model A")
         self.assertIn("nvme0n1", details["hardware_details"]["storage_devices"])

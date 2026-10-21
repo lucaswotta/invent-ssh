@@ -11,6 +11,8 @@ from typing import Any, Iterator, Mapping, Sequence
 
 from paths import get_snapshots_db_path
 
+_LEGACY_DISK_SIZE = re.compile(r" total \(\d+ physical block devices\)$")
+
 DIFF_FIELDS: tuple[tuple[str, str], ...] = (
     ("status", "Status"),
     ("processador", "Processador"),
@@ -114,6 +116,10 @@ def compute_records_diff(
         for field_key, field_label in DIFF_FIELDS:
             before = _clean(prev.get(field_key)) or "—"
             after = _clean(curr.get(field_key)) or "—"
+            if field_key == "disk_size":
+                # Up to 0.9.1 the capacity carried a device count; compare the capacity only.
+                before = _LEGACY_DISK_SIZE.sub("", before)
+                after = _LEGACY_DISK_SIZE.sub("", after)
             if before != after:
                 changes.append({
                     "ip": ip,
