@@ -816,10 +816,7 @@ def _collect_linux_hardware(
     ))
     disk_type = " + ".join(drive_types) if drive_types else "N/A"
     drive_total = sum(drive["size_bytes"] for drive in drives)
-    disk_size = (
-        f"{_format_capacity(drive_total)} total ({len(drives)} physical block devices)"
-        if drives else "N/A"
-    )
+    disk_size = _format_capacity(drive_total) if drives else "N/A"
     drive_lines: list[str] = []
     for drive in drives:
         line = (

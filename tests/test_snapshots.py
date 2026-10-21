@@ -92,6 +92,11 @@ class SnapshotAndAnalyticsTests(unittest.TestCase):
             self.assertEqual(fields["Memória RAM"], ("4.0 GiB DDR4", "8.0 GiB DDR4"))
             self.assertEqual(fields["Tipo de Armazenamento"], ("HDD", "NVMe"))
 
+    def test_disk_size_from_older_versions_is_not_a_change(self):
+        before = {"ip": "10.0.0.9", "status": "ONLINE", "disk_size": "128 GB total (1 physical block devices)"}
+        after = {"ip": "10.0.0.9", "status": "ONLINE", "disk_size": "128 GB"}
+        self.assertEqual(compute_records_diff([after], [before]), [])
+
     def test_compute_records_diff_ignores_unchanged_hosts(self):
         record = {"ip": "10.0.0.9", "status": "ONLINE", "ram": "16 GiB"}
         self.assertEqual(compute_records_diff([record], [dict(record)]), [])
