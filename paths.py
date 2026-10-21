@@ -9,6 +9,7 @@ import json
 import os
 import platform
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +118,25 @@ def _user_dir(xdg_key: str, default_name: str) -> Path:
         except OSError:
             pass
     return home / default_name
+
+
+def external_program_env() -> dict[str, str]:
+    """Environment for system programs (zenity, xdg-open, install.sh) started by a packaged build.
+
+    The PyInstaller bootloader points LD_LIBRARY_PATH at the bundled libraries, which are
+    older than the system's and break programs such as gio or gtk-update-icon-cache.
+    PYINSTALLER_RESET_ENVIRONMENT makes a newer Invenux .exe started from here run as a
+    program of its own instead of reusing this one's unpacked files.
+    """
+    env = dict(os.environ)
+    if getattr(sys, "frozen", False):
+        original = env.pop("LD_LIBRARY_PATH_ORIG", None)
+        if original is None:
+            env.pop("LD_LIBRARY_PATH", None)
+        else:
+            env["LD_LIBRARY_PATH"] = original
+        env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    return env
 
 
 def get_documents_dir() -> Path:

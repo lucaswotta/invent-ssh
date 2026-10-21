@@ -32,6 +32,21 @@ class UserPathTests(unittest.TestCase):
             self.assertTrue(config.is_dir())
             self.assertTrue(logs.is_dir())
 
+    def test_external_programs_get_the_system_libraries_back(self):
+        bundled = {"LD_LIBRARY_PATH": "/opt/invenux/_internal", "KEEP": "1"}
+        with patch.object(paths.sys, "frozen", True, create=True), patch.dict(os.environ, bundled, clear=True):
+            env = paths.external_program_env()
+        self.assertNotIn("LD_LIBRARY_PATH", env)
+        self.assertEqual(env["PYINSTALLER_RESET_ENVIRONMENT"], "1")
+        self.assertEqual(env["KEEP"], "1")
+
+        restored = {"LD_LIBRARY_PATH": "/opt/invenux/_internal", "LD_LIBRARY_PATH_ORIG": "/usr/local/lib"}
+        with patch.object(paths.sys, "frozen", True, create=True), patch.dict(os.environ, restored, clear=True):
+            self.assertEqual(paths.external_program_env()["LD_LIBRARY_PATH"], "/usr/local/lib")
+
+        with patch.dict(os.environ, bundled, clear=True):
+            self.assertEqual(paths.external_program_env(), bundled)
+
     def test_config_migration_whitelists_preferences_and_drops_unknown_secrets(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
