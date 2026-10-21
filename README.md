@@ -122,7 +122,7 @@ The window uses [pywebview](https://pywebview.flowrl.com/) when it is installed,
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.8.0
+python3 build.py                   # dist/invenux-v0.8.1
 ```
 
 On Linux, `./install.sh` in the extracted release folder copies the program to `~/.local/lib/invenux`, links `~/.local/bin/invenux` and adds the menu entry and icon, without sudo. `./install.sh --uninstall` removes them and keeps history and reports.
