@@ -32,6 +32,19 @@ QT_UNUSED_MODULES = (
     "PySide6.QtOpenGLWidgets",
     "PySide6.QtDBus",
 )
+# Libraries every Linux desktop provides and that must match the system: Mesa's
+# EGL/GBM drivers need the system C++ runtime and GBM, and the system's GIO modules
+# (dconf, gvfs) need the system GLib. Copies from the older build machine break both.
+LINUX_SYSTEM_LIBRARIES = (
+    "libstdc++.so.6",
+    "libgcc_s.so.1",
+    "libgbm.so.1",
+    "libglib-2.0.so.0",
+    "libgobject-2.0.so.0",
+    "libgio-2.0.so.0",
+    "libgmodule-2.0.so.0",
+    "libgthread-2.0.so.0",
+)
 # Chromium UI strings (context menu) for the app languages; the other 50 locales add 40 MB.
 QT_WEBENGINE_LOCALES = ("en-US.pak", "es.pak", "es-419.pak", "pt-BR.pak")
 ICON_ICO = BRAND_DIR / "invenux.ico"
@@ -128,6 +141,17 @@ def prune_qt_resources(dist_root: Path) -> int:
     return freed
 
 
+def drop_linux_system_libraries(dist_root: Path) -> list[str]:
+    """Remove LINUX_SYSTEM_LIBRARIES from the bundle so the loader uses the system's."""
+    removed = []
+    for name in LINUX_SYSTEM_LIBRARIES:
+        library = dist_root / "_internal" / name
+        if library.is_file():
+            library.unlink()
+            removed.append(name)
+    return removed
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Build Invenux for the current operating system (Windows, macOS, or Linux)."
@@ -169,7 +193,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"PyInstaller exited with status {completed.returncode}.", file=sys.stderr)
             return completed.returncode
 
-        freed = prune_qt_resources(ROOT / "dist" / f"{APP_SLUG}-v{version}")
+        bundle = ROOT / "dist" / f"{APP_SLUG}-v{version}"
+        if platform.system() == "Linux":
+            removed = drop_linux_system_libraries(bundle)
+            print("Using the system copies of: " + ", ".join(removed))
+        freed = prune_qt_resources(bundle)
         if freed:
             print(f"Removed {freed / 1_000_000:.0f} MB of unused Qt translations and DevTools files.")
         print("Build completed. Inspect the dist/ directory for the native executable/app bundle.")

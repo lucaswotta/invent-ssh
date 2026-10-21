@@ -46,6 +46,18 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual([p.name for p in (qt / "resources").iterdir()], ["qtwebengine_resources.pak"])
 
 
+    def test_linux_bundle_drops_libraries_that_must_match_the_system(self):
+        with tempfile.TemporaryDirectory() as directory:
+            internal = Path(directory) / "_internal"
+            internal.mkdir()
+            for name in ("libstdc++.so.6", "libgbm.so.1", "libglib-2.0.so.0", "libxcb-cursor.so.0"):
+                (internal / name).write_bytes(b"x")
+
+            removed = build.drop_linux_system_libraries(Path(directory))
+
+            self.assertEqual(sorted(removed), ["libgbm.so.1", "libglib-2.0.so.0", "libstdc++.so.6"])
+            self.assertEqual([p.name for p in internal.iterdir()], ["libxcb-cursor.so.0"])
+
 class LauncherTests(unittest.TestCase):
     def test_linux_without_display_skips_the_window_and_uses_the_browser(self):
         webview = MagicMock()
