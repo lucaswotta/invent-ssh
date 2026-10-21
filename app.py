@@ -73,6 +73,8 @@ def setup_logging() -> None:
     log_file = log_dir / "invenux.log"
     handler = RotatingFileHandler(log_file, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+    # paramiko logs two INFO lines per host (connected, authenticated); keep its warnings only.
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     root_logger = logging.getLogger()
     if not root_logger.handlers:
         root_logger.setLevel(logging.INFO)

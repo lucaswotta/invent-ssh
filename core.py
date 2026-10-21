@@ -84,7 +84,10 @@ class InventoryEngine:
             log_level = logging.DEBUG
         else:
             log_level = getattr(logging, level.upper(), logging.INFO)
-        self.logger.log(log_level, "%s | value=%s", message, value if value is not None else "N/A")
+        if value is None:
+            self.logger.log(log_level, "%s", message)
+        else:
+            self.logger.log(log_level, "%s | %s", message, value)
 
     def run_inventory(self) -> None:
         """Run one inventory cycle and always report its real outcome to the UI."""
