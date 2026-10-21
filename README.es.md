@@ -150,6 +150,8 @@ python3 app.py --input equipos.xlsx --user inventario --key ~/.ssh/id_ed25519 --
 | --- | --- | --- |
 | `IP` | Sí | Dirección o nombre del equipo. También valen `HOST`, `HOSTNAME`, `ADDRESS`, `IP_ADDRESS`, `ENDPOINT` o `TARGET`. |
 | `LOCATION` | No | Sede o sala; agrupa el Parque y los informes. También valen `UBICACION`, `SEDE`, `SUCURSAL`, `SITE` o `LOCAL`. |
+| `USER` | No | Usuario SSH de ese equipo cuando difiere del panel SSH. También valen `USERNAME`, `SSH_USER`, `LOGIN` o `USUARIO`. |
+| `PASSWORD` | No | Contraseña SSH de ese equipo, para parques con contraseñas distintas; lo normal es dejarla en el panel SSH. También valen `PASS`, `SENHA` o `CONTRASENA`. Las celdas vacías usan el panel. Invenux solo la mantiene en memoria y nunca la escribe en la tabla, informes, instantáneas ni registros, pero el archivo la guarda en texto plano. |
 | Cualquier otra | No | Se copia tal cual a la tabla y a todos los informes, por ejemplo `ASSET_TAG`, `OWNER` o `NOTES`. |
 
 Las filas sin dirección y las direcciones repetidas se omiten y se listan al cargar. La plantilla (**Obtener la plantilla**) trae dos filas de ejemplo y una hoja que explica cada columna, en el idioma de la interfaz.
@@ -223,7 +225,7 @@ Sí, vea la línea de comandos arriba. Requiere clave privada.
 
 ## Próximos pasos
 
-El trabajo previsto y los problemas conocidos están en las [issues](https://github.com/lucaswotta/invenux/issues): instaladores firmados, agente SSH y jump host, puerto y usuario por equipo, recopilaciones programadas con informe de cambios, comparación entre dos instantáneas cualesquiera, tema claro y accesibilidad. Los comentarios y pull requests en cualquiera de ellas son bienvenidos.
+El trabajo previsto y los problemas conocidos están en las [issues](https://github.com/lucaswotta/invenux/issues): instaladores firmados, agente SSH y jump host, puerto SSH por equipo, recopilaciones programadas con informe de cambios, comparación entre dos instantáneas cualesquiera, tema claro y accesibilidad. Los comentarios y pull requests en cualquiera de ellas son bienvenidos.
 
 ## Contribuir
 
