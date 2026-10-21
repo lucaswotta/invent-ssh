@@ -130,7 +130,7 @@ La ventana usa [pywebview](https://pywebview.flowrl.com/) si está instalado, lu
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.9.0
+python3 build.py                   # dist/invenux-v0.9.1
 ```
 
 En Linux, `./install.sh` en la carpeta extraída de la release copia el programa a `~/.local/lib/invenux`, crea el enlace `~/.local/bin/invenux` y agrega el acceso y el icono al menú, sin sudo. `./install.sh --uninstall` lo quita y conserva el historial y los informes.
