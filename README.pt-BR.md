@@ -122,7 +122,7 @@ A janela usa o [pywebview](https://pywebview.flowrl.com/) quando ele está insta
 
 ```sh
 python3 -m pip install -r requirements-build.txt
-python3 build.py                   # dist/invenux-v0.8.1
+python3 build.py                   # dist/invenux-v0.8.2
 ```
 
 No Linux, `./install.sh` na pasta extraída da release copia o programa para `~/.local/lib/invenux`, cria o link `~/.local/bin/invenux` e adiciona o atalho e o ícone no menu, sem sudo. `./install.sh --uninstall` remove tudo e mantém histórico e relatórios.
