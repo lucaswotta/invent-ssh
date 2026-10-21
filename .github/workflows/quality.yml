@@ -42,10 +42,12 @@ jobs:
   native-build:
     name: Native package · ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # Same rule as release.yml: the Intel macOS image may be retired at any time.
+    continue-on-error: ${{ matrix.os == 'macos-15-intel' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
 
     steps:
       - name: Check out repository
